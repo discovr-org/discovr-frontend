@@ -1,0 +1,19 @@
+/* A quotation on a hairline rule, not a card. */
+.verdict {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: var(--space-3);
+  border-left: var(--border-hairline) solid var(--line-strong);
+}
+.label {
+  color: var(--ink-subtle);
+}
+.quote::before {
+  content: "\201C";
+  color: var(--ink-subtle);
+}
+.quote::after {
+  content: "\201D";
+  color: var(--ink-subtle);
+}

@@ -1,0 +1,123 @@
+/* PolicyDisclosure. Every value is a design token from app/globals.css, except the
+   type sizes, which match the design's row title (16/21), summary (13/18) and pointers (14/20). */
+
+.card {
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+
+.heading {
+  margin: 0;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--size-field);
+  padding: 14px var(--space-4);
+  border: 0;
+  background: none;
+  color: var(--ink-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: background var(--duration-instant) var(--ease-exit);
+}
+.toggle[aria-expanded="true"] {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.toggle:hover {
+  background: var(--surface-sunken);
+}
+.toggle:active {
+  background: var(--brand-tint);
+}
+.toggle:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.toggle > svg {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+  color: var(--ink-muted);
+  flex-shrink: 0;
+}
+
+.chevron {
+  transition: transform var(--duration-instant) var(--ease-exit);
+}
+.toggle[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.title {
+  font-size: 16px;
+  line-height: 21px;
+  font-weight: 600;
+}
+.summary {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--state-positive);
+}
+
+/* The body lines up with the title text: space-4 edge + icon + space-3 gap. */
+.body {
+  border-top: var(--border-hairline) solid var(--line-subtle);
+  padding: var(--space-4) var(--space-4) var(--space-5) calc(var(--space-4) + var(--size-icon-sm) + var(--space-3));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.body[hidden] {
+  display: none;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.groupTitle {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--ink-primary);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.list li {
+  position: relative;
+  padding-left: var(--space-3);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink-muted);
+}
+.list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 4px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--ink-subtle);
+}

@@ -1,0 +1,39 @@
+.skel {
+  background: var(--surface-sunken);
+  border-radius: var(--radius-sm);
+  position: relative;
+  overflow: hidden;
+}
+.skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(234, 235, 231, 0.06), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skel::after {
+    animation: none;
+  }
+}
+.hero {
+  width: 100%;
+  aspect-ratio: 390 / 320;
+  border-radius: 0;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+}

@@ -1,0 +1,119 @@
+.scrim {
+  position: fixed;
+  inset: 0;
+  max-width: var(--size-content-max);
+  margin: 0 auto;
+  background: var(--surface-canvas);
+  opacity: 0;
+  z-index: var(--z-scrim);
+  pointer-events: none;
+  transition: opacity var(--duration-exit) var(--ease-exit);
+}
+.scrimOpen {
+  opacity: var(--opacity-scrim);
+  pointer-events: auto;
+  transition-duration: var(--duration-enter);
+  transition-timing-function: var(--ease-enter);
+}
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: var(--size-content-max);
+  margin: 0 auto;
+  z-index: var(--z-sheet);
+  background: var(--surface-raised);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--shadow-overlay);
+  padding: var(--space-3) var(--space-5) calc(var(--space-5) + var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  transform: translateY(100%);
+  visibility: hidden;
+  transition:
+    transform var(--duration-exit) var(--ease-exit),
+    visibility 0s linear var(--duration-exit);
+  max-height: 88dvh;
+  overflow-y: auto;
+}
+.sheetOpen {
+  transform: translateY(0);
+  visibility: visible;
+  transition:
+    transform var(--duration-enter) var(--ease-enter),
+    visibility 0s;
+}
+.handle {
+  width: 36px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--line-strong);
+  align-self: center;
+  flex-shrink: 0;
+}
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.sub {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink-muted);
+}
+
+/* Option rows inside a sheet */
+.options {
+  display: flex;
+  flex-direction: column;
+}
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--size-field);
+  padding: 14px 0;
+  border-bottom: var(--border-hairline) solid var(--line-subtle);
+  color: var(--ink-primary);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+.option:last-child {
+  border-bottom: 0;
+}
+.option:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.option > svg {
+  width: var(--size-icon-md);
+  height: var(--size-icon-md);
+  color: var(--ink-muted);
+  flex-shrink: 0;
+}
+.option > svg.chev {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+  color: var(--ink-subtle);
+}
+.optionText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.optionTitle {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.optionSub {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+  user-select: text;
+}

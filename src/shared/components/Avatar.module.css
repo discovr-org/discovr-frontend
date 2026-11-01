@@ -1,0 +1,71 @@
+/* Pill face. Ring colour follows the surface behind it via --avatar-ring. */
+.avatar {
+  --avatar-ring: var(--surface-canvas);
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+  position: relative;
+  display: inline-block;
+  overflow: visible;
+}
+
+.sm {
+  width: var(--size-avatar-sm);
+  height: var(--size-avatar-sm);
+}
+.md {
+  width: var(--size-avatar-md);
+  height: var(--size-avatar-md);
+}
+.lg {
+  width: var(--size-avatar-lg);
+  height: var(--size-avatar-lg);
+}
+
+.face {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  object-fit: cover;
+}
+
+.initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  color: var(--ink-muted);
+  font-weight: 600;
+  line-height: 1;
+}
+.md .initials {
+  font-size: 16px;
+}
+.lg .initials {
+  font-size: 22px;
+}
+.sm .initials {
+  font-size: 12px;
+}
+
+.verified {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-pill);
+  background: var(--state-positive);
+  border: 2px solid var(--avatar-ring);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--surface-canvas);
+}
+.verified svg {
+  width: 11px;
+  height: 11px;
+}

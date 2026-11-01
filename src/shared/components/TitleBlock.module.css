@@ -1,0 +1,27 @@
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.block h1 {
+  text-wrap: balance;
+  /* Hero rule: three lines maximum — shorten the listing name instead. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+.byline {
+  color: var(--ink-muted);
+}
+.byline a {
+  color: var(--ink-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+.byline a:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}

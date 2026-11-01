@@ -1,0 +1,27 @@
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+
+.text,
+.links {
+  margin: 0;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--ink-muted);
+}
+
+.link {
+  color: var(--ink-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}

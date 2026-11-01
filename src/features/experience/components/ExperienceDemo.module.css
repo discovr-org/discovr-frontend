@@ -1,0 +1,52 @@
+.states {
+  display: none;
+}
+@media (min-width: 600px) {
+  .states {
+    position: fixed;
+    top: calc(var(--safe-top) + var(--space-3));
+    left: var(--space-4);
+    z-index: var(--z-toast);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+}
+.label {
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--ink-subtle);
+}
+.seg {
+  display: inline-flex;
+  flex-direction: column;
+  padding: 3px;
+  gap: 2px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+.seg button {
+  height: 30px;
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-muted);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  text-align: left;
+}
+.seg button:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.seg button[aria-selected="true"] {
+  background: var(--brand-tint);
+  color: var(--ink-primary);
+}

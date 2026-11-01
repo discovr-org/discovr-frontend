@@ -1,0 +1,86 @@
+/* Full-bleed, square-cornered photo gallery. Ratio 390 / 320, reserved before any image loads. */
+.hero {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 390 / 320;
+  overflow: hidden;
+  background: var(--surface-sunken);
+}
+
+.gallery {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.gallery::-webkit-scrollbar {
+  display: none;
+}
+.gallery:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: calc(var(--focus-offset) * -2);
+}
+
+.slide {
+  position: relative;
+  flex: 0 0 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  margin: 0;
+}
+.slide img {
+  object-fit: cover;
+}
+/* photo-lift sits above the image (an inset shadow on the slide would paint under it). */
+.slide::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow: var(--photo-lift);
+  pointer-events: none;
+}
+
+.count {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  padding: var(--space-1) 10px;
+  border-radius: var(--radius-pill);
+  background: var(--control-scrim);
+  color: var(--ink-primary);
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* Previous / next only where there is a mouse; phones swipe. */
+.nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: none !important;
+}
+.prev {
+  left: var(--space-2);
+}
+.next {
+  right: var(--space-2);
+}
+@media (hover: hover) and (pointer: fine) {
+  .nav {
+    display: flex !important;
+  }
+  .nav[disabled] {
+    opacity: 0;
+    pointer-events: none;
+  }
+}

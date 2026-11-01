@@ -1,0 +1,51 @@
+/* Detail-screen AppBar: transparent over the gallery, solid with the title once past it,
+   and slides up out of view while scrolling down past the gallery. */
+.bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  max-width: var(--size-content-max);
+  margin: 0 auto;
+  z-index: var(--z-sticky);
+  height: calc(var(--size-bar-app) + var(--safe-top));
+  padding: var(--safe-top) var(--space-2) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: transparent;
+  border-bottom: var(--border-hairline) solid transparent;
+  transition:
+    transform var(--duration-enter) var(--ease-enter),
+    background var(--duration-enter) var(--ease-enter),
+    visibility 0s;
+}
+.solid {
+  background: var(--surface-raised);
+  border-bottom-color: var(--line-subtle);
+}
+.hidden {
+  transform: translateY(-100%);
+  visibility: hidden;
+  transition:
+    transform var(--duration-exit) var(--ease-exit),
+    background var(--duration-exit) var(--ease-exit),
+    visibility 0s linear var(--duration-exit);
+}
+
+.title {
+  flex-grow: 1;
+  min-width: 0;
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity var(--duration-exit) var(--ease-exit);
+}
+.solid .title {
+  opacity: 1;
+}

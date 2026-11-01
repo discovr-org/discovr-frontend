@@ -1,0 +1,39 @@
+.chip {
+  flex-shrink: 0;
+  min-height: var(--size-control-md);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  border: var(--border-hairline) solid var(--line-strong);
+  background: transparent;
+  color: var(--ink-primary);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chip:hover {
+  background: var(--surface-sunken);
+}
+
+.chip:active {
+  background: var(--brand-tint);
+}
+
+.chip:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.selected {
+  background: var(--brand-tint);
+  border-color: var(--brand-primary);
+  color: var(--ink-primary);
+}
+
+.selected:hover {
+  background: var(--brand-tint);
+}

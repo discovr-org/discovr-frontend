@@ -1,0 +1,43 @@
+/* The phone column: full width up to size-content-max, centred, hairline edges on wider screens. */
+.app {
+  max-width: var(--size-content-max);
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--surface-canvas);
+  position: relative;
+}
+@media (min-width: 481px) {
+  .app {
+    border-left: var(--border-hairline) solid var(--line-subtle);
+    border-right: var(--border-hairline) solid var(--line-subtle);
+  }
+}
+
+/* Title, key details, verdict, tiles: space-5 apart, under the gallery. */
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-4) 0;
+}
+
+.rule {
+  height: var(--border-hairline);
+  background: var(--line-subtle);
+  margin: var(--space-6) var(--space-4) 0;
+  border: 0;
+}
+
+/* Long-form sections, space-6 apart. Bottom padding clears the BookingBar and the TabBar. */
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-6) var(--space-4) calc(var(--space-7) + var(--bb-h, 108px) + var(--size-bar-tab));
+}
+
+.related {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}

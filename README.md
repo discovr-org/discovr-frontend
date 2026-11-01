@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# discovr
 
-## Getting Started
+Dark-only, mobile-first web app. Eight things worth doing tonight in Goa.
 
-First, run the development server:
+## Run
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## PWA
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Production build registers a service worker (app shell + offline fallback + ticket cache rules).
 
-## Learn More
+```bash
+npm run build
+npm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+To exercise the SW in development: `npm run dev:pwa` (still registers only when `NODE_ENV=production` unless you flip `PwaProvider`).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Install prompt: Android/desktop via `beforeinstallprompt`. iOS Add to Home Screen copy comes later — after a successful booking.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Layout
 
-## Deploy on Vercel
+```
+src/
+  app/           # routes only
+  features/      # home | experience | booking → components / utils / styles
+  shared/        # cross-feature components, utils, design tokens
+  types/
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Agent rules live in the repo-root `.cursor/skills/` (`discovr-structure`, `discovr-brand`, `discovr-code`, `discovr-product`).

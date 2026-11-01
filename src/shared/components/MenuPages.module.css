@@ -1,0 +1,86 @@
+/* One cover page, with the pages behind it peeking out, and the count under it. */
+.row {
+  display: flex;
+}
+.tile {
+  width: 40%;
+  max-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-primary);
+  font: inherit;
+  text-align: left;
+  cursor: zoom-in;
+  border-radius: var(--radius-sm);
+}
+.tile:focus-visible {
+  outline: none;
+}
+.tile:focus-visible .thumb {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.stack {
+  position: relative;
+  display: block;
+  padding: 0 var(--space-2) var(--space-2) 0;
+}
+.stack::before,
+.stack::after {
+  content: "";
+  position: absolute;
+  border-radius: var(--radius-sm);
+  border: var(--border-hairline) solid var(--line-subtle);
+  background: var(--surface-sunken);
+}
+/* back page first, then the middle one, then the cover on top */
+.stack::before {
+  inset: var(--space-2) 0 0 var(--space-2);
+}
+.stack::after {
+  inset: var(--space-1);
+}
+.single {
+  padding: 0;
+}
+.single::before,
+.single::after {
+  display: none;
+}
+
+/* No photo-lift: a menu is a document, and the hairline border holds the geometry instead. */
+.thumb {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: var(--border-hairline) solid var(--line-subtle);
+  background: var(--surface-sunken);
+  transition: border-color var(--duration-instant) var(--ease-exit);
+}
+.thumb img {
+  object-fit: cover;
+}
+.tile:hover .thumb {
+  border-color: var(--line-strong);
+}
+.tile:active .thumb {
+  border-color: var(--ink-muted);
+}
+
+.count {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}

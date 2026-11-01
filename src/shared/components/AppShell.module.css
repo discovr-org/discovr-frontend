@@ -1,0 +1,18 @@
+.shell {
+  width: min(100%, var(--size-content-max));
+  margin-inline: auto;
+  min-height: 100dvh;
+  background: var(--surface-canvas);
+  position: relative;
+}
+
+.content {
+  padding-bottom: calc(var(--size-bar-tab) + var(--safe-bottom) + var(--space-6));
+}
+
+@media (min-width: 481px) {
+  .shell {
+    border-left: var(--border-hairline) solid var(--line-subtle);
+    border-right: var(--border-hairline) solid var(--line-subtle);
+  }
+}

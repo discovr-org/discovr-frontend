@@ -1,0 +1,105 @@
+/* Sits space-3 above the booking bar / tab stack. Never over the primary action. */
+.wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  max-width: var(--size-content-max);
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+  z-index: var(--z-toast);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity var(--duration-exit) var(--ease-exit),
+    transform var(--duration-exit) var(--ease-exit);
+  bottom: calc(var(--bb-h, 0px) + var(--size-bar-tab) + var(--safe-bottom) + var(--space-3));
+}
+
+.shown {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition-duration: var(--duration-enter);
+  transition-timing-function: var(--ease-enter);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrap,
+  .shown {
+    transition: opacity var(--duration-exit) linear;
+    transform: none;
+  }
+}
+
+.toast {
+  width: 100%;
+  min-height: 52px;
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-overlay);
+  box-shadow: var(--shadow-overlay);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  touch-action: pan-y;
+}
+
+.icon {
+  flex-shrink: 0;
+  display: flex;
+}
+.icon svg {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+}
+.positive {
+  color: var(--state-positive);
+}
+.notice {
+  color: var(--state-notice);
+}
+.critical {
+  color: var(--state-critical);
+}
+.neutral {
+  color: var(--ink-muted);
+}
+
+.message {
+  flex-grow: 1;
+  font-size: 14px;
+  line-height: 20px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.undo {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--brand-primary);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+}
+.undo:hover {
+  background: var(--brand-tint);
+}
+.undo:active {
+  background: var(--brand-tint);
+}
+.undo:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}

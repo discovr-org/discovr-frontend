@@ -1,0 +1,46 @@
+/* IconButton: 44px round target, 24px glyph. */
+.button {
+  width: var(--size-control-md);
+  height: var(--size-control-md);
+  flex-shrink: 0;
+  border: 0;
+  padding: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--duration-instant) var(--ease-exit);
+}
+.button:hover,
+.button:active {
+  background: var(--brand-tint);
+}
+.button:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.button svg {
+  width: var(--size-icon-md);
+  height: var(--size-icon-md);
+}
+
+/* On a photo: a scrim so the glyph survives whatever the photo does. */
+.scrimmed {
+  background: var(--control-scrim);
+}
+.scrimmed:hover {
+  background: var(--control-scrim);
+  color: var(--brand-primary-hover);
+}
+
+/* Toggle on (the saved heart). */
+.button[aria-pressed="true"],
+.scrimmed[aria-pressed="true"]:hover {
+  color: var(--accent-pink);
+}
+.button[aria-pressed="true"] svg {
+  fill: currentColor;
+}

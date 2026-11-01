@@ -1,3 +1,9 @@
+# discovr frontend
+
+Before building UI, copy, or features: follow the repo-root always-on rule and read the matching skills in `../.cursor/skills/` (`discovr-principles`, `discovr-interface`, `discovr-brand`, `discovr-voice`, `discovr-structure`, `discovr-logo`, `discovr-ship`, `discovr-code`).
+
+Folder shape: `src/features|shared/<name>/{components,utils,styles}`. Tokens only. Dark-only.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know

@@ -1,0 +1,156 @@
+/* Full-screen menu reader within the content column. */
+.viewer {
+  position: fixed;
+  inset: 0;
+  max-width: var(--size-content-max);
+  margin: 0 auto;
+  z-index: var(--z-sheet);
+  background: var(--surface-canvas);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition:
+    opacity var(--duration-exit) var(--ease-exit),
+    transform var(--duration-exit) var(--ease-exit),
+    visibility 0s linear var(--duration-exit);
+}
+.open {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity var(--duration-enter) var(--ease-enter),
+    transform var(--duration-enter) var(--ease-enter),
+    visibility 0s;
+}
+
+.bar {
+  flex-shrink: 0;
+  height: calc(var(--size-bar-app) + var(--safe-top));
+  padding: var(--safe-top) var(--space-2) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--surface-raised);
+  border-bottom: var(--border-hairline) solid var(--line-subtle);
+}
+.title {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.name {
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.count {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* The zoom toggle is not a "saved" toggle: no pink, no fill. */
+.zoomOn {
+  background: var(--brand-tint) !important;
+  color: var(--ink-primary) !important;
+}
+.zoomOn svg {
+  fill: none !important;
+}
+
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.pages {
+  flex: 1;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+}
+.pages::-webkit-scrollbar {
+  display: none;
+}
+/* While zoomed, pans stay inside the page: no page turns by accident. */
+.zoomed {
+  overflow-x: hidden;
+}
+.slide {
+  flex: 0 0 100%;
+  height: 100%;
+  overflow: auto;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  padding: var(--space-4);
+  overscroll-behavior: contain;
+}
+.page {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-raised);
+  cursor: zoom-in;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.page img {
+  object-fit: cover;
+  pointer-events: none;
+}
+.zoomed .page {
+  width: 200%;
+  cursor: zoom-out;
+}
+
+/* Previous / next only where there is a mouse; phones swipe. */
+.nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: none !important;
+}
+.prev {
+  left: var(--space-2);
+}
+.next {
+  right: var(--space-2);
+}
+@media (hover: hover) and (pointer: fine) {
+  .nav {
+    display: flex !important;
+  }
+  .nav[disabled] {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.foot {
+  flex-shrink: 0;
+  padding: var(--space-3) var(--space-4) calc(var(--space-4) + var(--safe-bottom));
+  text-align: center;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ink-muted);
+}

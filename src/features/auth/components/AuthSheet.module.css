@@ -1,0 +1,609 @@
+/* discovr AuthSheet. Values match the design canvas 1:1 (discovr tokens). */
+
+.root {
+  --surface-canvas: #061412;
+  --surface-raised: #141a19;
+  --surface-sunken: #1d2422;
+  --surface-overlay: #222927;
+  --ink-primary: #eaebe7;
+  --ink-muted: #9ba3a0;
+  --ink-subtle: #808886;
+  --line-subtle: #283130;
+  --line-strong: #636d6b;
+  --brand: #f4f0e3;
+  --brand-hover: #fffdf4;
+  --brand-pressed: #ded9c9;
+  --on-brand: #061412;
+  --pressed-tint: #22211d;
+  --critical: #ff7a63;
+  --positive: #57d3a0;
+  --scrim: rgba(6, 20, 18, 0.6);
+  --shadow-overlay: 0 8px 24px rgba(0, 0, 0, 0.6), 0 24px 48px rgba(0, 0, 0, 0.7);
+  --font-body: var(--font-instrument-sans, 'Instrument Sans'), -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --font-display: var(--font-bricolage, 'Bricolage Grotesque'), 'Trebuchet MS', system-ui, sans-serif;
+
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  color-scheme: dark;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+  opacity: 0;
+  transition: opacity 120ms linear;
+}
+.root[data-state='open'] .scrim {
+  opacity: 1;
+  transition: opacity 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  max-width: 480px;
+  box-sizing: border-box;
+  padding: 12px 24px calc(24px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface-raised);
+  border-radius: 24px 24px 0 0;
+  box-shadow: var(--shadow-overlay);
+  color: var(--ink-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  outline: none;
+}
+
+.sheet *,
+.sheet *::before,
+.sheet *::after {
+  box-sizing: border-box;
+}
+
+/* ---------- header ---------- */
+
+.dragZone {
+  margin: -12px -24px 0;
+  padding: 12px 24px 0;
+  touch-action: none;
+  cursor: grab;
+}
+
+.handle {
+  width: 36px;
+  height: 4px;
+  margin: 0 auto 16px;
+  border-radius: 999px;
+  background: var(--line-strong);
+}
+
+.progress {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.segment {
+  height: 3px;
+  border-radius: 999px;
+  background: var(--line-subtle);
+  transition: background-color 180ms linear;
+}
+.segment[data-on='true'] {
+  background: var(--ink-primary);
+}
+
+.title {
+  margin: 0 0 20px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ---------- step container ---------- */
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: stepIn 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes stepIn {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.label {
+  margin-bottom: -8px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+/* ---------- phone field ---------- */
+
+.field {
+  height: 48px;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--line-strong);
+  padding: 0 12px 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.field:focus-within {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+/* Error: red border only, no white ring */
+.field[data-error='true'] {
+  border-color: var(--critical);
+}
+.field[data-error='true']:focus-within {
+  outline: none;
+}
+
+.ccButton {
+  all: unset;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 0 6px 0 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--ink-primary);
+  font-variant-numeric: tabular-nums;
+  transition: background-color 80ms linear;
+}
+.ccButton:hover {
+  background: var(--surface-sunken);
+}
+.ccButton:active {
+  background: var(--pressed-tint);
+}
+.ccButton:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.flag {
+  font-size: 20px;
+  line-height: 24px;
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  background: var(--line-subtle);
+  flex: none;
+}
+
+.phoneInput,
+.searchInput {
+  all: unset;
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--ink-primary);
+}
+.phoneInput {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.phoneInput::placeholder,
+.searchInput::placeholder {
+  color: var(--ink-subtle);
+  opacity: 1;
+}
+.phoneInput:-webkit-autofill {
+  -webkit-text-fill-color: var(--ink-primary);
+  -webkit-box-shadow: 0 0 0 40px var(--surface-sunken) inset;
+  caret-color: var(--ink-primary);
+}
+.searchInput::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+.valid {
+  flex: none;
+}
+
+.error {
+  margin: -8px 0 0;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--critical);
+}
+
+/* ---------- primary button ---------- */
+
+.primary {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  height: 52px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: var(--on-brand);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 80ms linear;
+}
+.primary:hover {
+  background: var(--brand-hover);
+}
+.primary:active {
+  background: var(--brand-pressed);
+}
+.primary:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.primary[data-disabled='true'] {
+  opacity: 0.4;
+  cursor: default;
+}
+.primary[data-disabled='true']:hover,
+.primary[data-disabled='true']:active {
+  background: var(--brand);
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid rgba(6, 20, 18, 0.25);
+  border-top-color: var(--on-brand);
+  animation: spin 700ms linear infinite;
+}
+
+/* ---------- terms ---------- */
+
+.terms {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: -4px;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-muted);
+}
+
+/* 44px tap target centred on the 16px box */
+.termsInput {
+  position: absolute;
+  left: -14px;
+  top: -14px;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.box {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.termsInput:checked + .box {
+  border-color: var(--brand);
+  background: var(--brand);
+}
+.termsInput:focus-visible + .box {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.link {
+  position: relative;
+  color: var(--ink-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.link:hover {
+  color: var(--brand-hover);
+}
+
+/* ---------- OTP ---------- */
+
+.otpLabelRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: -8px;
+}
+
+.otpLabel {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.textButton {
+  all: unset;
+  box-sizing: border-box;
+  height: 44px;
+  margin: -12px 0;
+  padding: 0 8px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--ink-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: background-color 80ms linear;
+}
+.textButton[data-flush='true'] {
+  margin: 0 0 0 -8px;
+}
+.textButton:active {
+  background: var(--pressed-tint);
+}
+.textButton:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.otpWrap {
+  position: relative;
+}
+
+.otpGrid {
+  display: grid;
+  gap: 8px;
+}
+
+.otpBox {
+  height: 56px;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--line-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-primary);
+}
+.otpBox[data-active='true'] {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.otpBox[data-error='true'] {
+  border-color: var(--critical);
+}
+
+/* One real input over the boxes: paste, autofill and SMS suggestions all work */
+.otpInput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  font-size: 16px;
+  color: transparent;
+  caret-color: transparent;
+  cursor: text;
+}
+
+.status {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.resendWait,
+.checking {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.checking {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.smallSpinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid var(--line-subtle);
+  border-top-color: var(--ink-primary);
+  animation: spin 700ms linear infinite;
+}
+
+/* ---------- country picker ---------- */
+
+.pickerHeader {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: -10px 0 -10px -12px;
+}
+
+.iconButton {
+  all: unset;
+  box-sizing: border-box;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.iconButton:active {
+  background: var(--pressed-tint);
+}
+.iconButton:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.pickerTitle {
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.searchField {
+  height: 48px;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--line-strong);
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.searchField:focus-within {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.list {
+  height: 336px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0 -24px;
+  padding: 0 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-subtle) transparent;
+}
+
+.row {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background-color 80ms linear;
+}
+.row:hover {
+  background: var(--surface-sunken);
+}
+.row:active {
+  background: var(--pressed-tint);
+}
+.row:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+}
+
+.rowFlag {
+  width: 24px;
+  font-size: 20px;
+  line-height: 24px;
+  text-align: center;
+}
+
+.rowName {
+  flex: 1;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--ink-primary);
+}
+
+.rowDial {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.rowCheck {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty {
+  margin: 0;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink-muted);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step {
+    animation: none;
+  }
+  .sheet,
+  .scrim,
+  .segment {
+    transition: none !important;
+  }
+}

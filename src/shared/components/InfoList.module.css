@@ -1,0 +1,119 @@
+/* Key details: icon + a line of facts, no container. body-sm throughout. */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.row,
+.link,
+.toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  color: var(--ink-primary);
+}
+.row > svg,
+.link > svg,
+.toggle > svg {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+  color: var(--ink-muted);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.text {
+  min-width: 0;
+}
+.sep {
+  color: var(--ink-subtle);
+  padding: 0 var(--space-1);
+}
+.muted {
+  color: var(--ink-muted);
+}
+.positive {
+  color: var(--state-positive);
+  font-weight: 600;
+}
+.critical {
+  color: var(--state-critical);
+  font-weight: 600;
+}
+
+/* Place: links to the exact pin. Hit area padded to 44px with a matching negative margin. */
+.link {
+  padding: var(--space-3) 0;
+  margin: calc(var(--space-3) * -1) 0;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+.link:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.place {
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+}
+.link:hover .place {
+  text-decoration-color: var(--ink-muted);
+}
+
+/* Schedule: a real button that opens the week. */
+.toggle {
+  width: 100%;
+  padding: var(--space-3) 0;
+  margin: calc(var(--space-3) * -1) 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  border-radius: var(--radius-sm);
+}
+.toggle:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.toggle > svg.chev {
+  transition: transform var(--duration-instant) var(--ease-exit);
+}
+.toggle[aria-expanded="true"] > svg.chev {
+  transform: rotate(180deg);
+}
+
+/* The week, Monday first, aligned to the text column; today highlighted. */
+.week {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0 0 0 calc(var(--size-icon-sm) + var(--space-2));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.day {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+  padding: 2px var(--space-2);
+  margin: 0 calc(var(--space-2) * -1);
+  border-radius: var(--radius-sm);
+}
+.today {
+  background: var(--brand-tint);
+  color: var(--ink-primary);
+  font-weight: 600;
+}
+.off span:last-child {
+  color: var(--ink-subtle);
+}

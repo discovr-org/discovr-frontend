@@ -1,0 +1,186 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  FEED_FILTERS,
+  feedSections as localFeedSections,
+  priceLabel,
+  type FeedFilter,
+  type FeedSection,
+} from "@/features/home/utils/feedData";
+import styles from "@/features/home/styles/exploreFeed.module.css";
+import { AppShell } from "@/shared/components/AppShell";
+import { Chip } from "@/shared/components/Chip";
+import { ExperienceCard } from "@/shared/components/ExperienceCard";
+import { MessageIcon, PhoneIcon, SearchIcon } from "@/shared/components/icons";
+import { useToast } from "@/shared/components/Toast";
+import { fetchCatalogFeed } from "@/shared/utils/catalogApi";
+import { DISCOVR_PHONE } from "@/shared/utils/discovrContact";
+import { useSaved } from "@/shared/utils/useSaved";
+
+export function ExploreFeed() {
+  const [filter, setFilter] = useState<FeedFilter>("Tonight");
+  const [sections, setSections] = useState<FeedSection[]>(localFeedSections);
+  const saved = useSaved();
+  const toast = useToast();
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchCatalogFeed().then((remote) => {
+      if (cancelled || !remote?.length) return;
+      setSections(
+        remote.map((s) => ({
+          id: s.id,
+          title: s.title,
+          density: s.density,
+          items: s.items.map((item) => ({
+            slug: item.slug,
+            title: item.title,
+            placeLabel: item.placeLabel,
+            imageSrc: item.imageSrc,
+            imageAlt: item.imageAlt,
+            blurb: item.blurb,
+            durationLabel: item.durationLabel,
+            priceInr: item.priceInr,
+          })),
+        })),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <AppShell current="explore" savedDot={saved.hasAny}>
+      <div className={styles.page}>
+        <header className={styles.brand}>
+          <p className={styles.wordmark}>discovr</p>
+          <p className={styles.tagline}>Goa, from people who know where to go</p>
+        </header>
+
+        <Link href="/search" className={styles.search}>
+          <SearchIcon />
+          <span>Search Goa</span>
+        </Link>
+
+        <div className={styles.filters} role="group" aria-label="Filters">
+          {FEED_FILTERS.map((f) => (
+            <Chip
+              key={f}
+              selected={filter === f}
+              onClick={() => setFilter(f)}
+            >
+              {f}
+            </Chip>
+          ))}
+        </div>
+
+        {sections.map((section) => (
+          <section
+            key={section.id}
+            className={styles.section}
+            aria-labelledby={`sec-${section.id}`}
+          >
+            <h2 id={`sec-${section.id}`} className={styles.sectionTitle}>
+              {section.title}
+            </h2>
+            {section.density === "portrait" ? (
+              <div
+                className={styles.rail}
+                role="list"
+                aria-label={`${section.title}, swipe for more`}
+              >
+                {section.items.map((item) => (
+                  <div
+                    key={`${section.id}-${item.slug}-${item.title}`}
+                    role="listitem"
+                  >
+                    <ExperienceCard
+                      density="portrait"
+                      href={`/experiences/${item.slug}`}
+                      title={item.title}
+                      placeLabel={item.placeLabel}
+                      imageSrc={item.imageSrc}
+                      imageAlt={item.imageAlt}
+                      priceLabel={priceLabel(item)}
+                      saved={saved.isSaved(item.slug)}
+                      onToggleSave={() => {
+                        const was = saved.isSaved(item.slug);
+                        saved.toggle(item.slug);
+                        toast(
+                          was
+                            ? "Removed from saved"
+                            : "Saved. Send it to your group from Saved.",
+                        );
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.stack}>
+                {section.items.map((item) => (
+                  <ExperienceCard
+                    key={`${section.id}-${item.slug}-${item.title}`}
+                    density="landscape"
+                    href={`/experiences/${item.slug}`}
+                    title={item.title}
+                    placeLabel={item.placeLabel}
+                    imageSrc={item.imageSrc}
+                    imageAlt={item.imageAlt}
+                    blurb={item.blurb}
+                    durationLabel={item.durationLabel}
+                    priceLabel={priceLabel(item)}
+                    saved={saved.isSaved(item.slug)}
+                    onToggleSave={() => {
+                      const was = saved.isSaved(item.slug);
+                      saved.toggle(item.slug);
+                      toast(
+                        was
+                          ? "Removed from saved"
+                          : "Saved. Send it to your group from Saved.",
+                      );
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        ))}
+
+        <footer className={styles.promo}>
+          <h2 className={styles.promoTitle}>
+            discovr the best of what Goa has to offer
+          </h2>
+          <div className={styles.promoActions}>
+            <a
+              className={styles.circle}
+              href={`https://wa.me/${DISCOVR_PHONE.replace(/[^\d]/g, "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="WhatsApp discovr"
+            >
+              <MessageIcon />
+            </a>
+            <a
+              className={styles.circle}
+              href={`tel:${DISCOVR_PHONE}`}
+              aria-label="Call discovr"
+            >
+              <PhoneIcon />
+            </a>
+          </div>
+          <nav className={styles.promoLinks} aria-label="More from discovr">
+            <Link href="/saved">Saved</Link>
+            <Link href="/about">About us</Link>
+            <Link href="/how-we-pick">How we pick</Link>
+            <Link href="/list-with-us">List with us</Link>
+            <Link href="/help">Help</Link>
+          </nav>
+        </footer>
+      </div>
+    </AppShell>
+  );
+}

@@ -1,0 +1,46 @@
+.track {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+}
+
+.off {
+  opacity: var(--opacity-disabled);
+  pointer-events: none;
+}
+
+.seg {
+  height: 30px;
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-muted);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background var(--duration-instant) var(--ease-exit),
+    color var(--duration-instant) var(--ease-exit);
+}
+.seg svg {
+  width: 15px;
+  height: 15px;
+}
+.seg:hover:not(:disabled) {
+  color: var(--ink-primary);
+}
+.seg:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.on {
+  background: var(--brand-tint);
+  color: var(--ink-primary);
+}
