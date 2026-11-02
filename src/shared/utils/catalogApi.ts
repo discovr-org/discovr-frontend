@@ -7,23 +7,21 @@ import type {
   Weekday,
 } from "@/types/experience";
 import { apiBaseUrl, hasApiBaseUrl } from "@/shared/utils/apiBase";
-import type { FeedItem, FeedSection } from "@/features/home/utils/feedData";
+import type { FeedItem } from "@/features/home/utils/feedData";
+import { formatDuration } from "@/shared/utils/formatDuration";
 
-export type ApiFeedSection = {
-  id: string;
+const FALLBACK_IMAGE = "/demo/jetty-dusk.png";
+
+type ApiListingCard = {
+  slug: string;
   title: string;
-  density: "portrait" | "landscape";
-  items: {
-    slug: string;
-    title: string;
-    placeLabel: string;
-    imageSrc: string;
-    imageAlt: string;
-    blurb?: string;
-    durationLabel?: string;
-    priceInr?: number;
-    priceAsk?: boolean;
-  }[];
+  placeLabel: string;
+  imageSrc?: string;
+  imageAlt?: string;
+  blurb?: string;
+  durationMinutes?: number;
+  priceInr?: number;
+  priceAsk?: boolean;
 };
 
 type ApiExperience = {
@@ -41,7 +39,7 @@ type ApiExperience = {
     distance?: string;
   };
   schedule?: WeekSchedule | ListingHours | Record<string, unknown>;
-  duration: string;
+  durationMinutes: number;
   groupSize: string;
   about: string;
   included?: IncludedItem[];
@@ -77,6 +75,7 @@ function asListingHours(value: unknown): ListingHours | undefined {
     minPeople: typeof row.minPeople === "string" ? row.minPeople : undefined,
     durationLabel:
       typeof row.durationLabel === "string" ? row.durationLabel : undefined,
+    difficulty: typeof row.difficulty === "string" ? row.difficulty : undefined,
   };
 }
 
@@ -136,7 +135,7 @@ export function mapApiExperience(raw: ApiExperience): Experience {
     },
     schedule: week ?? {},
     hours,
-    duration: content.durationLabel?.trim() || raw.duration,
+    duration: content.durationLabel?.trim() || formatDuration(raw.durationMinutes),
     groupSize: raw.groupSize,
     about: raw.about,
     included,
@@ -148,37 +147,17 @@ export function mapApiExperience(raw: ApiExperience): Experience {
   };
 }
 
-export function mapApiFeedSections(sections: ApiFeedSection[]): FeedSection[] {
-  return sections.map((s) => ({
-    id: s.id,
-    title: s.title,
-    density: s.density,
-    items: s.items.map(
-      (item): FeedItem => ({
-        slug: item.slug,
-        title: item.title,
-        placeLabel: item.placeLabel,
-        imageSrc: item.imageSrc,
-        imageAlt: item.imageAlt,
-        blurb: item.blurb,
-        durationLabel: item.durationLabel,
-        priceInr: item.priceAsk ? undefined : item.priceInr,
-      }),
-    ),
-  }));
-}
-
-export function flattenFeedItems(sections: FeedSection[]): FeedItem[] {
-  const seen = new Set<string>();
-  const out: FeedItem[] = [];
-  for (const section of sections) {
-    for (const item of section.items) {
-      if (seen.has(item.slug)) continue;
-      seen.add(item.slug);
-      out.push(item);
-    }
-  }
-  return out;
+function mapApiCard(card: ApiListingCard): FeedItem {
+  return {
+    slug: card.slug,
+    title: card.title,
+    placeLabel: card.placeLabel,
+    imageSrc: card.imageSrc ?? FALLBACK_IMAGE,
+    imageAlt: card.imageAlt ?? card.title,
+    blurb: card.blurb,
+    durationLabel: formatDuration(card.durationMinutes) || undefined,
+    priceInr: card.priceAsk ? undefined : card.priceInr,
+  };
 }
 
 async function getJson<T>(path: string): Promise<T | null> {
@@ -197,10 +176,11 @@ async function getJson<T>(path: string): Promise<T | null> {
   }
 }
 
-export async function fetchCatalogFeed(): Promise<FeedSection[] | null> {
-  const data = await getJson<{ sections: ApiFeedSection[] }>("/v1/catalog/feed");
-  if (!data?.sections?.length) return null;
-  return mapApiFeedSections(data.sections);
+/** Every live listing as a card. Which ones show where is up to the screen. */
+export async function fetchCatalogCards(): Promise<FeedItem[] | null> {
+  const data = await getJson<{ cards: ApiListingCard[] }>("/v1/catalog/cards");
+  if (!data?.cards?.length) return null;
+  return data.cards.map(mapApiCard);
 }
 
 export async function fetchCatalogExperience(

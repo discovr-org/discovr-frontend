@@ -39,6 +39,7 @@ export type ListingHours = {
   ageGroup?: string;
   minPeople?: string;
   durationLabel?: string;
+  difficulty?: string;
 };
 
 export type ContentLink = { label: string; url: string };
@@ -59,6 +60,19 @@ export type ExperienceContent = {
   additionalInfo?: string;
   termsDetail?: string;
   whatToCarry?: string;
+  /** Places: adds "No booking needed, just walk in" to the bottom bar. */
+  walkIn?: boolean;
+  /** Italic one-liner at the top of About. */
+  pitch?: string;
+  fitnessLevel?: string;
+  /** e.g. "1 instructor for 4 students" */
+  instructorRatio?: string;
+  /** Yellow Health advisory box. */
+  healthAdvisory?: string;
+  /** "Things to get with you" checklist. */
+  carry?: string[];
+  /** "Know before you go" tips. Falls back to the policy lines. */
+  knowBeforeYouGo?: string[];
   included?: string[];
   notIncluded?: string[];
   phones?: string[];

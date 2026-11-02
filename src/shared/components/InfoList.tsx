@@ -10,7 +10,10 @@ import {
   summarise,
   todayIndex,
 } from "@/features/experience/utils/schedule";
-import { venueHoursStatus } from "@/features/experience/utils/venueHours";
+import {
+  openTodayStatus,
+  venueHoursStatus,
+} from "@/features/experience/utils/venueHours";
 import {
   ArrowUpRightIcon,
   ChevronDownIcon,
@@ -72,14 +75,16 @@ export function InfoList({
   const showPrice = !venue;
   const showPeople = !venue;
   const summary = showTripSchedule ? summarise(schedule, today) : null;
-  const openClosed = useHours
-    ? venueHoursStatus(hours?.timeSlot, timeZone)
-    : null;
+  // Places: open/closed right now. Trips: open today and the slot times.
+  const openClosed = !useHours
+    ? null
+    : venue
+      ? (venueHoursStatus(hours?.timeSlot, timeZone) ??
+        openTodayStatus(hours?.days, hours?.timeSlot, timeZone))
+      : (openTodayStatus(hours?.days, hours?.timeSlot, timeZone) ??
+        venueHoursStatus(hours?.timeSlot, timeZone));
   const pinHref = mapsHref || googleMapsPin(place.lat, place.lng);
-  const placeName =
-    venue && place.neighborhood?.trim()
-      ? place.neighborhood.trim()
-      : place.name;
+  const placeName = place.neighborhood?.trim() || place.name;
   const placeLabel = `${placeName}${place.distance ? `, ${place.distance}` : ""}. Open in Google Maps`;
   const peopleLine = durationPeopleLine(duration, groupSize);
 
@@ -148,8 +153,12 @@ export function InfoList({
               >
                 {openClosed.status}
               </span>
-              <Sep />
-              {openClosed.hours}
+              {openClosed.hours ? (
+                <>
+                  <Sep />
+                  {openClosed.hours}
+                </>
+              ) : null}
             </span>
             <ChevronDownIcon className={styles.chev} />
           </button>

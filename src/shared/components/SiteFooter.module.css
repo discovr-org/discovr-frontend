@@ -1,0 +1,113 @@
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-top: var(--space-6);
+  border-top: var(--border-hairline) solid var(--line-subtle);
+  overflow: hidden;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.circle {
+  width: var(--size-control-lg);
+  height: var(--size-control-lg);
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  color: var(--ink-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.circle svg {
+  width: var(--size-icon-md);
+  height: var(--size-icon-md);
+}
+
+.circle:focus-visible,
+.links a:focus-visible,
+.legal a:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.links,
+.legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ink-muted);
+}
+
+.links a,
+.legal a {
+  color: var(--ink-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.signup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+
+.signupTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+.signupDone {
+  margin: 0;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--state-positive);
+}
+
+/* Giant faded wordmark: the last thing on the page. */
+.wordmark {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(88px, 28vw, 136px);
+  line-height: 0.9;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  text-align: center;
+  color: var(--surface-raised);
+  user-select: none;
+}
+
+.signupText,
+.signupFine {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink-muted);
+}
+
+.signupFine {
+  font-size: 13px;
+  line-height: 18px;
+}

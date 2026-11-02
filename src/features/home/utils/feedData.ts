@@ -13,11 +13,13 @@ export type FeedItem = {
   priceSuffix?: string;
 };
 
+/** rail: tall cards you swipe sideways. stack: one big card each. */
+export type SectionLayout = "rail" | "stack";
+
 export type FeedSection = {
   id: string;
   title: string;
-  /** portrait carousel vs full-width shortlist cards */
-  density: "portrait" | "landscape";
+  layout: SectionLayout;
   items: FeedItem[];
 };
 
@@ -25,7 +27,10 @@ export const FEED_FILTERS = [
   "Tonight",
   "This weekend",
   "Near me",
-  "Under ₹2,000",
+  "Under ₹1,000",
+  "Food and drink",
+  "Nightlife",
+  "Wellness",
 ] as const;
 
 export type FeedFilter = (typeof FEED_FILTERS)[number];

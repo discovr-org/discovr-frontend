@@ -4,10 +4,22 @@
   min-width: 0;
 }
 
-/* Wide enough that the next card peeks (~72vw on a phone). */
+/* Wide enough that the next card peeks on a phone. */
 .portrait {
-  width: min(268px, 72vw);
+  width: 70vw;
   flex: 0 0 auto;
+}
+
+@media (min-width: 600px) {
+  .portrait {
+    width: 280px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .portrait {
+    width: 340px;
+  }
 }
 
 .landscape {
@@ -28,12 +40,12 @@
 }
 
 .portrait .media {
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 5;
   border-radius: var(--radius-lg);
 }
 
 .landscape .media {
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 326 / 180;
 }
 
 .img {
@@ -125,10 +137,8 @@
 }
 
 .blurb {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  font-size: 14px;
+  line-height: 20px;
 }
 
 .body {
@@ -154,12 +164,54 @@
 .footer {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-3);
+}
+
+.saveFoot {
+  width: var(--size-control-md);
+  height: var(--size-control-md);
+  margin-right: calc(var(--space-2) * -1);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.saveFoot[aria-pressed="true"] {
+  color: var(--accent-pink);
+}
+
+.saveFoot[aria-pressed="true"] svg {
+  fill: currentColor;
+}
+
+.saveFoot:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.saveFoot svg {
+  width: 22px;
+  height: 22px;
 }
 
 .price {
   font-size: 15px;
   line-height: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-primary);
+}
+
+.overlayPrice {
+  margin: var(--space-1) 0 0;
+  font-size: 14px;
+  line-height: 18px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--ink-primary);

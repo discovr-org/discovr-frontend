@@ -38,3 +38,16 @@
   line-height: 18px;
   color: var(--ink-muted);
 }
+
+.bookLink {
+  align-self: flex-end;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ink-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.bookLink:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}

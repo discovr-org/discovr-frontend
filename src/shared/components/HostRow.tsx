@@ -4,9 +4,11 @@ import styles from "./HostRow.module.css";
 
 export interface HostRowProps {
   host: Host;
+  /** Off when the section heading already says "Run by …". */
+  showCredit?: boolean;
 }
 
-const CREDIT_LABEL: Record<HostCredit, string> = {
+export const CREDIT_LABEL: Record<HostCredit, string> = {
   hosted: "Hosted by",
   run: "Run by",
   owned: "Owned by",
@@ -16,10 +18,10 @@ const CREDIT_LABEL: Record<HostCredit, string> = {
  * Host card on the detail screen: avatar + credit + business name + meta.
  * Credit is run by / hosted by / owned by (set in admin).
  */
-export function HostRow({ host }: HostRowProps) {
+export function HostRow({ host, showCredit = true }: HostRowProps) {
   const credit = host.credit ?? "hosted";
   const sub = [
-    host.verified ? "Verified" : null,
+    host.verified ? "Verified business" : null,
     host.experienceCount != null
       ? `${host.experienceCount} experiences`
       : null,
@@ -39,7 +41,8 @@ export function HostRow({ host }: HostRowProps) {
       />
       <div>
         <div className={styles.name}>
-          {CREDIT_LABEL[credit]} {host.businessName}
+          {showCredit ? `${CREDIT_LABEL[credit]} ` : ""}
+          {host.businessName}
         </div>
         {sub ? <div className={styles.sub}>{sub}</div> : null}
       </div>

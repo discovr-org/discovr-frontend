@@ -8,8 +8,12 @@ import styles from "./BookingBar.module.css";
 
 export interface BookingBarProps {
   priceFrom: number;
-  /** Venue listings with no published tariff. */
+  /** Places, or listings with no published tariff. */
   askForPrice?: boolean;
+  /** Places that take walk-ins: the note says no booking is needed. */
+  walkIn?: boolean;
+  /** The host's own booking page: adds "or book on {host}" under the button. */
+  bookHref?: string;
   /** "+ taxes" vs "inclusive of taxes" under the price. */
   taxes?: "extra" | "inclusive";
   /** E.164 phone the CTA dials when no `onCallToBook` is passed. */
@@ -32,6 +36,8 @@ export interface BookingBarProps {
 export function BookingBar({
   priceFrom,
   askForPrice,
+  bookHref,
+  walkIn,
   taxes = "inclusive",
   phone,
   hostBusinessName,
@@ -53,12 +59,10 @@ export function BookingBar({
       ro.disconnect();
       root.style.removeProperty("--bb-h");
     };
-  }, [hidden, askForPrice]);
+  }, [hidden, askForPrice, bookHref]);
 
-  const callLabel = askForPrice
-    ? `Call ${hostBusinessName}`
-    : `Call ${hostBusinessName} to book`;
-  const cta = askForPrice ? "Call" : "Call to book";
+  const callLabel = `Call ${hostBusinessName} to book`;
+  const cta = "Call to book";
 
   return (
     <footer
@@ -91,9 +95,21 @@ export function BookingBar({
           </Button>
         )}
       </div>
-      <span className={styles.note}>
-        You&apos;ll speak to {hostBusinessName} directly.
-      </span>
+      {bookHref ? (
+        <a
+          className={styles.bookLink}
+          href={bookHref}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          or book on {hostBusinessName}
+        </a>
+      ) : (
+        <span className={styles.note}>
+          You&apos;ll speak to {hostBusinessName} directly.
+          {walkIn ? " No booking needed, just walk in" : null}
+        </span>
+      )}
     </footer>
   );
 }

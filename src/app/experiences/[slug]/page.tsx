@@ -5,9 +5,8 @@ import type { ScreenState } from "@/types/experience";
 import detailStyles from "@/features/experience/components/ExperienceDetail.module.css";
 import { ExperienceDetailSkeleton } from "@/shared/components/Skeleton";
 import {
+  fetchCatalogCards,
   fetchCatalogExperience,
-  fetchCatalogFeed,
-  flattenFeedItems,
 } from "@/shared/utils/catalogApi";
 
 type PageProps = {
@@ -28,8 +27,7 @@ async function ExperiencePageBody({ params, searchParams }: PageProps) {
   const experience = await fetchCatalogExperience(slug);
   if (!experience) notFound();
 
-  const feed = await fetchCatalogFeed();
-  const relatedItems = feed ? flattenFeedItems(feed) : [];
+  const relatedItems = (await fetchCatalogCards()) ?? [];
 
   return (
     <ExperienceClient

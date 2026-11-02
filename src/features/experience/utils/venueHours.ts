@@ -22,6 +22,7 @@ function parseClock(raw: string): number | null {
 }
 
 function formatClock(mins: number): string {
+  if (mins % 1440 === 0) return "midnight";
   const h24 = Math.floor(mins / 60) % 24;
   const m = mins % 60;
   const suffix = h24 >= 12 ? "pm" : "am";
@@ -38,7 +39,11 @@ export function parseTimeRange(
   timeSlot: string | undefined,
 ): { open: number; close: number; label: string } | null {
   if (!timeSlot?.trim()) return null;
-  const cleaned = timeSlot.replace(/\.$/, "").trim();
+  const cleaned = timeSlot
+    .replace(/\.$/, "")
+    .replace(/\bmidnight\b/gi, "12 AM")
+    .replace(/\bnoon\b/gi, "12 PM")
+    .trim();
   const range = cleaned.match(
     /(\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?))\s*[–—-]\s*(\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?))/i,
   );
@@ -70,6 +75,53 @@ function isOpenNow(open: number, close: number, nowMins: number): boolean {
   if (close > open) return nowMins >= open && nowMins < close;
   // Overnight: open evening → close after midnight
   return nowMins >= open || nowMins < close;
+}
+
+const EVERY_DAY = /every\s*day|daily|all\s*week|7\s*days|nightly/i;
+const WEEKDAY_NAMES = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+];
+
+/** "8 AM and 10 AM (2 slots)" → "8am and 10am". */
+export function tidyTimes(raw: string): string {
+  return raw
+    .replace(/\([^)]*\)/g, "")
+    .replace(/\.$/, "")
+    .replace(/(\d)\s*([ap])\.?m\.?/gi, (_, d: string, ap: string) => `${d}${ap.toLowerCase()}m`)
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Trips with slots rather than an open–close range:
+ * "Every day" + "8 AM and 10 AM" → "Open today · 8am and 10am".
+ * "Tuesdays off." on a Tuesday → "Closed today".
+ */
+export function openTodayStatus(
+  days: string | undefined,
+  timeSlot: string | undefined,
+  timeZone = "Asia/Kolkata",
+  now: Date = new Date(),
+): VenueHoursStatus | null {
+  const times = timeSlot ? tidyTimes(timeSlot) : "";
+  const dayText = (days ?? "").toLowerCase();
+  const today = new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone })
+    .format(now)
+    .toLowerCase();
+  if (WEEKDAY_NAMES.includes(today) && new RegExp(`${today}s?\\s+off`).test(dayText)) {
+    return { open: false, status: "Closed today", hours: times };
+  }
+  if (!dayText || EVERY_DAY.test(dayText) || dayText.includes(today)) {
+    if (!times) return null;
+    return { open: true, status: "Open today", hours: times };
+  }
+  return null;
 }
 
 /** "Open now · 9pm – 3am" / "Closed now · 9pm – 3am". */

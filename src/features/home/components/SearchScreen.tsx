@@ -8,16 +8,15 @@ import { EmptyState } from "@/shared/components/EmptyState";
 import { ExperienceCard } from "@/shared/components/ExperienceCard";
 import { AlertIcon, SearchIcon } from "@/shared/components/icons";
 import { useToast } from "@/shared/components/Toast";
-import { flattenFeedItems } from "@/shared/utils/catalogApi";
-import { useCatalogFeed } from "@/shared/utils/useCatalogFeed";
+import { useCatalogCards } from "@/shared/utils/useCatalogCards";
 import { useSaved } from "@/shared/utils/useSaved";
 import styles from "@/features/home/styles/searchScreen.module.css";
 
 export function SearchScreen() {
   const [q, setQ] = useState("");
-  const feed = useCatalogFeed();
-  const items = useMemo(() => (feed.data ? flattenFeedItems(feed.data) : []), [feed.data]);
-  const loadError = !feed.data && feed.isError;
+  const cards = useCatalogCards();
+  const items = useMemo(() => cards.data ?? [], [cards.data]);
+  const loadError = !cards.data && cards.isError;
   const saved = useSaved();
   const auth = useAuth();
   const toast = useToast();

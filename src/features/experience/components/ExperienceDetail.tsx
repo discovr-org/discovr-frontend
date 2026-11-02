@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { isVenueListing } from "@/features/experience/utils/listingKind";
-import { googleMapsDirections } from "@/features/experience/utils/schedule";
+import { googleMapsDirections, rupees } from "@/features/experience/utils/schedule";
 import { useScrollChrome } from "@/features/experience/utils/useScrollChrome";
 import { priceLabel, type FeedItem } from "@/features/home/utils/feedData";
 import { ActionRow } from "@/shared/components/ActionRow";
@@ -16,16 +16,15 @@ import { ContactSheet } from "@/shared/components/ContactSheet";
 import { Disclaimer } from "@/shared/components/Disclaimer";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { ExperienceCard } from "@/shared/components/ExperienceCard";
-import { FactList, includedFacts } from "@/shared/components/FactList";
 import { HeroGallery, HeroPlaceholder } from "@/shared/components/HeroGallery";
-import { HostRow } from "@/shared/components/HostRow";
+import { CREDIT_LABEL, HostRow } from "@/shared/components/HostRow";
 import { AlertIcon, WifiOffIcon } from "@/shared/components/icons";
 import { InfoList } from "@/shared/components/InfoList";
 import { MenuPages } from "@/shared/components/MenuPages";
 import { MenuViewer } from "@/shared/components/MenuViewer";
-import { PolicyDisclosure } from "@/shared/components/PolicyDisclosure";
 import { ReviewList } from "@/shared/components/ReviewList";
 import { Section } from "@/shared/components/Section";
+import { SiteFooter } from "@/shared/components/SiteFooter";
 import { ExperienceDetailSkeleton } from "@/shared/components/Skeleton";
 import { TabBar } from "@/shared/components/TabBar";
 import { TitleBlock } from "@/shared/components/TitleBlock";
@@ -33,6 +32,15 @@ import { useToast } from "@/shared/components/Toast";
 import { Verdict } from "@/shared/components/Verdict";
 import { useSaved } from "@/shared/utils/useSaved";
 import type { Experience, ScreenState } from "@/types/experience";
+import listing from "../styles/listingSections.module.css";
+import { AboutBlock } from "./AboutBlock";
+import { Checklist } from "./Checklist";
+import { DetailFacts, type DetailFact } from "./DetailFacts";
+import { FaqList } from "./FaqList";
+import { HealthAdvisory } from "./HealthAdvisory";
+import { IncludedBoxes } from "./IncludedBoxes";
+import { ProcessSteps } from "./ProcessSteps";
+import { TipsBox } from "./TipsBox";
 import styles from "./ExperienceDetail.module.css";
 
 export interface ExperienceDetailProps {
@@ -225,7 +233,17 @@ export function ExperienceDetail({
       {experience && (
         <BookingBar
           priceFrom={experience.price.fromAmount}
-          askForPrice={experience.price.askForPrice}
+          askForPrice={
+            experience.price.askForPrice || isVenueListing(experience)
+          }
+          walkIn={
+            isVenueListing(experience) && experience.content?.walkIn === true
+          }
+          bookHref={
+            isVenueListing(experience)
+              ? undefined
+              : experience.content?.links?.book?.url || undefined
+          }
           taxes={experience.price.taxes ?? "inclusive"}
           phone={experience.host.phone}
           hostBusinessName={experience.host.businessName}
@@ -277,6 +295,11 @@ function Populated({
   const menuLink = content.links?.menu;
   const hasPhotos = x.photos.length > 0;
   const venue = isVenueListing(x);
+  const area = x.place.neighborhood?.trim() || x.place.name;
+  const venuePrice = venue ? venuePriceLine(x) : "";
+  const details = detailFacts(x);
+  const carry = carryList(content);
+  const tips = knowBeforeYouGo(x);
   const instagramHandle =
     x.host.instagramHandle?.trim() ||
     instagramHandleFromUrl(content.links?.instagram?.url);
@@ -298,7 +321,10 @@ function Populated({
             text="Showing what we had. Times may be out of date."
           />
         )}
-        <TitleBlock title={x.title} hostName={x.host.businessName} />
+        <TitleBlock
+          title={x.title}
+          hostName={venue ? undefined : x.host.businessName}
+        />
         <InfoList
           priceFrom={x.price.fromAmount}
           askForPrice={x.price.askForPrice}
@@ -311,7 +337,7 @@ function Populated({
           venue={venue}
           mapsHref={content.links?.maps?.url}
         />
-        <Verdict text={x.verdict} label={venue ? null : "Our verdict"} />
+        <Verdict text={x.verdict} label={null} />
         <ActionRow
           hostName={x.host.businessName}
           phone={x.host.phone}
@@ -324,25 +350,23 @@ function Populated({
       <hr className={styles.rule} />
 
       <div className={styles.content}>
-        <Section title="About">
-          <p className="t-body">{x.about}</p>
-          {content.meetingPoint ? (
-            <p className="t-body-sm" style={{ marginTop: "var(--space-3)" }}>
-              Meet at {content.meetingPoint}
-            </p>
-          ) : null}
-          {content.additionalInfo ? (
-            <p className="t-body-sm" style={{ marginTop: "var(--space-3)" }}>
-              {content.additionalInfo}
-            </p>
-          ) : null}
-        </Section>
+        <AboutBlock
+          title={x.title}
+          lead={venue ? x.about : content.pitch}
+          text={venue ? undefined : x.about}
+          photo={x.photos[1] ?? x.photos[0]}
+        />
+        {venue && venuePrice ? (
+          <Section title="Prices">
+            <p className={listing.price}>{venuePrice}</p>
+          </Section>
+        ) : null}
         {x.menu && x.menu.pages.length > 0 && (
           <Section title="Menu">
             <MenuPages pages={x.menu.pages} onOpen={(i) => onOpenMenu(i)} />
           </Section>
         )}
-        {!x.menu?.pages?.length && menuLink?.url ? (
+        {!venue && !x.menu?.pages?.length && menuLink?.url ? (
           <Section title="Menu">
             <a
               className="t-body"
@@ -354,37 +378,40 @@ function Populated({
             </a>
           </Section>
         ) : null}
-        {x.included.length > 0 && (
-          <Section id="included">
-            <FactList items={includedFacts(x.included)} />
+        {!venue && details.length > 0 ? (
+          <Section title="Details">
+            <DetailFacts facts={details} />
           </Section>
-        )}
-        {faqs.length > 0 && (
-          <Section title="Good to know">
-            <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-              {faqs.map((f) => (
-                <li key={`${f.q}-${f.a}`} style={{ marginBottom: "var(--space-4)" }}>
-                  <p className="t-title-sm" style={{ margin: 0 }}>
-                    {f.q}
-                  </p>
-                  <p className="t-body" style={{ margin: "var(--space-2) 0 0" }}>
-                    {f.a}
-                  </p>
-                </li>
-              ))}
-            </ul>
+        ) : null}
+        {x.included.length > 0 ? <IncludedBoxes items={x.included} /> : null}
+        {!venue ? (
+          <Section title="The process">
+            <ProcessSteps hostName={x.host.businessName} area={area} />
           </Section>
-        )}
-        {x.policy && (
-          <PolicyDisclosure
-            key={x.slug}
-            policy={x.policy}
-            hostName={x.host.businessName}
-          />
-        )}
-        <Section title="Your host" id="host">
-          <HostRow host={x.host} />
-        </Section>
+        ) : null}
+        {content.healthAdvisory?.trim() ? (
+          <HealthAdvisory text={content.healthAdvisory.trim()} />
+        ) : null}
+        {carry.length > 0 ? (
+          <Section title="Things to get with you">
+            <Checklist items={carry} />
+          </Section>
+        ) : null}
+        {!venue && tips.length > 0 ? (
+          <Section title="Know before you go">
+            <TipsBox tips={tips} />
+          </Section>
+        ) : null}
+        {!venue && faqs.length > 0 ? (
+          <Section title="FAQs">
+            <FaqList faqs={faqs} />
+          </Section>
+        ) : null}
+        {!venue ? (
+          <Section title={`${CREDIT_LABEL[x.host.credit ?? "hosted"]} ${x.host.businessName}`} id="host">
+            <HostRow host={x.host} showCredit={false} />
+          </Section>
+        ) : null}
         {x.reviews && x.reviews.count > 0 && (
           <ReviewList
             reviews={x.reviews.items}
@@ -421,6 +448,7 @@ function Populated({
             </div>
           </Section>
         )}
+        <SiteFooter source={x.slug} />
       </div>
     </div>
   );
@@ -439,4 +467,48 @@ function instagramHandleFromUrl(url: string | undefined): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+/** Places: the sheet's own price line, e.g. "₹3,000 for two (approx)". */
+function venuePriceLine(x: Experience): string {
+  const narrative = x.content?.priceNarrative?.trim();
+  if (narrative) return narrative;
+  if (x.price.askForPrice || !x.price.fromAmount) return "";
+  const unit = x.content?.priceUnit?.trim();
+  return unit ? `${rupees(x.price.fromAmount)}, ${unit}` : `${rupees(x.price.fromAmount)} per person`;
+}
+
+function detailFacts(x: Experience): DetailFact[] {
+  const c = x.content ?? {};
+  const facts: DetailFact[] = [];
+  const age = x.hours?.ageGroup?.trim();
+  const fitness = (c.fitnessLevel || c.difficulty || x.hours?.difficulty || "").trim();
+  const ratio = c.instructorRatio?.trim();
+  if (age) facts.push({ label: "Age", value: age });
+  if (fitness) facts.push({ label: "Fitness level", value: fitness });
+  if (ratio) facts.push({ label: "Student to instructor ratio", value: ratio });
+  return facts;
+}
+
+function carryList(c: NonNullable<Experience["content"]>): string[] {
+  if (c.carry?.length) return c.carry.map((s) => s.trim()).filter(Boolean);
+  return (c.whatToCarry ?? "")
+    .split(/\n|,/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/** Tips from admin, else the booking and cancellation notes plus the final-terms line. */
+function knowBeforeYouGo(x: Experience): string[] {
+  const c = x.content ?? {};
+  const tips = c.knowBeforeYouGo?.length
+    ? [...c.knowBeforeYouGo]
+    : [...(x.policy?.booking ?? []), ...(x.policy?.cancellation ?? [])];
+  const info = c.additionalInfo?.trim();
+  // Sheets often repeat the tips as one paragraph in additional info.
+  if (info && !tips.some((tip) => info.includes(tip.trim()))) tips.push(info);
+  if (x.policy && x.policy.showFinalTermsNote !== false) {
+    tips.push(`Check the final terms with ${x.host.businessName} before you pay.`);
+  }
+  return [...new Set(tips.map((s) => s.trim()).filter(Boolean))];
 }

@@ -1,39 +1,38 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   FEED_FILTERS,
   priceLabel,
   type FeedFilter,
 } from "@/features/home/utils/feedData";
+import { buildHomeSections } from "@/features/home/utils/homeSections";
 import styles from "@/features/home/styles/exploreFeed.module.css";
 import { AppShell } from "@/shared/components/AppShell";
+import { SiteFooter } from "@/shared/components/SiteFooter";
 import { Chip } from "@/shared/components/Chip";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { ExperienceCard } from "@/shared/components/ExperienceCard";
 import {
   AlertIcon,
-  MessageIcon,
-  PhoneIcon,
   SearchIcon,
 } from "@/shared/components/icons";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { useToast } from "@/shared/components/Toast";
 import { hasApiBaseUrl } from "@/shared/utils/apiBase";
-import { flattenFeedItems } from "@/shared/utils/catalogApi";
-import { useCatalogFeed } from "@/shared/utils/useCatalogFeed";
+import { useCatalogCards } from "@/shared/utils/useCatalogCards";
 import { FeedSkeleton } from "@/features/home/components/FeedSkeleton";
-import { DISCOVR_PHONE } from "@/shared/utils/discovrContact";
 import { useSaved } from "@/shared/utils/useSaved";
 
 export function ExploreFeed() {
-  const [filter, setFilter] = useState<FeedFilter>("Tonight");
+  const [filter, setFilter] = useState<FeedFilter | null>(null);
   const [query, setQuery] = useState("");
-  const feed = useCatalogFeed();
-  const sections = useMemo(() => feed.data ?? [], [feed.data]);
+  const [stuck, setStuck] = useState(false);
+  const stickSentinel = useRef<HTMLDivElement>(null);
+  const cards = useCatalogCards();
+  const sections = useMemo(() => buildHomeSections(cards.data ?? []), [cards.data]);
   // Cached data wins: only show loading/error when there is nothing to paint.
-  const loadState = feed.data ? "ready" : feed.isError || !hasApiBaseUrl() ? "error" : "loading";
+  const loadState = cards.data ? "ready" : cards.isError || !hasApiBaseUrl() ? "error" : "loading";
   const saved = useSaved();
   const auth = useAuth();
   const toast = useToast();
@@ -52,24 +51,39 @@ export function ExploreFeed() {
     );
   };
 
+  // Header shrinks to the small wordmark + chips once the search bar scrolls away.
+  useEffect(() => {
+    const el = stickSentinel.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([entry]) =>
+      setStuck(!entry.isIntersecting),
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   const needle = query.trim().toLowerCase();
   const searching = needle.length > 0;
 
   const searchResults = useMemo(() => {
     if (!searching) return [];
-    return flattenFeedItems(sections).filter((item) => {
+    return (cards.data ?? []).filter((item) => {
       const hay =
         `${item.title} ${item.placeLabel} ${item.blurb ?? ""}`.toLowerCase();
       return hay.includes(needle);
     });
-  }, [needle, searching, sections]);
+  }, [needle, searching, cards.data]);
 
   return (
     <AppShell current="explore" savedDot={saved.hasAny}>
       <div className={styles.page}>
         <header className={styles.brand}>
-          <p className={styles.wordmark}>discovr</p>
-          <p className={styles.tagline}>Goa, from people who know where to go</p>
+          <h1 className={styles.hero}>
+            <span className={styles.wordmark}>discovr</span>
+            <span className={styles.tagline}>
+              Goa, from people who know where to go
+            </span>
+          </h1>
         </header>
 
         <label className={styles.search}>
@@ -86,19 +100,29 @@ export function ExploreFeed() {
           />
         </label>
 
-        {!searching ? (
-          <div className={styles.filters} role="group" aria-label="Filters">
-            {FEED_FILTERS.map((f) => (
-              <Chip
-                key={f}
-                selected={filter === f}
-                onClick={() => setFilter(f)}
-              >
-                {f}
-              </Chip>
-            ))}
-          </div>
-        ) : null}
+        <div ref={stickSentinel} aria-hidden="true" />
+        <div
+          className={styles.sticky}
+          data-shown={stuck}
+          inert={!stuck}
+        >
+          <p className={styles.miniWordmark} aria-hidden="true">
+            discovr
+          </p>
+          {!searching ? (
+            <div className={styles.filters} role="group" aria-label="Filters">
+              {FEED_FILTERS.map((f) => (
+                <Chip
+                  key={f}
+                  selected={filter === f}
+                  onClick={() => setFilter(filter === f ? null : f)}
+                >
+                  {f}
+                </Chip>
+              ))}
+            </div>
+          ) : null}
+        </div>
 
         {loadState === "loading" ? <FeedSkeleton /> : null}
 
@@ -153,7 +177,7 @@ export function ExploreFeed() {
                 <h2 id={`sec-${section.id}`} className={styles.sectionTitle}>
                   {section.title}
                 </h2>
-                {section.density === "portrait" ? (
+                {section.layout === "rail" ? (
                   <div
                     className={styles.rail}
                     role="list"
@@ -171,7 +195,6 @@ export function ExploreFeed() {
                           placeLabel={item.placeLabel}
                           imageSrc={item.imageSrc}
                           imageAlt={item.imageAlt}
-                          priceLabel={priceLabel(item)}
                           saved={saved.isSaved(item.slug)}
                           onToggleSave={() => onToggleSave(item.slug)}
                         />
@@ -202,36 +225,9 @@ export function ExploreFeed() {
             ))
           : null}
 
-        <footer className={styles.promo}>
-          <h2 className={styles.promoTitle}>
-            discovr the best of what Goa has to offer
-          </h2>
-          <div className={styles.promoActions}>
-            <a
-              className={styles.circle}
-              href={`https://wa.me/${DISCOVR_PHONE.replace(/[^\d]/g, "")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="WhatsApp discovr"
-            >
-              <MessageIcon />
-            </a>
-            <a
-              className={styles.circle}
-              href={`tel:${DISCOVR_PHONE}`}
-              aria-label="Call discovr"
-            >
-              <PhoneIcon />
-            </a>
-          </div>
-          <nav className={styles.promoLinks} aria-label="More from discovr">
-            <Link href="/saved">Saved</Link>
-            <Link href="/about">About us</Link>
-            <Link href="/how-we-pick">How we pick</Link>
-            <Link href="/list-with-us">List with us</Link>
-            <Link href="/help">Help</Link>
-          </nav>
-        </footer>
+        <div className={styles.footerWrap}>
+          <SiteFooter source="home" />
+        </div>
       </div>
     </AppShell>
   );

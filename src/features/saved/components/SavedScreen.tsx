@@ -10,8 +10,7 @@ import { HeartIcon } from "@/shared/components/icons";
 import { useToast } from "@/shared/components/Toast";
 import {
   fetchCatalogExperience,
-  fetchCatalogFeed,
-  flattenFeedItems,
+  fetchCatalogCards,
 } from "@/shared/utils/catalogApi";
 import { useSaved } from "@/shared/utils/useSaved";
 import styles from "@/features/saved/styles/savedScreen.module.css";
@@ -34,9 +33,8 @@ export function SavedScreen() {
         return;
       }
 
-      const feed = await fetchCatalogFeed();
-      const fromFeed = feed ? flattenFeedItems(feed) : [];
-      const bySlug = new Map(fromFeed.map((item) => [item.slug, item]));
+      const cards = (await fetchCatalogCards()) ?? [];
+      const bySlug = new Map(cards.map((item) => [item.slug, item]));
 
       const missing = saved.slugs.filter((slug) => !bySlug.has(slug));
       await Promise.all(

@@ -17,7 +17,7 @@ export type ExperienceCardProps = {
   blurb?: string;
   /** e.g. "1 hour 30 min" */
   durationLabel?: string;
-  /** e.g. "From ₹1,400" or "From ₹2,000 + taxes" */
+  /** e.g. "From ₹1,400". Portrait cards show it only when passed. */
   priceLabel?: string;
   density?: ExperienceCardDensity;
   saved?: boolean;
@@ -44,6 +44,23 @@ export function ExperienceCard({
   priority = false,
 }: ExperienceCardProps) {
   const meta = [placeLabel, durationLabel].filter(Boolean).join(" · ");
+  const portrait = density === "portrait";
+
+  const heart = onToggleSave ? (
+    <button
+      type="button"
+      className={portrait ? styles.save : styles.saveFoot}
+      aria-label={`Save ${title}`}
+      aria-pressed={saved}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onToggleSave();
+      }}
+    >
+      <HeartIcon />
+    </button>
+  ) : null;
 
   return (
     <article className={[styles.card, styles[density]].join(" ")}>
@@ -55,9 +72,9 @@ export function ExperienceCard({
               alt={imageAlt}
               fill
               sizes={
-                density === "portrait"
-                  ? "268px"
-                  : "(max-width: 480px) 100vw, 480px"
+                portrait
+                  ? "(min-width: 1024px) 340px, (min-width: 600px) 280px, 70vw"
+                  : "(min-width: 1024px) 560px, (min-width: 600px) 688px, 100vw"
               }
               priority={priority}
               className={styles.img}
@@ -66,40 +83,32 @@ export function ExperienceCard({
           ) : (
             <div className={styles.img} aria-hidden />
           )}
-          {onToggleSave && (
-            <button
-              type="button"
-              className={styles.save}
-              aria-label={saved ? "Remove from saved" : "Save this experience"}
-              aria-pressed={saved}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onToggleSave();
-              }}
-            >
-              <HeartIcon />
-            </button>
-          )}
-          {density === "portrait" && (
+          {portrait && heart}
+          {portrait && (
             <div className={styles.overlay}>
               <h3 className={styles.title}>{title}</h3>
               <p className={styles.place}>{placeLabel}</p>
+              {priceLabel ? (
+                <p className={styles.overlayPrice}>{priceLabel}</p>
+              ) : null}
             </div>
           )}
         </div>
       </Link>
 
-      {density === "landscape" && (
+      {!portrait && (
         <div className={styles.body}>
           <Link href={href} className={styles.bodyLink}>
             <h3 className={styles.title}>{title}</h3>
             {blurb && <p className={styles.blurb}>{blurb}</p>}
             {meta && <p className={styles.meta}>{meta}</p>}
           </Link>
-          {priceLabel ? (
+          {priceLabel || heart ? (
             <div className={styles.footer}>
-              <span className={styles.price}>{priceLabel}</span>
+              {priceLabel ? (
+                <span className={styles.price}>{priceLabel}</span>
+              ) : null}
+              {heart}
             </div>
           ) : null}
         </div>
