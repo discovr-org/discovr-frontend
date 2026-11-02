@@ -1,31 +1,51 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { feedSections, priceLabel } from "@/features/home/utils/feedData";
+import { useEffect, useMemo, useState } from "react";
+import { priceLabel, type FeedItem } from "@/features/home/utils/feedData";
 import { AppShell } from "@/shared/components/AppShell";
+import { EmptyState } from "@/shared/components/EmptyState";
 import { ExperienceCard } from "@/shared/components/ExperienceCard";
-import { SearchIcon } from "@/shared/components/icons";
+import { AlertIcon, SearchIcon } from "@/shared/components/icons";
+import { fetchCatalogFeed, flattenFeedItems } from "@/shared/utils/catalogApi";
 import { useSaved } from "@/shared/utils/useSaved";
 import styles from "@/features/home/styles/searchScreen.module.css";
 
-const allItems = feedSections.flatMap((s) => s.items);
-
 export function SearchScreen() {
   const [q, setQ] = useState("");
+  const [items, setItems] = useState<FeedItem[]>([]);
+  const [loadError, setLoadError] = useState(false);
   const saved = useSaved();
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchCatalogFeed()
+      .then((feed) => {
+        if (cancelled) return;
+        if (!feed?.length) {
+          setLoadError(true);
+          setItems([]);
+          return;
+        }
+        setItems(flattenFeedItems(feed));
+        setLoadError(false);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const results = useMemo(() => {
     const needle = q.trim().toLowerCase();
     if (!needle) return [];
-    const seen = new Set<string>();
-    return allItems.filter((item) => {
-      if (seen.has(item.slug)) return false;
-      const hay = `${item.title} ${item.placeLabel} ${item.blurb ?? ""}`.toLowerCase();
-      if (!hay.includes(needle)) return false;
-      seen.add(item.slug);
-      return true;
+    return items.filter((item) => {
+      const hay =
+        `${item.title} ${item.placeLabel} ${item.blurb ?? ""}`.toLowerCase();
+      return hay.includes(needle);
     });
-  }, [q]);
+  }, [q, items]);
 
   return (
     <AppShell current="explore" savedDot={saved.hasAny}>
@@ -43,9 +63,19 @@ export function SearchScreen() {
           />
         </label>
 
-        {q.trim() && results.length === 0 && (
+        {loadError ? (
+          <EmptyState
+            icon={<AlertIcon />}
+            title="Can't search right now"
+            text="The catalog API didn't answer."
+            role="alert"
+          />
+        ) : null}
+
+        {q.trim() && !loadError && results.length === 0 && (
           <p className={styles.empty}>
-            Nothing matched. Try a place name, or go back to tonight&apos;s shortlist.
+            Nothing matched. Try a place name, or go back to tonight&apos;s
+            shortlist.
           </p>
         )}
 

@@ -1,24 +1,36 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { feedSections, priceLabel } from "@/features/home/utils/feedData";
+import { priceLabel, type FeedItem } from "@/features/home/utils/feedData";
 import { AppShell } from "@/shared/components/AppShell";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { ExperienceCard } from "@/shared/components/ExperienceCard";
 import { HeartIcon } from "@/shared/components/icons";
 import { useToast } from "@/shared/components/Toast";
+import { fetchCatalogFeed, flattenFeedItems } from "@/shared/utils/catalogApi";
 import { useSaved } from "@/shared/utils/useSaved";
 import styles from "@/features/saved/styles/savedScreen.module.css";
-
-const allItems = feedSections.flatMap((s) => s.items);
 
 export function SavedScreen() {
   const saved = useSaved();
   const toast = useToast();
-  const items = allItems.filter(
-    (item, i, arr) =>
-      saved.isSaved(item.slug) &&
-      arr.findIndex((x) => x.slug === item.slug) === i,
+  const [catalog, setCatalog] = useState<FeedItem[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchCatalogFeed().then((feed) => {
+      if (cancelled || !feed) return;
+      setCatalog(flattenFeedItems(feed));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const items = useMemo(
+    () => catalog.filter((item) => saved.slugs.includes(item.slug)),
+    [catalog, saved.slugs],
   );
 
   return (
@@ -27,7 +39,8 @@ export function SavedScreen() {
         <header className={styles.header}>
           <h1 className={styles.title}>Saved</h1>
           <p className={styles.lead}>
-            Things you marked for later. We&apos;ll tell you when the price drops.
+            Things you marked for later. We&apos;ll tell you when the price
+            drops.
           </p>
         </header>
 

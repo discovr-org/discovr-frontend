@@ -6,10 +6,15 @@ import {
   sampleListings,
   type SampleListing,
 } from "@/features/experience/utils/sampleExperience";
-import type { Experience, ScreenState } from "@/types/experience";
+import type { ScreenState } from "@/types/experience";
 import detailStyles from "@/features/experience/components/ExperienceDetail.module.css";
 import { ExperienceDetailSkeleton } from "@/shared/components/Skeleton";
-import { fetchCatalogExperience } from "@/shared/utils/catalogApi";
+import {
+  fetchCatalogExperience,
+  fetchCatalogFeed,
+  flattenFeedItems,
+} from "@/shared/utils/catalogApi";
+import { hasApiBaseUrl } from "@/shared/utils/apiBase";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -18,18 +23,13 @@ type PageProps = {
 
 const STATES: ScreenState[] = ["populated", "loading", "offline", "error"];
 
+export const dynamic = "force-dynamic";
+
 export function generateStaticParams() {
   return (Object.keys(sampleListings) as SampleListing[]).flatMap((key) => [
     { slug: key },
     { slug: sampleListings[key].slug },
   ]);
-}
-
-function resolveLocal(slug: string): Experience | null {
-  const key = (Object.keys(sampleListings) as SampleListing[]).find(
-    (k) => sampleListings[k].slug === slug || k === slug,
-  );
-  return key ? sampleListings[key] : null;
 }
 
 async function ExperiencePageBody({ params, searchParams }: PageProps) {
@@ -49,13 +49,28 @@ async function ExperiencePageBody({ params, searchParams }: PageProps) {
     return <ExperienceDemo initialState={state} initialListing={listingKey} />;
   }
 
-  const remote = await fetchCatalogExperience(
+  const experience = await fetchCatalogExperience(
     listingKey ? sampleListings[listingKey].slug : slug,
   );
-  const experience = remote ?? resolveLocal(slug);
-  if (!experience) notFound();
 
-  return <ExperienceClient experience={experience} state={state} />;
+  if (!experience) {
+    if (hasApiBaseUrl()) notFound();
+    // No API configured — demo samples only
+    const local = listingKey ? sampleListings[listingKey] : null;
+    if (!local) notFound();
+    return <ExperienceClient experience={local} state={state} />;
+  }
+
+  const feed = await fetchCatalogFeed();
+  const relatedItems = feed ? flattenFeedItems(feed) : [];
+
+  return (
+    <ExperienceClient
+      experience={experience}
+      state={state}
+      relatedItems={relatedItems}
+    />
+  );
 }
 
 export default function ExperiencePage(props: PageProps) {

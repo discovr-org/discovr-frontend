@@ -9,11 +9,7 @@ import {
 } from "@/features/auth/utils/useAuthGate";
 import { googleMapsDirections } from "@/features/experience/utils/schedule";
 import { useScrollChrome } from "@/features/experience/utils/useScrollChrome";
-import {
-  feedSections,
-  priceLabel,
-  type FeedItem,
-} from "@/features/home/utils/feedData";
+import { priceLabel, type FeedItem } from "@/features/home/utils/feedData";
 import { ActionRow } from "@/shared/components/ActionRow";
 import { AppBar } from "@/shared/components/AppBar";
 import { Banner } from "@/shared/components/Banner";
@@ -56,6 +52,8 @@ export interface ExperienceDetailProps {
   /** Persist saves however your app does; the screen only keeps local state. */
   initiallySaved?: boolean;
   onSaveChange?: (saved: boolean) => void;
+  /** Related cards from the catalog feed (API). */
+  relatedItems?: FeedItem[];
 }
 
 /**
@@ -68,6 +66,7 @@ export function ExperienceDetail({
   onRetry,
   initiallySaved = false,
   onSaveChange,
+  relatedItems = [],
 }: ExperienceDetailProps) {
   const router = useRouter();
   const toast = useToast();
@@ -88,7 +87,10 @@ export function ExperienceDetail({
   }, [experience, initiallySaved]);
 
   const saved = experience ? savedSlugs.includes(experience.slug) : false;
-  const related = useMemo(() => relatedFor(experience?.slug), [experience?.slug]);
+  const related = useMemo(() => {
+    if (!experience?.slug) return [];
+    return relatedItems.filter((item) => item.slug !== experience.slug).slice(0, 4);
+  }, [experience?.slug, relatedItems]);
 
   const loading = state === "loading" || !experience;
   const error = state === "error";
@@ -270,22 +272,6 @@ export function ExperienceDetail({
   );
 }
 
-function relatedFor(slug?: string): FeedItem[] {
-  if (!slug) return [];
-  const seen = new Set<string>();
-  const out: FeedItem[] = [];
-  for (const section of feedSections) {
-    for (const item of section.items) {
-      if (item.slug === slug) continue;
-      if (seen.has(item.slug)) continue;
-      seen.add(item.slug);
-      out.push(item);
-      if (out.length >= 4) return out;
-    }
-  }
-  return out;
-}
-
 function Populated({
   experience: x,
   offline,
@@ -305,9 +291,21 @@ function Populated({
   savedSlugs: string[];
   onToggleRelatedSave: (slug: string) => void;
 }) {
+  const content = x.content ?? {};
+  const faqs = (content.faqs ?? []).filter((f) => f.q.trim() || f.a.trim());
+  const mapsHref =
+    content.links?.maps?.url ||
+    googleMapsDirections(x.place.lat, x.place.lng);
+  const menuLink = content.links?.menu;
+  const hasPhotos = x.photos.length > 0;
+
   return (
     <div>
-      <HeroGallery ref={heroRef} photos={x.photos} />
+      {hasPhotos ? (
+        <HeroGallery ref={heroRef} photos={x.photos} />
+      ) : (
+        <HeroPlaceholder ref={heroRef} />
+      )}
 
       <div className={styles.summary}>
         {offline && (
@@ -325,14 +323,16 @@ function Populated({
           askForPrice={x.price.askForPrice}
           place={x.place}
           schedule={x.schedule}
+          hours={x.hours}
           duration={x.duration}
           groupSize={x.groupSize}
+          mapsHref={content.links?.maps?.url}
         />
         <Verdict text={x.verdict} />
         <ActionRow
           hostName={x.host.businessName}
           phone={x.host.phone}
-          directionsHref={googleMapsDirections(x.place.lat, x.place.lng)}
+          directionsHref={mapsHref}
           instagramHandle={x.host.instagramHandle}
           onShare={onShare}
         />
@@ -343,15 +343,55 @@ function Populated({
       <div className={styles.content}>
         <Section title="About">
           <p className="t-body">{x.about}</p>
+          {content.meetingPoint ? (
+            <p className="t-body-sm" style={{ marginTop: "var(--space-3)" }}>
+              Meet at {content.meetingPoint}
+            </p>
+          ) : null}
+          {content.additionalInfo ? (
+            <p className="t-body-sm" style={{ marginTop: "var(--space-3)" }}>
+              {content.additionalInfo}
+            </p>
+          ) : null}
         </Section>
         {x.menu && x.menu.pages.length > 0 && (
           <Section title="Menu">
             <MenuPages pages={x.menu.pages} onOpen={(i) => onOpenMenu(i)} />
           </Section>
         )}
-        <Section title="What's included">
-          <FactList items={includedFacts(x.included)} />
-        </Section>
+        {!x.menu?.pages?.length && menuLink?.url ? (
+          <Section title="Menu">
+            <a
+              className="t-body"
+              href={menuLink.url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {menuLink.label || "Open menu"}
+            </a>
+          </Section>
+        ) : null}
+        {x.included.length > 0 && (
+          <Section title="What's included">
+            <FactList items={includedFacts(x.included)} />
+          </Section>
+        )}
+        {faqs.length > 0 && (
+          <Section title="Good to know">
+            <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+              {faqs.map((f) => (
+                <li key={`${f.q}-${f.a}`} style={{ marginBottom: "var(--space-4)" }}>
+                  <p className="t-title-sm" style={{ margin: 0 }}>
+                    {f.q}
+                  </p>
+                  <p className="t-body" style={{ margin: "var(--space-2) 0 0" }}>
+                    {f.a}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </Section>
+        )}
         <Section title="Your host" id="host">
           <HostRow host={x.host} />
         </Section>

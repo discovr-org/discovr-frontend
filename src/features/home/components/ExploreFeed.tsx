@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   FEED_FILTERS,
-  feedSections as localFeedSections,
   priceLabel,
   type FeedFilter,
   type FeedSection,
@@ -12,41 +11,50 @@ import {
 import styles from "@/features/home/styles/exploreFeed.module.css";
 import { AppShell } from "@/shared/components/AppShell";
 import { Chip } from "@/shared/components/Chip";
+import { EmptyState } from "@/shared/components/EmptyState";
 import { ExperienceCard } from "@/shared/components/ExperienceCard";
-import { MessageIcon, PhoneIcon, SearchIcon } from "@/shared/components/icons";
+import {
+  AlertIcon,
+  MessageIcon,
+  PhoneIcon,
+  SearchIcon,
+} from "@/shared/components/icons";
 import { useToast } from "@/shared/components/Toast";
+import { hasApiBaseUrl } from "@/shared/utils/apiBase";
 import { fetchCatalogFeed } from "@/shared/utils/catalogApi";
 import { DISCOVR_PHONE } from "@/shared/utils/discovrContact";
 import { useSaved } from "@/shared/utils/useSaved";
 
+type LoadState = "loading" | "ready" | "error";
+
 export function ExploreFeed() {
   const [filter, setFilter] = useState<FeedFilter>("Tonight");
-  const [sections, setSections] = useState<FeedSection[]>(localFeedSections);
+  const [sections, setSections] = useState<FeedSection[]>([]);
+  const [loadState, setLoadState] = useState<LoadState>("loading");
   const saved = useSaved();
   const toast = useToast();
 
   useEffect(() => {
     let cancelled = false;
-    fetchCatalogFeed().then((remote) => {
-      if (cancelled || !remote?.length) return;
-      setSections(
-        remote.map((s) => ({
-          id: s.id,
-          title: s.title,
-          density: s.density,
-          items: s.items.map((item) => ({
-            slug: item.slug,
-            title: item.title,
-            placeLabel: item.placeLabel,
-            imageSrc: item.imageSrc,
-            imageAlt: item.imageAlt,
-            blurb: item.blurb,
-            durationLabel: item.durationLabel,
-            priceInr: item.priceInr,
-          })),
-        })),
-      );
-    });
+    if (!hasApiBaseUrl()) {
+      setLoadState("error");
+      return;
+    }
+    setLoadState("loading");
+    fetchCatalogFeed()
+      .then((remote) => {
+        if (cancelled) return;
+        if (!remote?.length) {
+          setSections([]);
+          setLoadState("error");
+          return;
+        }
+        setSections(remote);
+        setLoadState("ready");
+      })
+      .catch(() => {
+        if (!cancelled) setLoadState("error");
+      });
     return () => {
       cancelled = true;
     };
@@ -77,78 +85,99 @@ export function ExploreFeed() {
           ))}
         </div>
 
-        {sections.map((section) => (
-          <section
-            key={section.id}
-            className={styles.section}
-            aria-labelledby={`sec-${section.id}`}
-          >
-            <h2 id={`sec-${section.id}`} className={styles.sectionTitle}>
-              {section.title}
-            </h2>
-            {section.density === "portrait" ? (
-              <div
-                className={styles.rail}
-                role="list"
-                aria-label={`${section.title}, swipe for more`}
+        {loadState === "loading" ? (
+          <p className="t-body-sm" style={{ color: "var(--ink-muted)" }}>
+            Loading tonight&apos;s picks…
+          </p>
+        ) : null}
+
+        {loadState === "error" ? (
+          <EmptyState
+            icon={<AlertIcon />}
+            title="Can't load experiences"
+            text={
+              hasApiBaseUrl()
+                ? "The catalog API didn't answer. Try again in a moment."
+                : "Set NEXT_PUBLIC_API_BASE_URL to your API."
+            }
+            role="alert"
+          />
+        ) : null}
+
+        {loadState === "ready"
+          ? sections.map((section) => (
+              <section
+                key={section.id}
+                className={styles.section}
+                aria-labelledby={`sec-${section.id}`}
               >
-                {section.items.map((item) => (
+                <h2 id={`sec-${section.id}`} className={styles.sectionTitle}>
+                  {section.title}
+                </h2>
+                {section.density === "portrait" ? (
                   <div
-                    key={`${section.id}-${item.slug}-${item.title}`}
-                    role="listitem"
+                    className={styles.rail}
+                    role="list"
+                    aria-label={`${section.title}, swipe for more`}
                   >
-                    <ExperienceCard
-                      density="portrait"
-                      href={`/experiences/${item.slug}`}
-                      title={item.title}
-                      placeLabel={item.placeLabel}
-                      imageSrc={item.imageSrc}
-                      imageAlt={item.imageAlt}
-                      priceLabel={priceLabel(item)}
-                      saved={saved.isSaved(item.slug)}
-                      onToggleSave={() => {
-                        const was = saved.isSaved(item.slug);
-                        saved.toggle(item.slug);
-                        toast(
-                          was
-                            ? "Removed from saved"
-                            : "Saved. Send it to your group from Saved.",
-                        );
-                      }}
-                    />
+                    {section.items.map((item) => (
+                      <div
+                        key={`${section.id}-${item.slug}-${item.title}`}
+                        role="listitem"
+                      >
+                        <ExperienceCard
+                          density="portrait"
+                          href={`/experiences/${item.slug}`}
+                          title={item.title}
+                          placeLabel={item.placeLabel}
+                          imageSrc={item.imageSrc}
+                          imageAlt={item.imageAlt}
+                          priceLabel={priceLabel(item)}
+                          saved={saved.isSaved(item.slug)}
+                          onToggleSave={() => {
+                            const was = saved.isSaved(item.slug);
+                            saved.toggle(item.slug);
+                            toast(
+                              was
+                                ? "Removed from saved"
+                                : "Saved. Send it to your group from Saved.",
+                            );
+                          }}
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className={styles.stack}>
-                {section.items.map((item) => (
-                  <ExperienceCard
-                    key={`${section.id}-${item.slug}-${item.title}`}
-                    density="landscape"
-                    href={`/experiences/${item.slug}`}
-                    title={item.title}
-                    placeLabel={item.placeLabel}
-                    imageSrc={item.imageSrc}
-                    imageAlt={item.imageAlt}
-                    blurb={item.blurb}
-                    durationLabel={item.durationLabel}
-                    priceLabel={priceLabel(item)}
-                    saved={saved.isSaved(item.slug)}
-                    onToggleSave={() => {
-                      const was = saved.isSaved(item.slug);
-                      saved.toggle(item.slug);
-                      toast(
-                        was
-                          ? "Removed from saved"
-                          : "Saved. Send it to your group from Saved.",
-                      );
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        ))}
+                ) : (
+                  <div className={styles.stack}>
+                    {section.items.map((item) => (
+                      <ExperienceCard
+                        key={`${section.id}-${item.slug}-${item.title}`}
+                        density="landscape"
+                        href={`/experiences/${item.slug}`}
+                        title={item.title}
+                        placeLabel={item.placeLabel}
+                        imageSrc={item.imageSrc}
+                        imageAlt={item.imageAlt}
+                        blurb={item.blurb}
+                        durationLabel={item.durationLabel}
+                        priceLabel={priceLabel(item)}
+                        saved={saved.isSaved(item.slug)}
+                        onToggleSave={() => {
+                          const was = saved.isSaved(item.slug);
+                          saved.toggle(item.slug);
+                          toast(
+                            was
+                              ? "Removed from saved"
+                              : "Saved. Send it to your group from Saved.",
+                          );
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            ))
+          : null}
 
         <footer className={styles.promo}>
           <h2 className={styles.promoTitle}>

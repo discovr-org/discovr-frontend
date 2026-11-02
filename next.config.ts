@@ -6,8 +6,14 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "imagedelivery.net", pathname: "/**" },
+      { protocol: "https", hostname: "*.supabase.co", pathname: "/**" },
+    ],
+  },
   experimental: {
-    useOffline: true,
+    useCache: true,
   },
 };
 

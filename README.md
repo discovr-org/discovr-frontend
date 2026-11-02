@@ -5,11 +5,24 @@ Dark-only, mobile-first web app. Eight things worth doing tonight in Goa.
 ## Run
 
 ```bash
+cp .env.example .env.local
+# edit NEXT_PUBLIC_API_BASE_URL if needed
 npm install
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+## API base URL
+
+All catalog calls use `NEXT_PUBLIC_API_BASE_URL` (see `src/shared/utils/apiBase.ts`).
+
+| Where | What to set |
+| --- | --- |
+| Local | `.env.local` → `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8080` |
+| Vercel / host | Project env → same key, value = your Render API URL (e.g. `https://….onrender.com`) |
+
+Must be set at **build** time for Next (`NEXT_PUBLIC_*`). No trailing slash.
 
 ## PWA
 

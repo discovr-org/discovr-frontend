@@ -49,14 +49,23 @@ export function ExperienceCard({
     <article className={[styles.card, styles[density]].join(" ")}>
       <Link href={href} className={styles.mediaLink}>
         <div className={`${styles.media} photo-lift`}>
-          <Image
-            src={imageSrc}
-            alt={imageAlt}
-            fill
-            sizes={density === "portrait" ? "268px" : "(max-width: 480px) 100vw, 480px"}
-            priority={priority}
-            className={styles.img}
-          />
+          {imageSrc ? (
+            <Image
+              src={imageSrc}
+              alt={imageAlt}
+              fill
+              sizes={
+                density === "portrait"
+                  ? "268px"
+                  : "(max-width: 480px) 100vw, 480px"
+              }
+              priority={priority}
+              className={styles.img}
+              unoptimized={imageSrc.startsWith("http")}
+            />
+          ) : (
+            <div className={styles.img} aria-hidden />
+          )}
           {onToggleSave && (
             <button
               type="button"

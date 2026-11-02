@@ -26,7 +26,52 @@ export interface Experience {
   policy?: Policy;
   /** Reviews for the detail screen. Most recent first. */
   reviews?: ExperienceReviews;
+  /** Venue / sheet hours when the API stores ListingSchedule instead of a week grid. */
+  hours?: ListingHours;
+  tags?: string[];
+  content?: ExperienceContent;
 }
+
+export type ListingHours = {
+  days?: string;
+  timeSlot?: string;
+  bestTime?: string;
+  ageGroup?: string;
+  minPeople?: string;
+  durationLabel?: string;
+};
+
+export type ContentLink = { label: string; url: string };
+
+/** Extra sheet fields from the catalog API. */
+export type ExperienceContent = {
+  aka?: string;
+  locationLabel?: string;
+  priceNarrative?: string;
+  priceUnit?: string;
+  meetingPoint?: string;
+  droppingPoint?: string;
+  durationLabel?: string;
+  additionalInfo?: string;
+  termsDetail?: string;
+  whatToCarry?: string;
+  included?: string[];
+  notIncluded?: string[];
+  phones?: string[];
+  languages?: string[];
+  maxPeople?: string;
+  distance?: string;
+  difficulty?: string;
+  tagsOnDisplay?: string[];
+  faqs?: Array<{ q: string; a: string }>;
+  links?: {
+    maps?: ContentLink;
+    book?: ContentLink;
+    whatsapp?: ContentLink;
+    instagram?: ContentLink;
+    menu?: ContentLink;
+  };
+};
 
 export interface ExperienceReviews {
   average: number;
