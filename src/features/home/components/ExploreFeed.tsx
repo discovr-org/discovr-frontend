@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   FEED_FILTERS,
@@ -22,7 +22,7 @@ import {
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { useToast } from "@/shared/components/Toast";
 import { hasApiBaseUrl } from "@/shared/utils/apiBase";
-import { fetchCatalogFeed } from "@/shared/utils/catalogApi";
+import { fetchCatalogFeed, flattenFeedItems } from "@/shared/utils/catalogApi";
 import { DISCOVR_PHONE } from "@/shared/utils/discovrContact";
 import { useSaved } from "@/shared/utils/useSaved";
 
@@ -30,6 +30,7 @@ type LoadState = "loading" | "ready" | "error";
 
 export function ExploreFeed() {
   const [filter, setFilter] = useState<FeedFilter>("Tonight");
+  const [query, setQuery] = useState("");
   const [sections, setSections] = useState<FeedSection[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const saved = useSaved();
@@ -73,6 +74,18 @@ export function ExploreFeed() {
     };
   }, []);
 
+  const needle = query.trim().toLowerCase();
+  const searching = needle.length > 0;
+
+  const searchResults = useMemo(() => {
+    if (!searching) return [];
+    return flattenFeedItems(sections).filter((item) => {
+      const hay =
+        `${item.title} ${item.placeLabel} ${item.blurb ?? ""}`.toLowerCase();
+      return hay.includes(needle);
+    });
+  }, [needle, searching, sections]);
+
   return (
     <AppShell current="explore" savedDot={saved.hasAny}>
       <div className={styles.page}>
@@ -81,22 +94,33 @@ export function ExploreFeed() {
           <p className={styles.tagline}>Goa, from people who know where to go</p>
         </header>
 
-        <Link href="/search" className={styles.search}>
+        <label className={styles.search}>
           <SearchIcon />
-          <span>Search Goa</span>
-        </Link>
+          <span className="vh">Search Goa</span>
+          <input
+            className={styles.searchInput}
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search Goa"
+            enterKeyHint="search"
+            autoComplete="off"
+          />
+        </label>
 
-        <div className={styles.filters} role="group" aria-label="Filters">
-          {FEED_FILTERS.map((f) => (
-            <Chip
-              key={f}
-              selected={filter === f}
-              onClick={() => setFilter(f)}
-            >
-              {f}
-            </Chip>
-          ))}
-        </div>
+        {!searching ? (
+          <div className={styles.filters} role="group" aria-label="Filters">
+            {FEED_FILTERS.map((f) => (
+              <Chip
+                key={f}
+                selected={filter === f}
+                onClick={() => setFilter(f)}
+              >
+                {f}
+              </Chip>
+            ))}
+          </div>
+        ) : null}
 
         {loadState === "loading" ? (
           <p className="t-body-sm" style={{ color: "var(--ink-muted)" }}>
@@ -117,7 +141,35 @@ export function ExploreFeed() {
           />
         ) : null}
 
-        {loadState === "ready"
+        {loadState === "ready" && searching ? (
+          searchResults.length === 0 ? (
+            <p className={styles.searchEmpty}>
+              Nothing matched. Try a place name, or clear search for tonight&apos;s
+              shortlist.
+            </p>
+          ) : (
+            <div className={styles.stack}>
+              {searchResults.map((item) => (
+                <ExperienceCard
+                  key={item.slug}
+                  density="landscape"
+                  href={`/experiences/${item.slug}`}
+                  title={item.title}
+                  placeLabel={item.placeLabel}
+                  imageSrc={item.imageSrc}
+                  imageAlt={item.imageAlt}
+                  blurb={item.blurb}
+                  durationLabel={item.durationLabel}
+                  priceLabel={priceLabel(item)}
+                  saved={saved.isSaved(item.slug)}
+                  onToggleSave={() => onToggleSave(item.slug)}
+                />
+              ))}
+            </div>
+          )
+        ) : null}
+
+        {loadState === "ready" && !searching
           ? sections.map((section) => (
               <section
                 key={section.id}

@@ -66,7 +66,7 @@ export function ExperienceCard({
           ) : (
             <div className={styles.img} aria-hidden />
           )}
-          {onToggleSave && density === "portrait" && (
+          {onToggleSave && (
             <button
               type="button"
               className={styles.save}
@@ -97,20 +97,11 @@ export function ExperienceCard({
             {blurb && <p className={styles.blurb}>{blurb}</p>}
             {meta && <p className={styles.meta}>{meta}</p>}
           </Link>
-          <div className={styles.footer}>
-            {priceLabel && <span className={styles.price}>{priceLabel}</span>}
-            {onToggleSave && (
-              <button
-                type="button"
-                className={styles.saveInline}
-                aria-label={saved ? "Remove from saved" : "Save this experience"}
-                aria-pressed={saved}
-                onClick={onToggleSave}
-              >
-                <HeartIcon />
-              </button>
-            )}
-          </div>
+          {priceLabel ? (
+            <div className={styles.footer}>
+              <span className={styles.price}>{priceLabel}</span>
+            </div>
+          ) : null}
         </div>
       )}
     </article>

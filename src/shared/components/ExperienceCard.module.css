@@ -66,14 +66,12 @@
   outline-offset: var(--focus-offset);
 }
 
-.save svg,
-.saveInline svg {
+.save svg {
   width: var(--size-icon-md);
   height: var(--size-icon-md);
 }
 
-.save[aria-pressed="true"] svg,
-.saveInline[aria-pressed="true"] svg {
+.save[aria-pressed="true"] svg {
   fill: currentColor;
 }
 
@@ -156,7 +154,6 @@
 .footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-3);
 }
 
@@ -166,26 +163,4 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--ink-primary);
-}
-
-.saveInline {
-  width: var(--size-control-md);
-  height: var(--size-control-md);
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--ink-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.saveInline[aria-pressed="true"] {
-  color: var(--accent-pink);
-}
-
-.saveInline:focus-visible {
-  outline: var(--border-focus) solid var(--focus-ring);
-  outline-offset: var(--focus-offset);
 }
