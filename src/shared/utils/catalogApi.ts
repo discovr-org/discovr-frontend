@@ -96,6 +96,13 @@ export function mapApiExperience(raw: ApiExperience): Experience {
       ? raw.included
       : includedFromContent(content);
 
+  const taxes =
+    content.taxes === "extra" || content.taxes === "inclusive"
+      ? content.taxes
+      : raw.price?.taxes === "extra" || raw.price?.taxes === "inclusive"
+        ? raw.price.taxes
+        : "inclusive";
+
   return {
     slug: raw.slug,
     title: raw.title,
@@ -107,7 +114,10 @@ export function mapApiExperience(raw: ApiExperience): Experience {
     },
     photos: raw.photos ?? [],
     verdict: raw.verdict,
-    price: raw.price,
+    price: {
+      ...raw.price,
+      taxes,
+    },
     place: {
       name: raw.place.name,
       lat: raw.place.lat,

@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/features/auth/components/AuthProvider";
+import { isVenueListing } from "@/features/experience/utils/listingKind";
 import { googleMapsDirections } from "@/features/experience/utils/schedule";
 import { useScrollChrome } from "@/features/experience/utils/useScrollChrome";
 import { priceLabel, type FeedItem } from "@/features/home/utils/feedData";
@@ -220,9 +221,9 @@ export function ExperienceDetail({
         <BookingBar
           priceFrom={experience.price.fromAmount}
           askForPrice={experience.price.askForPrice}
+          taxes={experience.price.taxes ?? "inclusive"}
           phone={experience.host.phone}
           hostBusinessName={experience.host.businessName}
-          hostPersonName={experience.host.personName}
           lifted={chrome.tabShown}
           hidden={error}
           onCallToBook={onCallToBook}
@@ -291,13 +292,14 @@ function Populated({
         <TitleBlock title={x.title} hostName={x.host.businessName} />
         <InfoList
           priceFrom={x.price.fromAmount}
-          paidTo={x.price.paidTo}
           askForPrice={x.price.askForPrice}
+          taxes={x.price.taxes ?? "inclusive"}
           place={x.place}
           schedule={x.schedule}
           hours={x.hours}
           duration={x.duration}
           groupSize={x.groupSize}
+          venue={isVenueListing(x)}
           mapsHref={content.links?.maps?.url}
         />
         <Verdict text={x.verdict} />
@@ -344,7 +346,7 @@ function Populated({
           </Section>
         ) : null}
         {x.included.length > 0 && (
-          <Section title="What's included">
+          <Section id="included">
             <FactList items={includedFacts(x.included)} />
           </Section>
         )}
@@ -364,6 +366,13 @@ function Populated({
             </ul>
           </Section>
         )}
+        {x.policy && (
+          <PolicyDisclosure
+            key={x.slug}
+            policy={x.policy}
+            hostName={x.host.businessName}
+          />
+        )}
         <Section title="Your host" id="host">
           <HostRow host={x.host} />
         </Section>
@@ -378,11 +387,13 @@ function Populated({
             }}
           />
         )}
-        {x.policy && <PolicyDisclosure key={x.slug} policy={x.policy} />}
-        <Disclaimer hostName={x.host.businessName} />
+        <Disclaimer
+          hostName={x.host.businessName}
+          credit={x.host.credit ?? "hosted"}
+        />
 
         {related.length > 0 && (
-          <Section title="Also worth a look">
+          <Section title="More in Goa">
             <div className={styles.related}>
               {related.map((item) => (
                 <ExperienceCard

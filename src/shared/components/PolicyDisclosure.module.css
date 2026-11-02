@@ -121,3 +121,10 @@
   border-radius: var(--radius-pill);
   background: var(--ink-subtle);
 }
+
+.finalNote {
+  margin: var(--space-3) 0 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ink-muted);
+}

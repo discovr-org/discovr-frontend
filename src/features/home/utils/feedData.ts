@@ -9,6 +9,7 @@ export type FeedItem = {
   blurb?: string;
   durationLabel?: string;
   priceInr?: number;
+  /** e.g. "+ taxes" */
   priceSuffix?: string;
 };
 

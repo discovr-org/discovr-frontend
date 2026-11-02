@@ -1,4 +1,4 @@
-import type { Host } from "@/types/experience";
+import type { Host, HostCredit } from "@/types/experience";
 import { Avatar } from "./Avatar";
 import styles from "./HostRow.module.css";
 
@@ -6,11 +6,18 @@ export interface HostRowProps {
   host: Host;
 }
 
+const CREDIT_LABEL: Record<HostCredit, string> = {
+  hosted: "Hosted by",
+  run: "Run by",
+  owned: "Owned by",
+};
+
 /**
- * Host card on the detail screen: avatar + "Hosted by …" + verified / handle / languages.
- * The whole row is the target — the avatar is not a button on its own.
+ * Host card on the detail screen: avatar + credit + business name + meta.
+ * Credit is run by / hosted by / owned by (set in admin).
  */
 export function HostRow({ host }: HostRowProps) {
+  const credit = host.credit ?? "hosted";
   const sub = [
     host.verified ? "Verified" : null,
     host.experienceCount != null
@@ -25,13 +32,15 @@ export function HostRow({ host }: HostRowProps) {
   return (
     <div className={styles.row}>
       <Avatar
-        name={host.personName}
+        name={host.businessName}
         src={host.avatar?.src}
         size="md"
         verified={host.verified}
       />
       <div>
-        <div className={styles.name}>Hosted by {host.personName}</div>
+        <div className={styles.name}>
+          {CREDIT_LABEL[credit]} {host.businessName}
+        </div>
         {sub ? <div className={styles.sub}>{sub}</div> : null}
       </div>
     </div>

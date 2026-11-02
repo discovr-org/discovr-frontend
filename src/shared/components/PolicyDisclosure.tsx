@@ -14,10 +14,14 @@ export interface Policy {
   booking: string[];
   /** 3 to 4 short pointers: the free window, what happens after it, when the host cancels. */
   cancellation: string[];
+  /** Guest note under the card: "Check the final terms on {host} before paying." */
+  showFinalTermsNote?: boolean;
 }
 
 export interface PolicyDisclosureProps {
   policy: Policy;
+  /** Used in the final-terms note under the card. */
+  hostName: string;
   /** Closed by default. Render with `key={experience.slug}` so it closes again when the listing changes. */
   defaultOpen?: boolean;
 }
@@ -28,9 +32,14 @@ export interface PolicyDisclosureProps {
  * "Booking policy" group and a "Cancellation policy" group of dotted pointers.
  * Opens instantly (no height animation); only the chevron turns.
  */
-export function PolicyDisclosure({ policy, defaultOpen = false }: PolicyDisclosureProps) {
+export function PolicyDisclosure({
+  policy,
+  hostName,
+  defaultOpen = false,
+}: PolicyDisclosureProps) {
   const [open, setOpen] = useState(defaultOpen);
   const bodyId = useId();
+  const showNote = policy.showFinalTermsNote !== false;
 
   return (
     <section aria-label="Booking and cancellation policy">
@@ -56,6 +65,11 @@ export function PolicyDisclosure({ policy, defaultOpen = false }: PolicyDisclosu
           <PolicyGroup title="Cancellation policy" items={policy.cancellation} />
         </div>
       </div>
+      {showNote ? (
+        <p className={styles.finalNote}>
+          Check the final terms on {hostName} before paying.
+        </p>
+      ) : null}
     </section>
   );
 }

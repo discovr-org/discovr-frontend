@@ -10,10 +10,11 @@ export interface BookingBarProps {
   priceFrom: number;
   /** Venue listings with no published tariff. */
   askForPrice?: boolean;
+  /** "+ taxes" vs "inclusive of taxes" under the price. */
+  taxes?: "extra" | "inclusive";
   /** E.164 phone the CTA dials when no `onCallToBook` is passed. */
   phone: string;
   hostBusinessName: string;
-  hostPersonName: string;
   /** true while the TabBar is showing: the bar moves up and sits on top of it. */
   lifted: boolean;
   hidden?: boolean;
@@ -31,9 +32,9 @@ export interface BookingBarProps {
 export function BookingBar({
   priceFrom,
   askForPrice,
+  taxes = "inclusive",
   phone,
   hostBusinessName,
-  hostPersonName,
   lifted,
   hidden,
   onCallToBook,
@@ -73,7 +74,10 @@ export function BookingBar({
           ) : (
             <>
               <span className="t-price">From {rupees(priceFrom)}</span>
-              <span className={styles.per}>per person</span>
+              <span className={styles.per}>
+                per person ·{" "}
+                {taxes === "extra" ? "+ taxes" : "inclusive of taxes"}
+              </span>
             </>
           )}
         </div>
@@ -88,7 +92,7 @@ export function BookingBar({
         )}
       </div>
       <span className={styles.note}>
-        You&apos;ll speak to {hostPersonName} at {hostBusinessName} directly.
+        You&apos;ll speak to {hostBusinessName} directly.
       </span>
     </footer>
   );

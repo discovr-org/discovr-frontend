@@ -49,6 +49,10 @@ export type ExperienceContent = {
   locationLabel?: string;
   priceNarrative?: string;
   priceUnit?: string;
+  /** "+ taxes" vs "inclusive of taxes" on the guest price line. */
+  taxes?: PriceTaxes;
+  /** trip = schedule + people; venue = bar/restaurant (no trip times / people). */
+  format?: "trip" | "venue";
   meetingPoint?: string;
   droppingPoint?: string;
   durationLabel?: string;
@@ -107,6 +111,9 @@ export interface MenuPage {
   alt: string;
 }
 
+/** How we credit the place on the detail screen. */
+export type HostCredit = "hosted" | "run" | "owned";
+
 export interface Host {
   /** Business name shown in the byline, e.g. "Mangrove Trails" */
   businessName: string;
@@ -123,6 +130,8 @@ export interface Host {
   experienceCount?: number;
   /** e.g. ["Konkani", "Hindi", "English"] */
   languages: string[];
+  /** "Hosted by" / "Run by" / "Owned by". Defaults to hosted. */
+  credit?: HostCredit;
 }
 
 export interface Photo {
@@ -131,16 +140,21 @@ export interface Photo {
   alt: string;
 }
 
+/** How taxes sit next to the listed price. */
+export type PriceTaxes = "extra" | "inclusive";
+
 export interface Price {
-  /** Lowest per-person price in rupees, all-in. Ignored when askForPrice is true. */
+  /** Lowest per-person price in rupees. Ignored when askForPrice is true. */
   fromAmount: number;
-  /** Who gets paid, shown next to the price in the key details. */
-  paidTo: string; // e.g. "paid to the host"
+  /** Kept for API compat; not shown on guest UI. */
+  paidTo: string;
   /**
    * Venue / walk-in listings with no published tariff.
    * BookingBar says "Ask for the price" and Call dials the host.
    */
   askForPrice?: boolean;
+  /** "+ taxes" vs "inclusive of taxes". Defaults to inclusive. */
+  taxes?: PriceTaxes;
 }
 
 export interface Place {

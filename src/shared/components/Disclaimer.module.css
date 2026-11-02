@@ -1,3 +1,9 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
 .box {
   display: flex;
   flex-direction: column;
@@ -7,18 +13,35 @@
   background: var(--surface-raised);
 }
 
-.text,
-.links {
+.text {
   margin: 0;
   font-size: 13px;
   line-height: 19px;
   color: var(--ink-muted);
 }
 
+.footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-5);
+}
+
 .link {
   color: var(--ink-primary);
   text-decoration: underline;
   text-underline-offset: 2px;
+  font-size: 13px;
+  line-height: 19px;
+}
+
+.footer .link {
+  flex: 1 1 0;
+  max-width: 48%;
+}
+
+.footer .link:last-child {
+  text-align: right;
 }
 
 .link:focus-visible {
