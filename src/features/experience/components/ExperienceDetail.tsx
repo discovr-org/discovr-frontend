@@ -271,6 +271,10 @@ function Populated({
     googleMapsDirections(x.place.lat, x.place.lng);
   const menuLink = content.links?.menu;
   const hasPhotos = x.photos.length > 0;
+  const venue = isVenueListing(x);
+  const instagramHandle =
+    x.host.instagramHandle?.trim() ||
+    instagramHandleFromUrl(content.links?.instagram?.url);
 
   return (
     <div>
@@ -299,15 +303,15 @@ function Populated({
           hours={x.hours}
           duration={x.duration}
           groupSize={x.groupSize}
-          venue={isVenueListing(x)}
+          venue={venue}
           mapsHref={content.links?.maps?.url}
         />
-        <Verdict text={x.verdict} />
+        <Verdict text={x.verdict} label={venue ? null : "Our verdict"} />
         <ActionRow
           hostName={x.host.businessName}
           phone={x.host.phone}
           directionsHref={mapsHref}
-          instagramHandle={x.host.instagramHandle}
+          instagramHandle={instagramHandle}
           onShare={onShare}
         />
       </div>
@@ -415,4 +419,19 @@ function Populated({
       </div>
     </div>
   );
+}
+
+/** Pull @handle from an Instagram profile URL when the host row has none. */
+function instagramHandleFromUrl(url: string | undefined): string | undefined {
+  if (!url?.trim()) return undefined;
+  try {
+    const path = new URL(url).pathname.replace(/^\/+|\/+$/g, "");
+    const handle = path.split("/")[0]?.replace(/^@/, "");
+    if (!handle || handle === "p" || handle === "reel" || handle === "stories") {
+      return undefined;
+    }
+    return handle;
+  } catch {
+    return undefined;
+  }
 }

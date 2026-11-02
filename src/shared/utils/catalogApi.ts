@@ -33,7 +33,13 @@ type ApiExperience = {
   photos: Experience["photos"];
   verdict: string;
   price: Experience["price"];
-  place: { name: string; lat: number; lng: number; distance?: string };
+  place: {
+    name: string;
+    neighborhood?: string;
+    lat: number;
+    lng: number;
+    distance?: string;
+  };
   schedule?: WeekSchedule | ListingHours | Record<string, unknown>;
   duration: string;
   groupSize: string;
@@ -120,6 +126,10 @@ export function mapApiExperience(raw: ApiExperience): Experience {
     },
     place: {
       name: raw.place.name,
+      neighborhood:
+        raw.place.neighborhood?.trim() ||
+        content.locationLabel?.trim() ||
+        undefined,
       lat: raw.place.lat,
       lng: raw.place.lng,
       distance: raw.place.distance || content.distance || undefined,

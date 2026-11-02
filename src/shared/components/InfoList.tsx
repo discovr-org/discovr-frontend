@@ -10,6 +10,7 @@ import {
   summarise,
   todayIndex,
 } from "@/features/experience/utils/schedule";
+import { venueHoursStatus } from "@/features/experience/utils/venueHours";
 import {
   ArrowUpRightIcon,
   ChevronDownIcon,
@@ -32,7 +33,7 @@ export interface InfoListProps {
   hours?: ListingHours;
   duration: string;
   groupSize: string;
-  /** Bars/venues: hide trip schedule and people row. */
+  /** Bars/venues: hide price + people; open/closed hours instead of trips. */
   venue?: boolean;
   /** IANA timezone used to decide which day is "today". Defaults to India. */
   timeZone?: string;
@@ -44,11 +45,6 @@ const Sep = () => (
     |
   </span>
 );
-
-function hoursLine(hours: ListingHours): string {
-  const parts = [hours.days, hours.timeSlot].filter(Boolean);
-  return parts.join(" · ") || hours.bestTime || "Hours on request";
-}
 
 /** Price, place, times (week grid or venue hours), duration and group size. */
 export function InfoList({
@@ -71,32 +67,48 @@ export function InfoList({
     hours?.days || hours?.timeSlot || hours?.bestTime,
   );
   const hasTripTimes = WEEK.some((d) => (schedule[d] ?? []).length > 0);
-  const useHours = hasVenueHours && (!hasTripTimes || venue);
+  const useHours = venue || (hasVenueHours && !hasTripTimes);
   const showTripSchedule = !venue && !useHours;
+  const showPrice = !venue;
   const showPeople = !venue;
   const summary = showTripSchedule ? summarise(schedule, today) : null;
+  const openClosed = useHours
+    ? venueHoursStatus(hours?.timeSlot, timeZone)
+    : null;
   const pinHref = mapsHref || googleMapsPin(place.lat, place.lng);
-  const placeLabel = `${place.name}${place.distance ? `, ${place.distance}` : ""}. Open in Google Maps`;
+  const placeName =
+    venue && place.neighborhood?.trim()
+      ? place.neighborhood.trim()
+      : place.name;
+  const placeLabel = `${placeName}${place.distance ? `, ${place.distance}` : ""}. Open in Google Maps`;
   const peopleLine = durationPeopleLine(duration, groupSize);
+
+  const hoursDetail = [
+    hours?.days,
+    hours?.timeSlot,
+    hours?.bestTime ? `Best: ${hours.bestTime}` : null,
+  ].filter(Boolean) as string[];
 
   return (
     <ul className={styles.list} aria-label="Key details">
-      <li className={styles.row}>
-        <RupeeIcon />
-        <span className={styles.text}>
-          {askForPrice ? (
-            "Ask for the price"
-          ) : (
-            <>
-              From {rupees(priceFrom)} per person
-              <Sep />
-              <span className={styles.muted}>
-                {taxes === "extra" ? "+ taxes" : "inclusive of taxes"}
-              </span>
-            </>
-          )}
-        </span>
-      </li>
+      {showPrice ? (
+        <li className={styles.row}>
+          <RupeeIcon />
+          <span className={styles.text}>
+            {askForPrice ? (
+              "Ask for the price"
+            ) : (
+              <>
+                From {rupees(priceFrom)} per person
+                <Sep />
+                <span className={styles.muted}>
+                  {taxes === "extra" ? "+ taxes" : "inclusive of taxes"}
+                </span>
+              </>
+            )}
+          </span>
+        </li>
+      ) : null}
 
       <li>
         <a
@@ -108,7 +120,7 @@ export function InfoList({
         >
           <PinIcon />
           <span className={styles.text}>
-            <span className={styles.place}>{place.name}</span>
+            <span className={styles.place}>{placeName}</span>
             {place.distance && (
               <>
                 <Sep />
@@ -120,10 +132,78 @@ export function InfoList({
         </a>
       </li>
 
-      {useHours && hours ? (
-        <li className={styles.row}>
-          <ClockIcon />
-          <span className={styles.text}>{hoursLine(hours)}</span>
+      {useHours && openClosed ? (
+        <li>
+          <button
+            type="button"
+            className={styles.toggle}
+            aria-expanded={open}
+            aria-controls={weekId}
+            onClick={() => setOpen((o) => !o)}
+          >
+            <ClockIcon />
+            <span className={styles.text}>
+              <span
+                className={openClosed.open ? styles.positive : styles.critical}
+              >
+                {openClosed.status}
+              </span>
+              <Sep />
+              {openClosed.hours}
+            </span>
+            <ChevronDownIcon className={styles.chev} />
+          </button>
+          {hoursDetail.length > 0 ? (
+            <ul
+              className={styles.week}
+              id={weekId}
+              hidden={!open}
+              aria-label="Opening hours"
+            >
+              {hoursDetail.map((line) => (
+                <li key={line} className={styles.day}>
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </li>
+      ) : null}
+
+      {useHours && !openClosed && hours ? (
+        <li>
+          <button
+            type="button"
+            className={styles.toggle}
+            aria-expanded={open}
+            aria-controls={weekId}
+            onClick={() => setOpen((o) => !o)}
+            disabled={hoursDetail.length === 0}
+          >
+            <ClockIcon />
+            <span className={styles.text}>
+              {[hours.days, hours.timeSlot].filter(Boolean).join(" · ") ||
+                hours.bestTime ||
+                "Hours on request"}
+            </span>
+            {hoursDetail.length > 0 ? (
+              <ChevronDownIcon className={styles.chev} />
+            ) : null}
+          </button>
+          {hoursDetail.length > 0 ? (
+            <ul
+              className={styles.week}
+              id={weekId}
+              hidden={!open}
+              aria-label="Opening hours"
+            >
+              {hoursDetail.map((line) => (
+                <li key={line} className={styles.day}>
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </li>
       ) : null}
 

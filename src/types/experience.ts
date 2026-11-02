@@ -160,6 +160,8 @@ export interface Price {
 export interface Place {
   /** e.g. "Siolim jetty, North Goa" */
   name: string;
+  /** Area line for venues, e.g. "Assagao, North End". */
+  neighborhood?: string;
   /** Exact pin. Opened in Google Maps from the key details and the Directions tile. */
   lat: number;
   lng: number;
