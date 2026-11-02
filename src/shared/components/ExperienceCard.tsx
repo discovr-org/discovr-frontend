@@ -66,7 +66,7 @@ export function ExperienceCard({
           ) : (
             <div className={styles.img} aria-hidden />
           )}
-          {onToggleSave && (
+          {onToggleSave && density === "portrait" && (
             <button
               type="button"
               className={styles.save}
