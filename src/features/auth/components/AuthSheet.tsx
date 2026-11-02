@@ -108,7 +108,8 @@ export function AuthSheet({
   const [checking, setChecking] = useState(false);
   const [otpFocused, setOtpFocused] = useState(false);
   const [resendAt, setResendAt] = useState(0);
-  const [now, setNow] = useState(() => Date.now());
+  // 0 until mount / send — Date.now() in useState breaks cacheComponents prerender.
+  const [now, setNow] = useState(0);
 
   // Swipe to dismiss and keyboard offset
   const [dragY, setDragY] = useState(0);

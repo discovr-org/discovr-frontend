@@ -17,8 +17,6 @@ type PageProps = {
 
 const STATES: ScreenState[] = ["populated", "loading", "offline", "error"];
 
-export const dynamic = "force-dynamic";
-
 async function ExperiencePageBody({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const query = await searchParams;
