@@ -41,7 +41,10 @@ export function ExploreFeed() {
   const onToggleSave = (slug: string) => {
     const was = saved.isSaved(slug);
     saved.toggle(slug);
-    if (!was && !auth.user) auth.openAuth("save");
+    if (!was && !auth.user) {
+      auth.openAuth("save");
+      return;
+    }
     toast(
       was
         ? "Removed from saved"

@@ -92,6 +92,8 @@ export function ExperienceDetail({
       if (has !== v) savedStore.toggle(experience.slug);
       onSaveChange?.(v);
       if (silent) return;
+      // Guests only get the signup sheet — no "Saved" toast on top.
+      if (v && !auth.user) return;
       if (v) {
         toast("Saved. Send it to your group from Saved.", {
           onUndo: () => setSavedAndNotify(false, true),
@@ -100,7 +102,7 @@ export function ExperienceDetail({
         toast("Removed from saved");
       }
     },
-    [experience, onSaveChange, savedStore, toast],
+    [auth.user, experience, onSaveChange, savedStore, toast],
   );
 
   const dialHost = useCallback(() => {
@@ -192,7 +194,10 @@ export function ExperienceDetail({
               savedSlugs={savedStore.slugs}
               onToggleRelatedSave={(slug) => {
                 const nowSaved = savedStore.toggle(slug);
-                if (nowSaved && !auth.user) auth.openAuth("save");
+                if (nowSaved && !auth.user) {
+                  auth.openAuth("save");
+                  return;
+                }
                 toast(
                   nowSaved
                     ? "Saved. Send it to your group from Saved."

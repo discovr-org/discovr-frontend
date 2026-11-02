@@ -81,7 +81,10 @@ export function SearchScreen() {
               onToggleSave={() => {
                 const was = saved.isSaved(item.slug);
                 saved.toggle(item.slug);
-                if (!was && !auth.user) auth.openAuth("save");
+                if (!was && !auth.user) {
+                  auth.openAuth("save");
+                  return;
+                }
                 toast(
                   was
                     ? "Removed from saved"
