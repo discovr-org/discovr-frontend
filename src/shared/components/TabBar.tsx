@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { MouseEvent } from "react";
 import { CompassIcon, HeartIcon, MessageIcon, UserIcon } from "./icons";
 import styles from "./TabBar.module.css";
 
@@ -16,9 +17,19 @@ export interface TabBarProps {
   savedDot?: boolean;
   hrefs?: Partial<Record<Tab, string>>;
   onFocusWithin?: () => void;
+  /** Guest gate for Profile — call preventDefault to open signup instead. */
+  onProfile?: (e: MouseEvent<HTMLAnchorElement>) => void;
 }
 
-export function TabBar({ shown, current, onContact, savedDot, hrefs, onFocusWithin }: TabBarProps) {
+export function TabBar({
+  shown,
+  current,
+  onContact,
+  savedDot,
+  hrefs,
+  onFocusWithin,
+  onProfile,
+}: TabBarProps) {
   const href = { explore: "/", saved: "/saved", profile: "/profile", ...hrefs };
   const aria = (t: Tab) => (t === current ? ("page" as const) : undefined);
   return (
@@ -42,7 +53,12 @@ export function TabBar({ shown, current, onContact, savedDot, hrefs, onFocusWith
             </>
           )}
         </Link>
-        <Link href={href.profile} className={styles.item} aria-current={aria("profile")}>
+        <Link
+          href={href.profile}
+          className={styles.item}
+          aria-current={aria("profile")}
+          onClick={onProfile}
+        >
           <UserIcon />
           <span className={styles.label}>Profile</span>
         </Link>

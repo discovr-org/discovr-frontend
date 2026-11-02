@@ -1,12 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AuthSheet } from "@/features/auth/components/AuthSheet";
-import {
-  useAuthGate,
-  type AuthIntent,
-} from "@/features/auth/utils/useAuthGate";
+import { useAuth } from "@/features/auth/components/AuthProvider";
 import { googleMapsDirections } from "@/features/experience/utils/schedule";
 import { useScrollChrome } from "@/features/experience/utils/useScrollChrome";
 import { priceLabel, type FeedItem } from "@/features/home/utils/feedData";
@@ -34,10 +30,7 @@ import { TabBar } from "@/shared/components/TabBar";
 import { TitleBlock } from "@/shared/components/TitleBlock";
 import { useToast } from "@/shared/components/Toast";
 import { Verdict } from "@/shared/components/Verdict";
-import {
-  readSavedSlugs,
-  toggleSavedSlug,
-} from "@/shared/utils/savedStore";
+import { useSaved } from "@/shared/utils/useSaved";
 import type { Experience, ScreenState } from "@/types/experience";
 import styles from "./ExperienceDetail.module.css";
 
@@ -72,21 +65,12 @@ export function ExperienceDetail({
   const toast = useToast();
   const heroRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLElement>(null);
-  const [savedSlugs, setSavedSlugs] = useState<string[]>([]);
   const [contactOpen, setContactOpen] = useState(false);
   const [menuAt, setMenuAt] = useState<number | null>(null);
-  const auth = useAuthGate();
+  const auth = useAuth();
+  const savedStore = useSaved();
 
-  useEffect(() => {
-    const next = readSavedSlugs();
-    if (experience && initiallySaved && !next.includes(experience.slug)) {
-      setSavedSlugs(toggleSavedSlug(experience.slug));
-      return;
-    }
-    setSavedSlugs(next);
-  }, [experience, initiallySaved]);
-
-  const saved = experience ? savedSlugs.includes(experience.slug) : false;
+  const saved = experience ? savedStore.isSaved(experience.slug) : initiallySaved;
   const related = useMemo(() => {
     if (!experience?.slug) return [];
     return relatedItems.filter((item) => item.slug !== experience.slug).slice(0, 4);
@@ -102,11 +86,9 @@ export function ExperienceDetail({
 
   const setSavedAndNotify = useCallback(
     (v: boolean, silent = false) => {
-      if (experience) {
-        const has = readSavedSlugs().includes(experience.slug);
-        if (has !== v) setSavedSlugs(toggleSavedSlug(experience.slug));
-        else setSavedSlugs(readSavedSlugs());
-      }
+      if (!experience) return;
+      const has = savedStore.isSaved(experience.slug);
+      if (has !== v) savedStore.toggle(experience.slug);
       onSaveChange?.(v);
       if (silent) return;
       if (v) {
@@ -117,7 +99,7 @@ export function ExperienceDetail({
         toast("Removed from saved");
       }
     },
-    [experience, onSaveChange, toast],
+    [experience, onSaveChange, savedStore, toast],
   );
 
   const dialHost = useCallback(() => {
@@ -126,21 +108,16 @@ export function ExperienceDetail({
     window.location.href = `tel:${experience.host.phone}`;
   }, [experience, toast]);
 
-  const runIntent = useCallback(
-    (intent: AuthIntent) => {
-      if (intent === "save") setSavedAndNotify(true);
-      else dialHost();
-    },
-    [dialHost, setSavedAndNotify],
-  );
-
   const onToggleSave = useCallback(() => {
+    if (!experience) return;
     if (saved) {
       setSavedAndNotify(false);
       return;
     }
-    auth.requireAuth("save", () => setSavedAndNotify(true));
-  }, [auth, saved, setSavedAndNotify]);
+    // Guest: keep in localStorage now; ask for number so we can sync later.
+    setSavedAndNotify(true);
+    if (!auth.user) auth.openAuth("save");
+  }, [auth, experience, saved, setSavedAndNotify]);
 
   const onCallToBook = useCallback(() => {
     auth.requireAuth("call", dialHost);
@@ -211,12 +188,12 @@ export function ExperienceDetail({
               onShare={share}
               onOpenMenu={setMenuAt}
               related={related}
-              savedSlugs={savedSlugs}
+              savedSlugs={savedStore.slugs}
               onToggleRelatedSave={(slug) => {
-                const next = toggleSavedSlug(slug);
-                setSavedSlugs(next);
+                const nowSaved = savedStore.toggle(slug);
+                if (nowSaved && !auth.user) auth.openAuth("save");
                 toast(
-                  next.includes(slug)
+                  nowSaved
                     ? "Saved. Send it to your group from Saved."
                     : "Removed from saved",
                 );
@@ -230,8 +207,13 @@ export function ExperienceDetail({
         shown={chrome.tabShown}
         current="explore"
         onContact={() => setContactOpen(true)}
-        savedDot={saved}
+        savedDot={savedStore.hasAny}
         onFocusWithin={chrome.reveal}
+        onProfile={(e) => {
+          if (auth.user) return;
+          e.preventDefault();
+          auth.requireAuth("profile", () => router.push("/profile"));
+        }}
       />
 
       {experience && (
@@ -248,16 +230,6 @@ export function ExperienceDetail({
       )}
 
       <ContactSheet open={contactOpen} onClose={() => setContactOpen(false)} />
-
-      <AuthSheet
-        open={auth.authOpen}
-        onClose={auth.closeAuth}
-        onSendCode={auth.onSendCode}
-        onVerifyCode={auth.onVerifyCode}
-        onSuccess={(phone) => auth.onSuccess(phone, runIntent)}
-        termsHref="/terms"
-        privacyHref="/privacy"
-      />
 
       {experience?.menu && experience.menu.pages.length > 0 && (
         <MenuViewer

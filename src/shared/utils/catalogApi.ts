@@ -165,7 +165,11 @@ async function getJson<T>(path: string): Promise<T | null> {
   if (!hasApiBaseUrl()) return null;
   const base = apiBaseUrl();
   try {
-    const res = await fetch(`${base}${path}`, { next: { revalidate: 60 } });
+    const init: RequestInit =
+      typeof window === "undefined"
+        ? { next: { revalidate: 60 } }
+        : { cache: "no-store" };
+    const res = await fetch(`${base}${path}`, init);
     if (!res.ok) return null;
     return (await res.json()) as T;
   } catch {

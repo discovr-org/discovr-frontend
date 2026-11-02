@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/features/auth/components/AuthProvider";
 import { priceLabel, type FeedItem } from "@/features/home/utils/feedData";
 import { AppShell } from "@/shared/components/AppShell";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { ExperienceCard } from "@/shared/components/ExperienceCard";
 import { AlertIcon, SearchIcon } from "@/shared/components/icons";
+import { useToast } from "@/shared/components/Toast";
 import { fetchCatalogFeed, flattenFeedItems } from "@/shared/utils/catalogApi";
 import { useSaved } from "@/shared/utils/useSaved";
 import styles from "@/features/home/styles/searchScreen.module.css";
@@ -15,6 +17,8 @@ export function SearchScreen() {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loadError, setLoadError] = useState(false);
   const saved = useSaved();
+  const auth = useAuth();
+  const toast = useToast();
 
   useEffect(() => {
     let cancelled = false;
@@ -93,7 +97,16 @@ export function SearchScreen() {
               durationLabel={item.durationLabel}
               priceLabel={priceLabel(item)}
               saved={saved.isSaved(item.slug)}
-              onToggleSave={() => saved.toggle(item.slug)}
+              onToggleSave={() => {
+                const was = saved.isSaved(item.slug);
+                saved.toggle(item.slug);
+                if (!was && !auth.user) auth.openAuth("save");
+                toast(
+                  was
+                    ? "Removed from saved"
+                    : "Saved. Send it to your group from Saved.",
+                );
+              }}
             />
           ))}
         </div>

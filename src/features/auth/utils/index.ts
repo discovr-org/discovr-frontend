@@ -11,6 +11,7 @@ export {
   toE164,
 } from "./phone";
 export { mockSendCode, mockVerifyCode } from "./mockOtp";
+export { requestOtp, verifyOtp, logoutSession } from "./authApi";
 export {
   clearSession,
   readSession,
@@ -18,3 +19,4 @@ export {
   type SessionUser,
 } from "./session";
 export { useAuthGate, type AuthIntent } from "./useAuthGate";
+export { useAuth } from "@/features/auth/components/AuthProvider";

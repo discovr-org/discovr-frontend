@@ -19,6 +19,7 @@ import {
   PhoneIcon,
   SearchIcon,
 } from "@/shared/components/icons";
+import { useAuth } from "@/features/auth/components/AuthProvider";
 import { useToast } from "@/shared/components/Toast";
 import { hasApiBaseUrl } from "@/shared/utils/apiBase";
 import { fetchCatalogFeed } from "@/shared/utils/catalogApi";
@@ -32,7 +33,19 @@ export function ExploreFeed() {
   const [sections, setSections] = useState<FeedSection[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const saved = useSaved();
+  const auth = useAuth();
   const toast = useToast();
+
+  const onToggleSave = (slug: string) => {
+    const was = saved.isSaved(slug);
+    saved.toggle(slug);
+    if (!was && !auth.user) auth.openAuth("save");
+    toast(
+      was
+        ? "Removed from saved"
+        : "Saved. Send it to your group from Saved.",
+    );
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -134,15 +147,7 @@ export function ExploreFeed() {
                           imageAlt={item.imageAlt}
                           priceLabel={priceLabel(item)}
                           saved={saved.isSaved(item.slug)}
-                          onToggleSave={() => {
-                            const was = saved.isSaved(item.slug);
-                            saved.toggle(item.slug);
-                            toast(
-                              was
-                                ? "Removed from saved"
-                                : "Saved. Send it to your group from Saved.",
-                            );
-                          }}
+                          onToggleSave={() => onToggleSave(item.slug)}
                         />
                       </div>
                     ))}
@@ -162,15 +167,7 @@ export function ExploreFeed() {
                         durationLabel={item.durationLabel}
                         priceLabel={priceLabel(item)}
                         saved={saved.isSaved(item.slug)}
-                        onToggleSave={() => {
-                          const was = saved.isSaved(item.slug);
-                          saved.toggle(item.slug);
-                          toast(
-                            was
-                              ? "Removed from saved"
-                              : "Saved. Send it to your group from Saved.",
-                          );
-                        }}
+                        onToggleSave={() => onToggleSave(item.slug)}
                       />
                     ))}
                   </div>

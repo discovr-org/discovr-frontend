@@ -2,6 +2,9 @@
 
 export type SessionUser = {
   phoneE164: string;
+  /** Opaque Bearer token from `/v1/auth/otp/verify`. */
+  sessionId: string;
+  userId?: string;
 };
 
 const KEY = "discovr.session";
@@ -11,9 +14,13 @@ export function readSession(): SessionUser | null {
   try {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as SessionUser;
-    if (!parsed?.phoneE164) return null;
-    return parsed;
+    const parsed = JSON.parse(raw) as Partial<SessionUser>;
+    if (!parsed?.phoneE164 || !parsed?.sessionId) return null;
+    return {
+      phoneE164: parsed.phoneE164,
+      sessionId: parsed.sessionId,
+      userId: parsed.userId,
+    };
   } catch {
     return null;
   }

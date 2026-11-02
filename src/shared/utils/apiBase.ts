@@ -1,7 +1,7 @@
 /**
  * Public API origin from env.
  * Set `NEXT_PUBLIC_API_BASE_URL` in `.env.local` (dev) or the host’s env (Vercel/etc).
- * Empty → catalog callers may fall back to local seed.
+ * Required for catalog UI — empty means no API.
  */
 export function apiBaseUrl(): string {
   const raw = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ?? "";

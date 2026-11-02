@@ -1,18 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
+import { useAuth } from "@/features/auth/components/AuthProvider";
 import { AppShell } from "@/shared/components/AppShell";
-import { readSession, clearSession } from "@/features/auth/utils/session";
 import { useSaved } from "@/shared/utils/useSaved";
-import { useEffect, useState } from "react";
-import type { SessionUser } from "@/features/auth/utils/session";
 import styles from "@/features/profile/styles/profileScreen.module.css";
 
 export function ProfileScreen() {
   const saved = useSaved();
-  const [user, setUser] = useState<SessionUser | null>(null);
+  const auth = useAuth();
 
   useEffect(() => {
-    setUser(readSession());
+    if (!auth.user) auth.openAuth("profile");
+    // Open once on first visit as a guest.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only gate on mount
   }, []);
 
   return (
@@ -21,9 +22,9 @@ export function ProfileScreen() {
         <header className={styles.header}>
           <h1 className={styles.title}>Profile</h1>
           <p className={styles.lead}>
-            {user
-              ? `Signed in as ${user.phoneE164}`
-              : "You're browsing as a guest. Save or call to book and we'll ask for your number."}
+            {auth.user
+              ? `Signed in as ${auth.user.phoneE164}`
+              : "You're browsing as a guest. Save or open Profile and we'll ask for your number."}
           </p>
         </header>
 
@@ -51,13 +52,12 @@ export function ProfileScreen() {
           </li>
         </ul>
 
-        {user && (
+        {auth.user && (
           <button
             type="button"
             className={styles.signOut}
             onClick={() => {
-              clearSession();
-              setUser(null);
+              void auth.signOut();
             }}
           >
             Sign out

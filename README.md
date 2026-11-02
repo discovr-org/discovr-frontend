@@ -35,8 +35,6 @@ npm start
 
 To exercise the SW in development: `npm run dev:pwa` (still registers only when `NODE_ENV=production` unless you flip `PwaProvider`).
 
-Install prompt: Android/desktop via `beforeinstallprompt`. iOS Add to Home Screen copy comes later — after a successful booking.
-
 ## Layout
 
 ```
