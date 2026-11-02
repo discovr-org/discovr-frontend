@@ -1,45 +1,26 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "@/features/auth/components/AuthProvider";
-import { priceLabel, type FeedItem } from "@/features/home/utils/feedData";
+import { priceLabel } from "@/features/home/utils/feedData";
 import { AppShell } from "@/shared/components/AppShell";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { ExperienceCard } from "@/shared/components/ExperienceCard";
 import { AlertIcon, SearchIcon } from "@/shared/components/icons";
 import { useToast } from "@/shared/components/Toast";
-import { fetchCatalogFeed, flattenFeedItems } from "@/shared/utils/catalogApi";
+import { flattenFeedItems } from "@/shared/utils/catalogApi";
+import { useCatalogFeed } from "@/shared/utils/useCatalogFeed";
 import { useSaved } from "@/shared/utils/useSaved";
 import styles from "@/features/home/styles/searchScreen.module.css";
 
 export function SearchScreen() {
   const [q, setQ] = useState("");
-  const [items, setItems] = useState<FeedItem[]>([]);
-  const [loadError, setLoadError] = useState(false);
+  const feed = useCatalogFeed();
+  const items = useMemo(() => (feed.data ? flattenFeedItems(feed.data) : []), [feed.data]);
+  const loadError = !feed.data && feed.isError;
   const saved = useSaved();
   const auth = useAuth();
   const toast = useToast();
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchCatalogFeed()
-      .then((feed) => {
-        if (cancelled) return;
-        if (!feed?.length) {
-          setLoadError(true);
-          setItems([]);
-          return;
-        }
-        setItems(flattenFeedItems(feed));
-        setLoadError(false);
-      })
-      .catch(() => {
-        if (!cancelled) setLoadError(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const results = useMemo(() => {
     const needle = q.trim().toLowerCase();

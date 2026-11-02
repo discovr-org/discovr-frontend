@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   FEED_FILTERS,
   priceLabel,
   type FeedFilter,
-  type FeedSection,
 } from "@/features/home/utils/feedData";
 import styles from "@/features/home/styles/exploreFeed.module.css";
 import { AppShell } from "@/shared/components/AppShell";
@@ -22,17 +21,19 @@ import {
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { useToast } from "@/shared/components/Toast";
 import { hasApiBaseUrl } from "@/shared/utils/apiBase";
-import { fetchCatalogFeed, flattenFeedItems } from "@/shared/utils/catalogApi";
+import { flattenFeedItems } from "@/shared/utils/catalogApi";
+import { useCatalogFeed } from "@/shared/utils/useCatalogFeed";
+import { FeedSkeleton } from "@/features/home/components/FeedSkeleton";
 import { DISCOVR_PHONE } from "@/shared/utils/discovrContact";
 import { useSaved } from "@/shared/utils/useSaved";
-
-type LoadState = "loading" | "ready" | "error";
 
 export function ExploreFeed() {
   const [filter, setFilter] = useState<FeedFilter>("Tonight");
   const [query, setQuery] = useState("");
-  const [sections, setSections] = useState<FeedSection[]>([]);
-  const [loadState, setLoadState] = useState<LoadState>("loading");
+  const feed = useCatalogFeed();
+  const sections = useMemo(() => feed.data ?? [], [feed.data]);
+  // Cached data wins: only show loading/error when there is nothing to paint.
+  const loadState = feed.data ? "ready" : feed.isError || !hasApiBaseUrl() ? "error" : "loading";
   const saved = useSaved();
   const auth = useAuth();
   const toast = useToast();
@@ -47,32 +48,6 @@ export function ExploreFeed() {
         : "Saved. Send it to your group from Saved.",
     );
   };
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!hasApiBaseUrl()) {
-      setLoadState("error");
-      return;
-    }
-    setLoadState("loading");
-    fetchCatalogFeed()
-      .then((remote) => {
-        if (cancelled) return;
-        if (!remote?.length) {
-          setSections([]);
-          setLoadState("error");
-          return;
-        }
-        setSections(remote);
-        setLoadState("ready");
-      })
-      .catch(() => {
-        if (!cancelled) setLoadState("error");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const needle = query.trim().toLowerCase();
   const searching = needle.length > 0;
@@ -122,11 +97,7 @@ export function ExploreFeed() {
           </div>
         ) : null}
 
-        {loadState === "loading" ? (
-          <p className="t-body-sm" style={{ color: "var(--ink-muted)" }}>
-            Loading tonight&apos;s picks…
-          </p>
-        ) : null}
+        {loadState === "loading" ? <FeedSkeleton /> : null}
 
         {loadState === "error" ? (
           <EmptyState
