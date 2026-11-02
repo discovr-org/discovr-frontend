@@ -25,12 +25,12 @@ export function Disclaimer({ hostName, credit = "hosted" }: DisclaimerProps) {
           vouch for what&apos;s on this page, but check the price and terms with{" "}
           {hostName} before you pay.
         </p>
-        <a href="/terms" className={styles.link}>
+        <a href="/legal/disclaimer" className={styles.link}>
           Read the full disclaimer
         </a>
       </div>
       <div className={styles.footer}>
-        <a href="/privacy" className={styles.link}>
+        <a href="/legal/privacy" className={styles.link}>
           Report wrong information
         </a>
         <a href="tel:+918169992510" className={styles.link}>

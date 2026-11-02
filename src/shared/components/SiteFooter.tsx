@@ -95,9 +95,9 @@ export function SiteFooter({ source }: SiteFooterProps) {
 
       <p className={styles.legal}>
         <span>© discovr 2026</span>
-        <Link href="/privacy">Privacy</Link>
-        <Link href="/terms">Terms</Link>
-        <Link href="/terms">Disclaimer</Link>
+        <Link href="/legal/privacy">Privacy</Link>
+        <Link href="/legal/terms">Terms</Link>
+        <Link href="/legal/disclaimer">Disclaimer</Link>
       </p>
       <p className={styles.wordmark} aria-hidden="true">
         discovr

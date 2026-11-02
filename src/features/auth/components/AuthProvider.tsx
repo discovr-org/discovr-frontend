@@ -133,8 +133,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         onSendCode={onSendCode}
         onVerifyCode={onVerifyCode}
         onSuccess={onSuccess}
-        termsHref="/terms"
-        privacyHref="/privacy"
+        termsHref="/legal/terms"
+        privacyHref="/legal/privacy"
       />
     </AuthContext.Provider>
   );

@@ -42,10 +42,10 @@ export function ProfileScreen() {
             <a href="/list-with-us">List with us</a>
           </li>
           <li>
-            <a href="/terms">Terms &amp; conditions</a>
+            <a href="/legal/terms">Terms &amp; conditions</a>
           </li>
           <li>
-            <a href="/privacy">Privacy</a>
+            <a href="/legal/privacy">Privacy</a>
           </li>
           <li>
             <a href="/help">Help</a>
