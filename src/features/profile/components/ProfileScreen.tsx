@@ -1,31 +1,52 @@
 "use client";
 
-import { useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { AppShell } from "@/shared/components/AppShell";
+import { Button } from "@/shared/components/Button";
+import { EmptyState } from "@/shared/components/EmptyState";
+import { UserIcon } from "@/shared/components/icons";
 import { useSaved } from "@/shared/utils/useSaved";
 import styles from "@/features/profile/styles/profileScreen.module.css";
+
+const noSubscribe = () => () => {};
 
 export function ProfileScreen() {
   const saved = useSaved();
   const auth = useAuth();
+  // The session lives in browser storage, so the server can't tell which view to draw.
+  const inBrowser = useSyncExternalStore(noSubscribe, () => true, () => false);
 
-  useEffect(() => {
-    if (!auth.user) auth.openAuth("profile");
-    // Open once on first visit as a guest.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only gate on mount
-  }, []);
+  if (!inBrowser) {
+    return <AppShell current="profile" savedDot={saved.hasAny}>{null}</AppShell>;
+  }
+
+  if (!auth.user) {
+    return (
+      <AppShell current="profile" savedDot={saved.hasAny}>
+        <div className={styles.page}>
+          <h1 className={styles.title}>Account</h1>
+          <EmptyState
+            icon={<UserIcon />}
+            title="Sign up to see your account"
+            text="Your saved things and lists live here."
+            action={
+              <Button variant="primary" onClick={() => auth.openAuth("profile")}>
+                Sign up
+              </Button>
+            }
+          />
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell current="profile" savedDot={saved.hasAny}>
       <div className={styles.page}>
         <header className={styles.header}>
           <h1 className={styles.title}>Profile</h1>
-          <p className={styles.lead}>
-            {auth.user
-              ? `Signed in as ${auth.user.phoneE164}`
-              : "You're browsing as a guest. Save or open Profile and we'll ask for your number."}
-          </p>
+          <p className={styles.lead}>Signed in as {auth.user.phoneE164}</p>
         </header>
 
         <ul className={styles.list}>
@@ -52,17 +73,15 @@ export function ProfileScreen() {
           </li>
         </ul>
 
-        {auth.user && (
-          <button
-            type="button"
-            className={styles.signOut}
-            onClick={() => {
-              void auth.signOut();
-            }}
-          >
-            Sign out
-          </button>
-        )}
+        <button
+          type="button"
+          className={styles.signOut}
+          onClick={() => {
+            void auth.signOut();
+          }}
+        >
+          Sign out
+        </button>
       </div>
     </AppShell>
   );

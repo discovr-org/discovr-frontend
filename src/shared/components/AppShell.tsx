@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, type MouseEvent, type ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { useAuth } from "@/features/auth/components/AuthProvider";
+import { useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { ContactSheet } from "./ContactSheet";
 import { SiteFooter } from "./SiteFooter";
 import { TabBar, type Tab } from "./TabBar";
@@ -22,15 +21,7 @@ type AppShellProps = {
 /** Screen chrome: skip link, phone tab bar, desktop top bar, Contact us sheet, centred column, footer. */
 export function AppShell({ current, children, savedDot, footer = true, footerSource }: AppShellProps) {
   const [contactOpen, setContactOpen] = useState(false);
-  const auth = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
-
-  const onProfile = (e: MouseEvent<HTMLAnchorElement>) => {
-    if (auth.user) return;
-    e.preventDefault();
-    auth.requireAuth("profile", () => router.push("/profile"));
-  };
 
   return (
     <>
@@ -42,14 +33,12 @@ export function AppShell({ current, children, savedDot, footer = true, footerSou
         current={current === "about" ? "explore" : current}
         savedDot={savedDot}
         onContact={() => setContactOpen(true)}
-        onProfile={onProfile}
       />
       <ContactSheet open={contactOpen} onClose={() => setContactOpen(false)} />
       <TopNav
         current={current}
         savedDot={savedDot}
         onContact={() => setContactOpen(true)}
-        onProfile={onProfile}
       />
       <div className={styles.shell}>
         <main id="main" tabIndex={-1} className={styles.main}>

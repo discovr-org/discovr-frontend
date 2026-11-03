@@ -2,7 +2,6 @@
 
 import { useLayoutEffect, useRef } from "react";
 import { rupees } from "@/features/experience/utils/schedule";
-import { Button } from "./Button";
 import { PhoneIcon } from "./icons";
 import styles from "./BookingBar.module.css";
 
@@ -10,7 +9,7 @@ export interface BookingBarProps {
   priceFrom: number;
   /** Places, or listings with no published tariff. */
   askForPrice?: boolean;
-  /** Places that take walk-ins: the note says no booking is needed. */
+  /** Places that take walk-ins: a small note says no booking is needed. */
   walkIn?: boolean;
   /** The host's own booking page. When set, the button opens it instead of calling. */
   bookHref?: string;
@@ -28,7 +27,7 @@ export interface BookingBarProps {
 }
 
 /**
- * Sticky conversion bar: "From ₹…" + Call to book, or "Ask for the price" + Call.
+ * Sticky conversion bar, one compact row: "From ₹…" + Call to book, or "Ask for the price" + Call.
  * Publishes its height as --bb-h on <html> so the page and toasts can clear it.
  */
 export function BookingBar({
@@ -56,10 +55,15 @@ export function BookingBar({
       ro.disconnect();
       root.style.removeProperty("--bb-h");
     };
-  }, [hidden, askForPrice, bookHref]);
+  }, [hidden, askForPrice, bookHref, walkIn]);
 
   const callLabel = `Call ${hostBusinessName} to book`;
-  const cta = "Call to book";
+  const callContent = (
+    <>
+      <PhoneIcon />
+      Call to book
+    </>
+  );
 
   return (
     <footer
@@ -68,45 +72,38 @@ export function BookingBar({
       aria-label={askForPrice ? "Ask about this place" : "Book this experience"}
       hidden={hidden}
     >
-      <div className={styles.top}>
-        <div className={styles.money}>
-          {askForPrice ? (
-            <span className="t-price">Ask for the price</span>
-          ) : (
-            <>
-              <span className="t-price">From {rupees(priceFrom)}</span>
-              <span className={styles.per}>
-                per person{taxes === "extra" ? " + taxes" : ""}
-              </span>
-            </>
-          )}
-        </div>
-        {bookHref ? (
-          <Button
-            variant="primary"
-            href={bookHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`Book on ${hostBusinessName}'s site (opens in a new tab)`}
-          >
-            Book on {hostBusinessName}
-          </Button>
-        ) : onCallToBook ? (
-          <Button variant="primary" onClick={onCallToBook} aria-label={callLabel} icon={<PhoneIcon />}>
-            {cta}
-          </Button>
+      <div className={styles.money}>
+        {askForPrice ? (
+          <span className="t-price">Ask for the price</span>
         ) : (
-          <Button variant="primary" href={`tel:${phone}`} aria-label={callLabel} icon={<PhoneIcon />}>
-            {cta}
-          </Button>
+          <>
+            <span className="t-price">From {rupees(priceFrom)}</span>
+            <span className={styles.unit}>
+              per person{taxes === "extra" ? " + taxes" : ""}
+            </span>
+          </>
         )}
+        {walkIn ? <span className={styles.unit}>No booking needed, just walk in</span> : null}
       </div>
-      <span className={styles.note}>
-        {bookHref
-          ? `You'll book on ${hostBusinessName}'s own page.`
-          : `You'll speak to ${hostBusinessName} directly.`}
-        {walkIn ? " No booking needed, just walk in" : null}
-      </span>
+      {bookHref ? (
+        <a
+          className={styles.cta}
+          href={bookHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Book on ${hostBusinessName}'s site (opens in a new tab)`}
+        >
+          Book on {hostBusinessName}
+        </a>
+      ) : onCallToBook ? (
+        <button type="button" className={styles.cta} onClick={onCallToBook} aria-label={callLabel}>
+          {callContent}
+        </button>
+      ) : (
+        <a className={styles.cta} href={`tel:${phone}`} aria-label={callLabel}>
+          {callContent}
+        </a>
+      )}
     </footer>
   );
 }
