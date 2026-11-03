@@ -1,15 +1,17 @@
-import Link from "next/link";
+import type { Metadata } from "next";
+import { ListWithUsPage } from "@/features/list-with-us/components/ListWithUsPage";
 
-export default function ListWithUsPage() {
-  return (
-    <div className="app-shell">
-      <h1 className="display-md">List with us</h1>
-      <p className="body-muted" style={{ marginTop: "var(--space-3)" }}>
-        Host in Goa? Tell us what you run. We only list what we&apos;ve been to.
-      </p>
-      <p style={{ marginTop: "var(--space-4)" }}>
-        <Link href="/">Back to explore</Link>
-      </p>
-    </div>
-  );
+const LEAD =
+  "Tell us what you run. If it sounds right, someone from the team will come and try it. You keep taking your own bookings.";
+
+export const metadata: Metadata = {
+  title: "List with us | discovr",
+  description: LEAD,
+  alternates: { canonical: "https://www.discovr.in/list-with-us" },
+  openGraph: { title: "List with us", description: LEAD, siteName: "discovr" },
+  twitter: { card: "summary", title: "List with us", description: LEAD },
+};
+
+export default function Page() {
+  return <ListWithUsPage lead={LEAD} />;
 }
