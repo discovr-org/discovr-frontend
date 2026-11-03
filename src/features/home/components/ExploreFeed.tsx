@@ -17,7 +17,6 @@ import { searchCards } from "@/features/home/utils/searchCards";
 import { buildHomeSections } from "@/features/home/utils/homeSections";
 import styles from "@/features/home/styles/exploreFeed.module.css";
 import { AppShell } from "@/shared/components/AppShell";
-import { SiteFooter } from "@/shared/components/SiteFooter";
 import { Chip } from "@/shared/components/Chip";
 import chipStyles from "@/shared/components/Chip.module.css";
 import { EmptyState } from "@/shared/components/EmptyState";
@@ -343,10 +342,6 @@ export function ExploreFeed() {
           onApply={setFilters}
           countFor={(draft) => applyFilters(allCards, draft).length}
         />
-
-        <div className={styles.footerWrap}>
-          <SiteFooter source="home" />
-        </div>
       </div>
     </AppShell>
   );

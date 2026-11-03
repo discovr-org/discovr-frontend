@@ -1,0 +1,9 @@
+.page {
+  padding: var(--space-4) var(--layout-gutter) 0;
+}
+
+@media (min-width: 1024px) {
+  .page {
+    padding-top: var(--space-6);
+  }
+}

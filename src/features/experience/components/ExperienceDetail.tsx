@@ -25,7 +25,6 @@ import { MenuViewer } from "@/shared/components/MenuViewer";
 import { PolicyDisclosure } from "@/shared/components/PolicyDisclosure";
 import { ReviewList } from "@/shared/components/ReviewList";
 import { Section } from "@/shared/components/Section";
-import { SiteFooter } from "@/shared/components/SiteFooter";
 import { ExperienceDetailSkeleton } from "@/shared/components/Skeleton";
 import { TitleBlock } from "@/shared/components/TitleBlock";
 import { useToast } from "@/shared/components/Toast";
@@ -153,7 +152,12 @@ export function ExperienceDetail({
   }, [router]);
 
   return (
-    <AppShell current="explore" savedDot={savedStore.hasAny}>
+    <AppShell
+      current="explore"
+      savedDot={savedStore.hasAny}
+      footer={!loading && !error}
+      footerSource={experience?.slug}
+    >
       <div className={styles.page} data-page="listing">
         <div className={styles.heroWrap}>
           <AppBar
@@ -215,7 +219,6 @@ export function ExperienceDetail({
           />
         )}
       </div>
-      {!loading && !error ? <SiteFooter source={experience!.slug} /> : null}
 
       {experience ? (
         <ReportSheet

@@ -13,7 +13,7 @@ type LegalPageProps = {
 
 export function LegalPage({ title, sections, lead, draft = true, children }: LegalPageProps) {
   return (
-    <div className="app-shell">
+    <div>
       <article className={styles.prose}>
         <h1 className="display-md">{title}</h1>
         {lead ? <p className={styles.lead}>{lead}</p> : null}

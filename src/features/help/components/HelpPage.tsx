@@ -40,7 +40,7 @@ export function HelpPage() {
   }
 
   return (
-    <div className="app-shell">
+    <div>
       <div className={styles.page}>
         <h1 className="display-md">Help and contact</h1>
         <div className={styles.contact}>

@@ -29,7 +29,7 @@ export function ListWithUsPage({ lead }: { lead: string }) {
   }
 
   return (
-    <div className="app-shell">
+    <div>
       <div className={styles.page}>
         <h1 className="display-md">List with us</h1>
         <p className={styles.lead}>{lead}</p>

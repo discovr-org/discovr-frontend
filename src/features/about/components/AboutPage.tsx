@@ -58,7 +58,7 @@ const FAQ = [
 
 export function AboutPage() {
   return (
-    <div className="app-shell">
+    <div>
       <article className={styles.page}>
         <h1 className="display-md">About discovr</h1>
         <p className={styles.intro}>{ABOUT_INTRO}</p>
