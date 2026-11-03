@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { FEED_FILTERS, priceLabel, type FeedFilter } from "@/features/home/utils/feedData";
+// Filter chips (hidden for now) also need: FEED_FILTERS, FeedFilter, Chip, chipStyles, SlidersIcon.
+import { priceLabel } from "@/features/home/utils/feedData";
 import {
   NO_FILTERS,
   activeLabels,
@@ -17,11 +18,9 @@ import { searchCards } from "@/features/home/utils/searchCards";
 import { buildHomeSections } from "@/features/home/utils/homeSections";
 import styles from "@/features/home/styles/exploreFeed.module.css";
 import { AppShell } from "@/shared/components/AppShell";
-import { Chip } from "@/shared/components/Chip";
-import chipStyles from "@/shared/components/Chip.module.css";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { ExperienceCard } from "@/shared/components/ExperienceCard";
-import { AlertIcon, CrossIcon, SearchIcon, SlidersIcon } from "@/shared/components/icons";
+import { AlertIcon, CrossIcon, SearchIcon } from "@/shared/components/icons";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { useToast } from "@/shared/components/Toast";
 import { hasApiBaseUrl } from "@/shared/utils/apiBase";
@@ -159,6 +158,7 @@ export function ExploreFeed() {
                 className={styles.miniWordmark}
               />
             </div>
+            {/* Filter chips: hidden for now, bring back later.
             {!searching ? (
               <div className={styles.filters} role="group" aria-label="Filters">
                 {FEED_FILTERS.map((f) => (
@@ -180,6 +180,7 @@ export function ExploreFeed() {
                 </Chip>
               </div>
             ) : null}
+            */}
           </div>
         </div>
 
@@ -347,6 +348,7 @@ export function ExploreFeed() {
   );
 }
 
+/* Filter chips helpers: bring back with the chips.
 const QUICK_TYPES: FeedFilter[] = ["Food and drink", "Nightlife", "Wellness"];
 
 function isQuickOn(f: FeedFilters, chip: FeedFilter): boolean {
@@ -366,4 +368,5 @@ function toggleQuick(f: FeedFilters, chip: FeedFilter): FeedFilters {
   }
   return f;
 }
+*/
 

@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useState, type FormEvent } from "react";
+// Trip-updates signup (hidden for now) also needs: useId, useState, FormEvent, subscribeTripUpdates.
 import { DISCOVR_PHONE, DISCOVR_PHONE_DISPLAY } from "@/shared/utils/discovrContact";
-import { subscribeTripUpdates } from "@/shared/utils/tripUpdatesApi";
 import { MessageIcon, PhoneIcon } from "./icons";
 import styles from "./SiteFooter.module.css";
 
@@ -13,7 +12,9 @@ type SiteFooterProps = {
 };
 
 /** Page footer on home and listing pages: links, trip-updates signup, legal, wordmark. */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used by the hidden trip-updates signup
 export function SiteFooter({ source }: SiteFooterProps) {
+  /* Trip-updates signup: hidden for now, bring back with the section below.
   const id = useId();
   const [phone, setPhone] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "done">("idle");
@@ -31,6 +32,7 @@ export function SiteFooter({ source }: SiteFooterProps) {
       setState("idle");
     }
   }
+  */
 
   return (
     <footer className={styles.footer}>
@@ -72,6 +74,7 @@ export function SiteFooter({ source }: SiteFooterProps) {
             </ul>
           </nav>
 
+          {/* Trip-updates signup: hidden for now, bring back later.
           <section className={styles.news} aria-labelledby={`${id}-h`}>
             <h2 id={`${id}-h`} className={styles.newsTitle}>
               Planning your Goa trip soon?
@@ -124,6 +127,7 @@ export function SiteFooter({ source }: SiteFooterProps) {
               </form>
             )}
           </section>
+          */}
         </div>
 
         <div className={styles.bottom}>
