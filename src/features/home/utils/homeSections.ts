@@ -20,7 +20,7 @@ export const HOME_SECTIONS: HomeSectionDef[] = [
     id: "nightlife",
     title: "Nightlife",
     layout: "rail",
-    slugs: ["juna", "raeeth", "the-loft-at-anamiva", "hideaway", "boilermaker"],
+    slugs: ["juna", "raeeth", "the-loft-at-anamiva", "hideaway"],
   },
   { id: "surfing", title: "Surfing", layout: "stack", slugs: ["surf-wala"] },
   {
@@ -46,18 +46,28 @@ export const HOME_SECTIONS: HomeSectionDef[] = [
   {
     id: "kayaking",
     title: "Kayaking",
-    layout: "stack",
+    layout: "rail",
     slugs: ["baga-mangrove-kayaking", "palolem-beach-kayaking"],
   },
   { id: "pottery", title: "Pottery", layout: "stack", slugs: ["mati-earth-studio"] },
   { id: "tattoo", title: "Tattoo", layout: "stack", slugs: ["angel-tattoo"] },
 ];
 
-/** Fill each section with the cards the API returned. Sections with no live cards are dropped. */
+/**
+ * Fill each section with the cards the API returned. A listing shows once on the page:
+ * if a slug sits in two sections, only the first keeps it. Sections with no live cards are dropped,
+ * and a section left with one card shows it full width instead of as a rail.
+ */
 export function buildHomeSections(cards: FeedItem[]): FeedSection[] {
   const bySlug = new Map(cards.map((card) => [card.slug, card]));
-  return HOME_SECTIONS.map(({ slugs, ...section }) => ({
-    ...section,
-    items: slugs.flatMap((slug) => bySlug.get(slug) ?? []),
-  })).filter((section) => section.items.length > 0);
+  const shown = new Set<string>();
+  return HOME_SECTIONS.map(({ slugs, layout, ...section }) => {
+    const items = slugs.flatMap((slug) => {
+      const card = bySlug.get(slug);
+      if (!card || shown.has(slug)) return [];
+      shown.add(slug);
+      return [card];
+    });
+    return { ...section, layout: items.length === 1 ? ("stack" as const) : layout, items };
+  }).filter((section) => section.items.length > 0);
 }
