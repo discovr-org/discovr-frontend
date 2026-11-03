@@ -46,7 +46,9 @@ export function ProfileScreen() {
       <div className={styles.page}>
         <header className={styles.header}>
           <h1 className={styles.title}>Profile</h1>
-          <p className={styles.lead}>Signed in as {auth.user.phoneE164}</p>
+          <p className={styles.lead} data-ph-mask>
+            Signed in as {auth.user.phoneE164}
+          </p>
         </header>
 
         <ul className={styles.list}>

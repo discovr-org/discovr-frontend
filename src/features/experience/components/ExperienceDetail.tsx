@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { isVenueListing } from "@/features/experience/utils/listingKind";
@@ -30,6 +30,11 @@ import { TitleBlock } from "@/shared/components/TitleBlock";
 import { useToast } from "@/shared/components/Toast";
 import { Verdict } from "@/shared/components/Verdict";
 import { useSaved } from "@/shared/utils/useSaved";
+import { TrackList } from "@/shared/analytics/components/TrackList";
+import { cardTrack, takeCardSource } from "@/shared/analytics/utils/cardSource";
+import { track } from "@/shared/analytics/utils/track";
+import { useScrollDepth } from "@/shared/analytics/utils/useScrollDepth";
+import { useTrackView } from "@/shared/analytics/utils/useTrackView";
 import type { Experience, ScreenState } from "@/types/experience";
 import { storyBlocks } from "../utils/story";
 import { ReportSheet } from "./ReportSheet";
@@ -86,6 +91,31 @@ export function ExperienceDetail({
     forceShown: loading && !error,
   });
 
+  // Once per visit, after the full listing (not the card preview) has loaded. Coming back to a
+  // listing Next kept alive counts as a new visit, as the effect runs again when it's shown.
+  const shown = !loading && !error;
+  const shownSlug = shown ? experience?.slug : undefined;
+  const sendViewed = useEffectEvent(() => {
+    if (!experience) return;
+    const source = takeCardSource(experience.slug);
+    track("experience_viewed", {
+      slug: experience.slug,
+      title: experience.title,
+      format: isVenueListing(experience) ? "venue" : "trip",
+      area: experience.place.neighborhood?.trim() || experience.place.name,
+      ...askPrice(experience),
+      book_via: experience.content?.bookVia === "link" ? "link" : "call",
+      has_menu: Boolean(experience.menu?.pages.length),
+      photos_count: experience.photos.length,
+      source_list: source?.list,
+      source_section: source?.section,
+      source_position: source?.position,
+    });
+  });
+  useEffect(() => {
+    if (shownSlug) sendViewed();
+  }, [shownSlug]);
+
   const setSavedAndNotify = useCallback(
     (v: boolean, silent = false) => {
       if (!experience) return;
@@ -114,6 +144,10 @@ export function ExperienceDetail({
 
   const onToggleSave = useCallback(() => {
     if (!experience) return;
+    track(saved ? "experience_unsaved" : "experience_saved", {
+      slug: experience.slug,
+      from: "listing",
+    });
     if (saved) {
       setSavedAndNotify(false);
       return;
@@ -130,6 +164,12 @@ export function ExperienceDetail({
   const share = useCallback(async () => {
     const url = window.location.href.split("#")[0];
     const title = experience?.title ?? "discovr";
+    if (experience) {
+      track("share_clicked", {
+        slug: experience.slug,
+        method: typeof navigator.share === "function" ? "native" : "copy",
+      });
+    }
     if (navigator.share) {
       try {
         await navigator.share({ title, url });
@@ -144,7 +184,7 @@ export function ExperienceDetail({
       /* ignore: the toast still tells them what to do */
     }
     toast("Link copied. Paste it in your group.");
-  }, [experience?.title, toast]);
+  }, [experience, toast]);
 
   const back = useCallback(() => {
     if (window.history.length > 1) router.back();
@@ -174,7 +214,13 @@ export function ExperienceDetail({
           {error ? (
             <HeroPlaceholder ref={heroRef} />
           ) : loading ? null : experience!.photos.length > 0 ? (
-            <HeroGallery ref={heroRef} photos={experience!.photos} />
+            <HeroGallery
+              ref={heroRef}
+              photos={experience!.photos}
+              onIndexChange={(index, total) =>
+                track("hero_photo_changed", { slug: experience!.slug, index, total })
+              }
+            />
           ) : (
             <HeroPlaceholder ref={heroRef} />
           )}
@@ -199,13 +245,36 @@ export function ExperienceDetail({
             experience={experience!}
             offline={state === "offline"}
             onShare={share}
-            onOpenMenu={setMenuAt}
-            onReport={() => setReportOpen(true)}
+            onOpenMenu={(index) => {
+              track("menu_opened", {
+                slug: experience!.slug,
+                pages: experience!.menu?.pages.length ?? 0,
+              });
+              setMenuAt(index);
+            }}
+            onReport={() => {
+              track("report_opened", { slug: experience!.slug });
+              setReportOpen(true);
+            }}
             onCallToBook={onCallToBook}
+            onBookClick={(method) => {
+              const x = experience!;
+              track("book_clicked", {
+                slug: x.slug,
+                method,
+                host: x.host.businessName,
+                ...askPrice(x),
+                gated_by_auth: method === "call" && !auth.user,
+              });
+            }}
             related={related}
             savedSlugs={savedStore.slugs}
             onToggleRelatedSave={(slug) => {
               const nowSaved = savedStore.toggle(slug);
+              track(nowSaved ? "experience_saved" : "experience_unsaved", {
+                slug,
+                from: "more_in_goa",
+              });
               if (nowSaved && !auth.user) {
                 auth.openAuth("save");
                 return;
@@ -236,6 +305,13 @@ export function ExperienceDetail({
           pages={experience.menu.pages}
           venueName={experience.host.businessName}
           onClose={() => setMenuAt(null)}
+          onPageChange={(index) =>
+            track("menu_page_viewed", {
+              slug: experience.slug,
+              page: index + 1,
+              pages: experience.menu?.pages.length ?? 0,
+            })
+          }
         />
       )}
     </AppShell>
@@ -249,6 +325,7 @@ function Populated({
   onOpenMenu,
   onReport,
   onCallToBook,
+  onBookClick,
   related,
   savedSlugs,
   onToggleRelatedSave,
@@ -259,6 +336,7 @@ function Populated({
   onOpenMenu: (index: number) => void;
   onReport: () => void;
   onCallToBook: () => void;
+  onBookClick: (method: "call" | "link") => void;
   related: FeedItem[];
   savedSlugs: string[];
   onToggleRelatedSave: (slug: string) => void;
@@ -275,6 +353,26 @@ function Populated({
     instagramHandleFromUrl(content.links?.instagram?.url);
   const policy = x.policy;
   const hasPolicy = Boolean(policy && (policy.booking.length || policy.cancellation.length));
+  const blocks = storyBlocks(x);
+
+  useScrollDepth(x.slug);
+  const storyRef = useTrackView<HTMLDivElement>(
+    () =>
+      track("story_viewed", {
+        slug: x.slug,
+        blocks_count: blocks.length,
+        photos_shown: blocks.some((b) => b.type === "photo"),
+      }),
+    x.slug,
+  );
+  const storyEndRef = useTrackView<HTMLDivElement>(
+    () => track("story_completed", { slug: x.slug, blocks_count: blocks.length }),
+    x.slug,
+  );
+  const onContact = (action: "call" | "directions" | "hours") => {
+    if (action === "hours") track("hours_expanded", { slug: x.slug });
+    else track(action === "call" ? "call_clicked" : "directions_clicked", { slug: x.slug });
+  };
 
   return (
     <>
@@ -304,6 +402,7 @@ function Populated({
               groupSize={x.groupSize}
               venue={venue}
               mapsHref={content.links?.maps?.url}
+              onAction={onContact}
             />
             <Verdict text={x.verdict} label={null} />
             <ActionRow
@@ -312,11 +411,18 @@ function Populated({
               directionsHref={mapsHref}
               instagramHandle={instagramHandle}
               onShare={onShare}
+              onAction={onContact}
             />
           </header>
 
           <Section title="About">
-            <StoryBlocks blocks={storyBlocks(x)} />
+            {/* Start and end markers: a long story is never half on screen at once. */}
+            <div ref={storyRef} aria-hidden="true" />
+            <StoryBlocks
+              blocks={blocks}
+              onFaqOpen={(question) => track("faq_opened", { slug: x.slug, question })}
+            />
+            <div ref={storyEndRef} aria-hidden="true" />
           </Section>
 
           {x.menu && x.menu.pages.length > 0 ? (
@@ -371,6 +477,7 @@ function Populated({
             phone={x.host.phone}
             hostBusinessName={x.host.businessName}
             onCallToBook={onCallToBook}
+            onBookClick={onBookClick}
           />
         </aside>
       </div>
@@ -380,27 +487,36 @@ function Populated({
           <h2 id="more-related" className="t-title">
             More in Goa
           </h2>
-          <ul className={styles.related}>
-            {related.map((item) => (
-              <li key={item.slug}>
-                <ExperienceCard
-                  density="tile"
-                  href={`/experiences/${item.slug}`}
-                  title={item.title}
-                  placeLabel={item.placeLabel}
-                  imageSrc={item.imageSrc}
-                  imageAlt={item.imageAlt}
-                  priceLabel={item.format === "venue" ? undefined : priceLabel(item)}
-                  saved={savedSlugs.includes(item.slug)}
-                  onToggleSave={() => onToggleRelatedSave(item.slug)}
-                />
-              </li>
-            ))}
-          </ul>
+          <TrackList list="more_in_goa" layout="grid">
+            <ul className={styles.related}>
+              {related.map((item, i) => (
+                <li key={item.slug}>
+                  <ExperienceCard
+                    track={cardTrack(item, i)}
+                    density="tile"
+                    href={`/experiences/${item.slug}`}
+                    title={item.title}
+                    placeLabel={item.placeLabel}
+                    imageSrc={item.imageSrc}
+                    imageAlt={item.imageAlt}
+                    priceLabel={item.format === "venue" ? undefined : priceLabel(item)}
+                    saved={savedSlugs.includes(item.slug)}
+                    onToggleSave={() => onToggleRelatedSave(item.slug)}
+                  />
+                </li>
+              ))}
+            </ul>
+          </TrackList>
         </section>
       )}
     </>
   );
+}
+
+/** Price fields for events, matching what the BookingBar shows (places always ask). */
+function askPrice(x: Experience): { ask_for_price: boolean; price_inr?: number } {
+  const ask = Boolean(x.price.askForPrice) || isVenueListing(x);
+  return ask ? { ask_for_price: true } : { ask_for_price: false, price_inr: x.price.fromAmount };
 }
 
 /** Pull @handle from an Instagram profile URL when the host row has none. */

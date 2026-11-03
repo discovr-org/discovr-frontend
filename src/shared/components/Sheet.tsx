@@ -87,6 +87,7 @@ export interface SheetOptionProps {
   title: string;
   sub: string;
   external?: boolean;
+  onClick?: () => void;
 }
 
 export function SheetOptions({ children }: { children: ReactNode }) {
@@ -94,9 +95,14 @@ export function SheetOptions({ children }: { children: ReactNode }) {
 }
 
 /** A 48px+ row: icon, title over sub-line, chevron. A real link. */
-export function SheetOption({ href, icon, title, sub, external }: SheetOptionProps) {
+export function SheetOption({ href, icon, title, sub, external, onClick }: SheetOptionProps) {
   return (
-    <a className={styles.option} href={href} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+    <a
+      className={styles.option}
+      href={href}
+      onClick={onClick}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+    >
       {icon}
       <span className={styles.optionText}>
         <span className={styles.optionTitle}>{title}</span>

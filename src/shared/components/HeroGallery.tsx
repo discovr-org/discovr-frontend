@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import type { Photo } from "@/types/experience";
 import { IconButton } from "./IconButton";
 import { BackIcon, ChevronRightIcon } from "./icons";
@@ -9,6 +9,8 @@ import styles from "./HeroGallery.module.css";
 
 export interface HeroGalleryProps {
   photos: Photo[];
+  /** Told each time a swipe or arrow lands on a different photo (0-based). */
+  onIndexChange?: (index: number, total: number) => void;
 }
 
 /**
@@ -16,10 +18,11 @@ export interface HeroGalleryProps {
  * previous/next buttons on pointer devices, arrow keys when focused.
  * The ref points at the outer hero box, which the scroll behaviour measures.
  */
-export const HeroGallery = forwardRef<HTMLDivElement, HeroGalleryProps>(function HeroGallery({ photos }, ref) {
+export const HeroGallery = forwardRef<HTMLDivElement, HeroGalleryProps>(function HeroGallery({ photos, onIndexChange }, ref) {
   const galleryRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const total = photos.length;
+  const landed = useEffectEvent((next: number) => onIndexChange?.(next, total));
 
   const current = useCallback(() => {
     const g = galleryRef.current;
@@ -30,9 +33,17 @@ export const HeroGallery = forwardRef<HTMLDivElement, HeroGalleryProps>(function
     const g = galleryRef.current;
     if (!g) return;
     let raf = 0;
+    let last = current();
     const onScroll = () => {
       cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => setIndex(current()));
+      raf = requestAnimationFrame(() => {
+        const next = current();
+        setIndex(next);
+        if (next !== last) {
+          last = next;
+          landed(next);
+        }
+      });
     };
     g.addEventListener("scroll", onScroll, { passive: true });
     return () => {

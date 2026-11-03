@@ -6,6 +6,7 @@ import { ArrowUpRightIcon, PhoneIcon } from "@/shared/components/icons";
 import { Input, Textarea } from "@/shared/components/Input";
 import { Radio, RadioGroup } from "@/shared/components/SelectionControl";
 import { DISCOVR_PHONE, discovrWhatsApp } from "@/shared/utils/discovrContact";
+import { track } from "@/shared/analytics/utils/track";
 import { submitHelpRequest } from "../utils/helpRequestApi";
 import styles from "../styles/help.module.css";
 
@@ -32,6 +33,7 @@ export function HelpPage() {
     setState("sending");
     try {
       await submitHelpRequest({ category, message, name, phone });
+      track("help_request_submitted", { category: category || "unspecified" });
       setState("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "That didn't go through. Try again in a moment.");

@@ -1,6 +1,7 @@
 "use client";
 
 import { DISCOVR_PHONE, DISCOVR_PHONE_DISPLAY } from "@/shared/utils/discovrContact";
+import { track } from "@/shared/analytics/utils/track";
 import { MessageIcon, PhoneIcon } from "./icons";
 import { Sheet, SheetOption, SheetOptions } from "./Sheet";
 
@@ -23,8 +24,21 @@ export function ContactSheet({ open, onClose, phone = DISCOVR_PHONE, phoneDispla
       subtitle="Our founder answers your call or WhatsApp message. Feel free to reach out for anything."
     >
       <SheetOptions>
-        <SheetOption href={`tel:${phone}`} icon={<PhoneIcon />} title="Call us" sub={phoneDisplay} />
-        <SheetOption href={wa} external icon={<MessageIcon />} title="WhatsApp us" sub="Same number. We usually reply instantly." />
+        <SheetOption
+          href={`tel:${phone}`}
+          icon={<PhoneIcon />}
+          title="Call us"
+          sub={phoneDisplay}
+          onClick={() => track("contact_clicked", { channel: "call", from: "contact_sheet" })}
+        />
+        <SheetOption
+          href={wa}
+          external
+          icon={<MessageIcon />}
+          title="WhatsApp us"
+          sub="Same number. We usually reply instantly."
+          onClick={() => track("contact_clicked", { channel: "whatsapp", from: "contact_sheet" })}
+        />
       </SheetOptions>
     </Sheet>
   );

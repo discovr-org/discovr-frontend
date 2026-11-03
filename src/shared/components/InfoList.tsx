@@ -42,6 +42,8 @@ export interface InfoListProps {
   /** IANA timezone used to decide which day is "today". Defaults to India. */
   timeZone?: string;
   mapsHref?: string;
+  /** Told when someone opens the week of hours or the map pin. */
+  onAction?: (action: "hours" | "directions") => void;
 }
 
 const Sep = () => (
@@ -69,8 +71,13 @@ export function InfoList({
   venue = false,
   timeZone,
   mapsHref,
+  onAction,
 }: InfoListProps) {
   const [open, setOpen] = useState(false);
+  const toggleHours = () => {
+    if (!open) onAction?.("hours");
+    setOpen(!open);
+  };
   const weekId = useId();
   const today = todayIndex(timeZone);
   const hasVenueHours = Boolean(
@@ -137,6 +144,7 @@ export function InfoList({
           target="_blank"
           rel="noopener noreferrer"
           aria-label={placeLabel}
+          onClick={() => onAction?.("directions")}
         >
           <PinIcon />
           <span className={styles.text}>
@@ -159,7 +167,7 @@ export function InfoList({
             className={styles.toggle}
             aria-expanded={open}
             aria-controls={weekId}
-            onClick={() => setOpen((o) => !o)}
+            onClick={toggleHours}
           >
             <ClockIcon />
             <span className={styles.text}>
@@ -188,7 +196,7 @@ export function InfoList({
             className={styles.toggle}
             aria-expanded={open}
             aria-controls={weekId}
-            onClick={() => setOpen((o) => !o)}
+            onClick={toggleHours}
             disabled={!weekRows}
           >
             <ClockIcon />
@@ -210,7 +218,7 @@ export function InfoList({
             className={styles.toggle}
             aria-expanded={open}
             aria-controls={weekId}
-            onClick={() => setOpen((o) => !o)}
+            onClick={toggleHours}
           >
             <ClockIcon />
             <span className={styles.text}>

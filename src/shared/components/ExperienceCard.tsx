@@ -3,6 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useTrackList } from "@/shared/analytics/components/TrackList";
+import { rememberCardSource, type CardTrack } from "@/shared/analytics/utils/cardSource";
+import type { CardProps } from "@/shared/analytics/utils/events";
+import { track as trackEvent } from "@/shared/analytics/utils/track";
+import { useTrackView } from "@/shared/analytics/utils/useTrackView";
 import { FALLBACK_IMAGE } from "@/shared/utils/catalogApi";
 import { HeartIcon } from "./icons";
 import styles from "./ExperienceCard.module.css";
@@ -25,6 +30,8 @@ export type ExperienceCardProps = {
   saved?: boolean;
   onToggleSave?: () => void;
   priority?: boolean;
+  /** Card analytics. List and section come from the surrounding TrackList. */
+  track?: CardTrack;
 };
 
 /**
@@ -44,8 +51,20 @@ export function ExperienceCard({
   saved = false,
   onToggleSave,
   priority = false,
+  track,
 }: ExperienceCardProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const list = useTrackList();
+  const cardEvent: CardProps | null =
+    track && list ? { ...list, ...track, title } : null;
+  const viewRef = useTrackView<HTMLElement>(() => {
+    if (cardEvent) trackEvent("experience_card_viewed", cardEvent);
+  }, cardEvent ? `${cardEvent.list}:${cardEvent.section_id ?? ""}:${cardEvent.slug}` : "");
+  const onCardClick = () => {
+    if (!cardEvent) return;
+    trackEvent("experience_card_clicked", cardEvent);
+    rememberCardSource(cardEvent);
+  };
   const src = failedSrc === imageSrc ? FALLBACK_IMAGE : imageSrc;
   const meta = [placeLabel, durationLabel].filter(Boolean).join(" · ");
   const portrait = density === "portrait";
@@ -68,7 +87,8 @@ export function ExperienceCard({
   ) : null;
 
   return (
-    <article className={[styles.card, styles[density]].join(" ")}>
+    // Taps on the save heart stop propagation, so only opening the listing counts as a click.
+    <article ref={viewRef} className={[styles.card, styles[density]].join(" ")} onClick={onCardClick}>
       <Link href={href} className={styles.mediaLink}>
         <div className={styles.media}>
           {src ? (

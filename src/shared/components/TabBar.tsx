@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { MouseEvent } from "react";
+import { track } from "@/shared/analytics/utils/track";
 import { CompassIcon, HeartIcon, MessageIcon, UserIcon } from "./icons";
 import styles from "./TabBar.module.css";
 
@@ -35,15 +36,36 @@ export function TabBar({
   return (
     <nav className={`${styles.bar} ${shown ? styles.shown : ""}`} aria-label="Main" onFocus={onFocusWithin}>
       <div className={styles.row}>
-        <Link href={href.explore} className={styles.item} aria-current={aria("explore")}>
+        <Link
+          href={href.explore}
+          className={styles.item}
+          aria-current={aria("explore")}
+          data-attr="tab-explore"
+          onClick={() => track("tab_clicked", { tab: "explore" })}
+        >
           <CompassIcon />
           <span className={styles.label}>Explore</span>
         </Link>
-        <button type="button" className={styles.item} aria-haspopup="dialog" onClick={onContact}>
+        <button
+          type="button"
+          className={styles.item}
+          aria-haspopup="dialog"
+          data-attr="tab-contact"
+          onClick={() => {
+            track("tab_clicked", { tab: "contact" });
+            onContact();
+          }}
+        >
           <MessageIcon />
           <span className={styles.label}>Contact us</span>
         </button>
-        <Link href={href.saved} className={styles.item} aria-current={aria("saved")}>
+        <Link
+          href={href.saved}
+          className={styles.item}
+          aria-current={aria("saved")}
+          data-attr="tab-saved"
+          onClick={() => track("tab_clicked", { tab: "saved" })}
+        >
           <HeartIcon />
           <span className={styles.label}>Saved</span>
           {savedDot && (
@@ -57,7 +79,11 @@ export function TabBar({
           href={href.profile}
           className={styles.item}
           aria-current={aria("profile")}
-          onClick={onProfile}
+          data-attr="tab-profile"
+          onClick={(e) => {
+            track("tab_clicked", { tab: "profile" });
+            onProfile?.(e);
+          }}
         >
           <UserIcon />
           <span className={styles.label}>Profile</span>

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/shared/components/Button";
-import { isAnalyticsOn, setAnalyticsOn } from "../utils/analyticsConsent";
+import { isAnalyticsOn, setAnalyticsOn } from "@/shared/analytics/utils/analyticsConsent";
+import { startAnalytics, stopAnalytics } from "@/shared/analytics/utils/posthog";
 import styles from "../styles/legalPage.module.css";
 
 export function ConsentSettings() {
@@ -15,7 +16,9 @@ export function ConsentSettings() {
   if (on === null) return null;
 
   const toggle = () => {
+    if (on) stopAnalytics();
     setAnalyticsOn(!on);
+    if (!on) startAnalytics();
     setOn(!on);
   };
 

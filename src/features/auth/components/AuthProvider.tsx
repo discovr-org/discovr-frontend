@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -22,6 +23,8 @@ import {
   type SessionUser,
 } from "@/features/auth/utils/session";
 import { useSaved } from "@/shared/components/SavedProvider";
+import { identifyUser, resetUser } from "@/shared/analytics/utils/posthog";
+import { track } from "@/shared/analytics/utils/track";
 
 export type AuthIntent = "save" | "call" | "profile";
 
@@ -64,12 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPending(intent);
       setPendingAction(() => ifAuthed);
       setAuthOpen(true);
+      track("auth_sheet_opened", { intent });
     },
     [],
   );
 
   const openAuth = useCallback((intent: AuthIntent = "profile") => {
     primeKeyboard();
+    track("auth_sheet_opened", { intent });
     setPending(intent);
     setPendingAction(null);
     setAuthOpen(true);
@@ -81,9 +86,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPendingAction(null);
   }, []);
 
-  const onSendCode = useCallback(async (phone: PhoneNumber) => {
-    await requestOtp(phone);
-  }, []);
+  const intent = pending ?? "profile";
+
+  const onSendCode = useCallback(
+    async (phone: PhoneNumber) => {
+      try {
+        await requestOtp(phone);
+        track("otp_requested", { intent });
+      } catch (err) {
+        track("otp_failed", { step: "send", reason: "error" });
+        throw err;
+      }
+    },
+    [intent],
+  );
 
   // Signed in from here on, even if they drop off at the name step; the server asks again next time.
   const onVerifyCode = useCallback(
@@ -98,44 +114,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
         writeSession(next);
         setUser(next);
+        if (next.userId) identifyUser(next.userId);
+        track("otp_verified", { intent, needs_name: result.isNewUser || !result.name });
         return { ok: true, isNewUser: result.isNewUser, name: result.name ?? undefined };
       } catch (err) {
         const message = err instanceof Error ? err.message : "";
-        if (/wrong code/i.test(message)) return { ok: false };
+        const wrongCode = /wrong code/i.test(message);
+        track("otp_failed", { step: "verify", reason: wrongCode ? "wrong_code" : "error" });
+        if (wrongCode) return { ok: false };
         throw err;
       }
     },
-    [],
+    [intent],
   );
 
-  const onSaveName = useCallback(async (_phone: PhoneNumber, name: string) => {
-    const session = readSession();
-    if (!session) throw new Error("Not signed in");
-    const saved = await saveName(session.sessionId, name);
-    const next = { ...session, name: saved };
-    writeSession(next);
-    setUser(next);
-  }, []);
+  const onSaveName = useCallback(
+    async (_phone: PhoneNumber, name: string) => {
+      const session = readSession();
+      if (!session) throw new Error("Not signed in");
+      const saved = await saveName(session.sessionId, name);
+      const next = { ...session, name: saved };
+      writeSession(next);
+      setUser(next);
+      track("name_submitted", { intent });
+    },
+    [intent],
+  );
 
   const onSuccess = useCallback(
     async () => {
       const session = readSession();
       if (session) await saved.syncAfterLogin(session.sessionId);
+      track("auth_sheet_closed", { intent, completed: true });
       setAuthOpen(false);
       const action = pendingAction;
       setPending(null);
       setPendingAction(null);
       action?.();
     },
-    [pendingAction, saved],
+    [pendingAction, saved, intent],
   );
+
+  const onClose = useCallback(() => {
+    track("auth_sheet_closed", { intent, completed: Boolean(readSession()?.sessionId) });
+    closeAuth();
+  }, [closeAuth, intent]);
 
   const signOut = useCallback(async () => {
     const session = readSession();
     if (session?.sessionId) await logoutSession(session.sessionId);
+    track("signed_out", {});
+    resetUser();
     clearSession();
     setUser(null);
   }, []);
+
+  // Returning visitors: link this device to their account by internal id.
+  const userId = user?.userId;
+  useEffect(() => {
+    if (userId) identifyUser(userId);
+  }, [userId]);
 
   const value = useMemo(
     () => ({
@@ -155,7 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
       <AuthSheet
         open={authOpen}
-        onClose={closeAuth}
+        onClose={onClose}
         onSendCode={onSendCode}
         onVerifyCode={onVerifyCode}
         onSaveName={onSaveName}

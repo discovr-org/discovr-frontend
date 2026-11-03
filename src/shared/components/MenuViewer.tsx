@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react";
 import type { MenuPage } from "@/types/experience";
 import { IconButton } from "./IconButton";
 import { BackIcon, ChevronRightIcon, CrossIcon, ZoomInIcon, ZoomOutIcon } from "./icons";
@@ -15,6 +15,8 @@ export interface MenuViewerProps {
   /** e.g. "Maria's Kitchen" (the bar reads "Maria's Kitchen menu") */
   venueName: string;
   onClose: () => void;
+  /** Told which page (0-based) is on screen, once when it opens and on every new page. */
+  onPageChange?: (index: number) => void;
 }
 
 /**
@@ -22,7 +24,14 @@ export interface MenuViewerProps {
  * button for 200% around the tap point, Escape or close to leave. Focus is trapped while
  * open, the page behind doesn't scroll, and focus returns to whatever opened it.
  */
-export function MenuViewer({ open, startIndex, pages, venueName, onClose }: MenuViewerProps) {
+export function MenuViewer({
+  open,
+  startIndex,
+  pages,
+  venueName,
+  onClose,
+  onPageChange,
+}: MenuViewerProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const pagesRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -77,6 +86,11 @@ export function MenuViewer({ open, startIndex, pages, venueName, onClose }: Menu
       cancelAnimationFrame(raf);
     };
   }, [current, n]);
+
+  const pageShown = useEffectEvent((i: number) => onPageChange?.(i));
+  useEffect(() => {
+    if (open) pageShown(index);
+  }, [open, index]);
 
   const setZoom = useCallback(
     (on: boolean, clientX?: number, clientY?: number) => {

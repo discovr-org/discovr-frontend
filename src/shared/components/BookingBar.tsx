@@ -24,6 +24,8 @@ export interface BookingBarProps {
    * Use to gate the call behind login (signup prototype).
    */
   onCallToBook?: () => void;
+  /** Told on every tap of the button, before it calls or opens the booking page. */
+  onBookClick?: (method: "call" | "link") => void;
 }
 
 /**
@@ -40,6 +42,7 @@ export function BookingBar({
   hostBusinessName,
   hidden,
   onCallToBook,
+  onBookClick,
 }: BookingBarProps) {
   const ref = useRef<HTMLElement>(null);
 
@@ -92,15 +95,32 @@ export function BookingBar({
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Book on ${hostBusinessName}'s site (opens in a new tab)`}
+          data-attr="book-cta"
+          onClick={() => onBookClick?.("link")}
         >
           Book on {hostBusinessName}
         </a>
       ) : onCallToBook ? (
-        <button type="button" className={styles.cta} onClick={onCallToBook} aria-label={callLabel}>
+        <button
+          type="button"
+          className={styles.cta}
+          data-attr="book-cta"
+          onClick={() => {
+            onBookClick?.("call");
+            onCallToBook();
+          }}
+          aria-label={callLabel}
+        >
           {callContent}
         </button>
       ) : (
-        <a className={styles.cta} href={`tel:${phone}`} aria-label={callLabel}>
+        <a
+          className={styles.cta}
+          href={`tel:${phone}`}
+          aria-label={callLabel}
+          data-attr="book-cta"
+          onClick={() => onBookClick?.("call")}
+        >
           {callContent}
         </a>
       )}

@@ -6,6 +6,7 @@ import { Input, Textarea } from "@/shared/components/Input";
 import { PanelSheet } from "@/shared/components/PanelSheet";
 import { Radio, RadioGroup } from "@/shared/components/SelectionControl";
 import { discovrWhatsApp } from "@/shared/utils/discovrContact";
+import { track } from "@/shared/analytics/utils/track";
 import styles from "../styles/reportSheet.module.css";
 
 const KINDS = [
@@ -47,6 +48,7 @@ export function ReportSheet({
     ]
       .filter(Boolean)
       .join("\n");
+    track("report_submitted", { slug, kind: kind || "unspecified" });
     window.open(discovrWhatsApp(text), "_blank", "noopener,noreferrer");
     onClose();
   };

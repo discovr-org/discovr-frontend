@@ -14,6 +14,9 @@ import {
 } from "@/shared/utils/catalogApi";
 import { useSaved } from "@/shared/utils/useSaved";
 import styles from "@/features/saved/styles/savedScreen.module.css";
+import { TrackList } from "@/shared/analytics/components/TrackList";
+import { cardTrack } from "@/shared/analytics/utils/cardSource";
+import { track } from "@/shared/analytics/utils/track";
 
 export function SavedScreen() {
   const saved = useSaved();
@@ -97,27 +100,31 @@ export function SavedScreen() {
             }
           />
         ) : (
-          <div className={styles.stack}>
-            {items.map((item) => (
-              <ExperienceCard
-                key={item.slug}
-                density="landscape"
-                href={`/experiences/${item.slug}`}
-                title={item.title}
-                placeLabel={item.placeLabel}
-                imageSrc={item.imageSrc}
-                imageAlt={item.imageAlt}
-                blurb={item.blurb}
-                durationLabel={item.durationLabel}
-                priceLabel={priceLabel(item)}
-                saved
-                onToggleSave={() => {
-                  saved.toggle(item.slug);
-                  toast("Removed from saved");
-                }}
-              />
-            ))}
-          </div>
+          <TrackList list="saved" layout="stack">
+            <div className={styles.stack}>
+              {items.map((item, i) => (
+                <ExperienceCard
+                  key={item.slug}
+                  track={cardTrack(item, i)}
+                  density="landscape"
+                  href={`/experiences/${item.slug}`}
+                  title={item.title}
+                  placeLabel={item.placeLabel}
+                  imageSrc={item.imageSrc}
+                  imageAlt={item.imageAlt}
+                  blurb={item.blurb}
+                  durationLabel={item.durationLabel}
+                  priceLabel={priceLabel(item)}
+                  saved
+                  onToggleSave={() => {
+                    saved.toggle(item.slug);
+                    track("experience_unsaved", { slug: item.slug, from: "saved" });
+                    toast("Removed from saved");
+                  }}
+                />
+              ))}
+            </div>
+          </TrackList>
         )}
       </div>
     </AppShell>

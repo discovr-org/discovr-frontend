@@ -1,0 +1,74 @@
+import posthog from "posthog-js";
+import { isAnalyticsOn } from "./analyticsConsent";
+import { pageTypeOf } from "./pageType";
+
+const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+const HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || "/ingest";
+
+/** True once PostHog is loaded and the visitor hasn't turned analytics off. */
+export function analyticsActive(): boolean {
+  return Boolean(KEY) && posthog.__loaded && !posthog.has_opted_out_capturing();
+}
+
+/** Called once at boot. Does nothing without a key or when analytics is off on this device. */
+export function bootAnalytics(): void {
+  if (isAnalyticsOn()) startAnalytics();
+}
+
+/** Load PostHog, or resume it after the visitor turns analytics back on. */
+export function startAnalytics(): void {
+  if (!KEY || typeof window === "undefined") return;
+  if (posthog.__loaded) {
+    posthog.opt_in_capturing();
+    posthog.startSessionRecording();
+    return;
+  }
+  posthog.init(KEY, {
+    api_host: HOST,
+    ui_host: "https://us.posthog.com",
+    defaults: "2026-08-30",
+    person_profiles: "identified_only",
+    capture_pageview: "history_change",
+    capture_pageleave: true,
+    autocapture: true,
+    capture_exceptions: true,
+    // Replays hide everything typed and anything marked data-ph-mask (e.g. the phone on Profile).
+    session_recording: { maskAllInputs: true, maskTextSelector: "[data-ph-mask]" },
+    before_send: (event) => {
+      if (event) event.properties.page_type = pageTypeOf(window.location.pathname);
+      return event;
+    },
+    loaded: (ph) => {
+      // This device's choice wins over any older PostHog opt-out.
+      if (ph.has_opted_out_capturing()) ph.opt_in_capturing();
+      ph.register({
+        app_surface: isStandalone() ? "pwa" : "browser",
+        app_version: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "dev",
+      });
+      if (process.env.NODE_ENV === "development") ph.debug();
+    },
+  });
+}
+
+/** Stop sending anything from this device. */
+export function stopAnalytics(): void {
+  if (!posthog.__loaded) return;
+  posthog.capture("analytics_opted_out");
+  posthog.stopSessionRecording();
+  posthog.opt_out_capturing();
+}
+
+/** Link this device to the signed-in account by internal id only, never name or phone. */
+export function identifyUser(userId: string): void {
+  if (analyticsActive() && posthog.get_distinct_id() !== userId) posthog.identify(userId);
+}
+
+/** Forget the account on sign-out, so the next visitor on this device starts fresh. */
+export function resetUser(): void {
+  if (posthog.__loaded) posthog.reset();
+}
+
+function isStandalone(): boolean {
+  const nav = window.navigator as Navigator & { standalone?: boolean };
+  return window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
+}

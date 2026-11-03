@@ -1,10 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import type { MouseEvent } from "react";
+import { track } from "@/shared/analytics/utils/track";
 // Trip-updates signup (hidden for now) also needs: useId, useState, FormEvent, subscribeTripUpdates.
 import { DISCOVR_PHONE, DISCOVR_PHONE_DISPLAY } from "@/shared/utils/discovrContact";
 import { MessageIcon, PhoneIcon } from "./icons";
 import styles from "./SiteFooter.module.css";
+
+/** One listener for every footer link: contact icons count as contact, the rest by their label. */
+function onFooterClick(e: MouseEvent<HTMLElement>) {
+  const a = (e.target as Element).closest("a");
+  if (!a) return;
+  const href = a.getAttribute("href") ?? "";
+  if (href.startsWith("tel:")) track("contact_clicked", { channel: "call", from: "footer" });
+  else if (href.startsWith("https://wa.me/")) track("contact_clicked", { channel: "whatsapp", from: "footer" });
+  else track("footer_link_clicked", { label: a.textContent?.trim() || href });
+}
 
 type SiteFooterProps = {
   /** Where the signup came from, e.g. "home" or a listing slug. */
@@ -35,7 +47,7 @@ export function SiteFooter({ source }: SiteFooterProps) {
   */
 
   return (
-    <footer className={styles.footer}>
+    <footer className={styles.footer} onClick={onFooterClick}>
       <div className={styles.inner}>
         <div className={styles.grid}>
           <div className={styles.intro}>

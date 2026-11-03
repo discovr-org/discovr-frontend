@@ -26,7 +26,14 @@ import { useToast } from "@/shared/components/Toast";
 import { hasApiBaseUrl } from "@/shared/utils/apiBase";
 import { useCatalogCards } from "@/shared/utils/useCatalogCards";
 import { FeedSkeleton } from "@/features/home/components/FeedSkeleton";
+import { HomeSection } from "@/features/home/components/HomeSection";
 import { useSaved } from "@/shared/utils/useSaved";
+import { TrackList } from "@/shared/analytics/components/TrackList";
+import { cardTrack } from "@/shared/analytics/utils/cardSource";
+import { track } from "@/shared/analytics/utils/track";
+import { useScrollDepth } from "@/shared/analytics/utils/useScrollDepth";
+
+const SEARCH_SETTLE_MS = 600;
 
 export function ExploreFeed() {
   const [filters, setFilters] = useState<FeedFilters>(NO_FILTERS);
@@ -44,9 +51,10 @@ export function ExploreFeed() {
   const auth = useAuth();
   const toast = useToast();
 
-  const onToggleSave = (slug: string) => {
+  const onToggleSave = (slug: string, from: string) => {
     const was = saved.isSaved(slug);
     saved.toggle(slug);
+    track(was ? "experience_unsaved" : "experience_saved", { slug, from });
     if (!was && !auth.user) {
       auth.openAuth("save");
       return;
@@ -85,6 +93,22 @@ export function ExploreFeed() {
     () => (searching ? searchCards(allCards, needle) : []),
     [needle, searching, allCards],
   );
+
+  useScrollDepth();
+
+  // One event per pause in typing, not per keystroke.
+  const resultsCount = searchResults.length;
+  useEffect(() => {
+    if (!searching || loadState !== "ready") return;
+    const timer = window.setTimeout(() => {
+      track("search_performed", {
+        query: needle,
+        query_length: needle.length,
+        results_count: resultsCount,
+      });
+    }, SEARCH_SETTLE_MS);
+    return () => window.clearTimeout(timer);
+  }, [needle, searching, resultsCount, loadState]);
 
   // Keep ?q= in the address so back/refresh and shared links keep the search.
   useEffect(() => {
@@ -214,24 +238,27 @@ export function ExploreFeed() {
               shortlist.
             </p>
           ) : (
-            <div className={styles.stack}>
-              {searchResults.map((item) => (
-                <ExperienceCard
-                  key={item.slug}
-                  density="landscape"
-                  href={`/experiences/${item.slug}`}
-                  title={item.title}
-                  placeLabel={areaOf(item)}
-                  imageSrc={item.imageSrc}
-                  imageAlt={item.imageAlt}
-                  blurb={item.blurb}
-                  durationLabel={item.durationLabel}
-                  priceLabel={priceLabel(item)}
-                  saved={saved.isSaved(item.slug)}
-                  onToggleSave={() => onToggleSave(item.slug)}
-                />
-              ))}
-            </div>
+            <TrackList list="search" layout="stack" searchQuery={needle}>
+              <div className={styles.stack}>
+                {searchResults.map((item, i) => (
+                  <ExperienceCard
+                    key={item.slug}
+                    density="landscape"
+                    href={`/experiences/${item.slug}`}
+                    title={item.title}
+                    placeLabel={areaOf(item)}
+                    imageSrc={item.imageSrc}
+                    imageAlt={item.imageAlt}
+                    blurb={item.blurb}
+                    durationLabel={item.durationLabel}
+                    priceLabel={priceLabel(item)}
+                    saved={saved.isSaved(item.slug)}
+                    onToggleSave={() => onToggleSave(item.slug, "search")}
+                    track={cardTrack(item, i)}
+                  />
+                ))}
+              </div>
+            </TrackList>
           )
         ) : null}
 
@@ -268,7 +295,7 @@ export function ExploreFeed() {
                       imageSrc={item.imageSrc}
                       imageAlt={item.imageAlt}
                       saved={saved.isSaved(item.slug)}
-                      onToggleSave={() => onToggleSave(item.slug)}
+                      onToggleSave={() => onToggleSave(item.slug, "filters")}
                     />
                   </li>
                 ))}
@@ -278,60 +305,14 @@ export function ExploreFeed() {
         ) : null}
 
         {loadState === "ready" && !searching && !filtering
-          ? sections.map((section) => (
-              <section
+          ? sections.map((section, i) => (
+              <HomeSection
                 key={section.id}
-                className={styles.section}
-                aria-labelledby={`sec-${section.id}`}
-              >
-                <h2 id={`sec-${section.id}`} className={styles.sectionTitle}>
-                  {section.title}
-                </h2>
-                {section.layout === "rail" ? (
-                  <div
-                    className={styles.rail}
-                    role="list"
-                    aria-label={`${section.title}, swipe for more`}
-                  >
-                    {section.items.map((item) => (
-                      <div
-                        key={`${section.id}-${item.slug}-${item.title}`}
-                        role="listitem"
-                      >
-                        <ExperienceCard
-                          density="portrait"
-                          href={`/experiences/${item.slug}`}
-                          title={item.title}
-                          placeLabel={areaOf(item)}
-                          imageSrc={item.imageSrc}
-                          imageAlt={item.imageAlt}
-                          saved={saved.isSaved(item.slug)}
-                          onToggleSave={() => onToggleSave(item.slug)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className={styles.stack}>
-                    {section.items.map((item) => (
-                      <ExperienceCard
-                        key={`${section.id}-${item.slug}-${item.title}`}
-                        density="landscape"
-                        href={`/experiences/${item.slug}`}
-                        title={item.title}
-                        placeLabel={areaOf(item)}
-                        imageSrc={item.imageSrc}
-                        imageAlt={item.imageAlt}
-                        blurb={item.blurb}
-                        durationLabel={item.durationLabel}
-                        priceLabel={priceLabel(item)}
-                        saved={saved.isSaved(item.slug)}
-                        onToggleSave={() => onToggleSave(item.slug)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </section>
+                section={section}
+                position={i + 1}
+                isSaved={saved.isSaved}
+                onToggleSave={onToggleSave}
+              />
             ))
           : null}
 

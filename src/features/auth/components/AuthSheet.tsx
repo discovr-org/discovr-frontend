@@ -680,7 +680,7 @@ export function AuthSheet({
         {step === 'otp' && (
           <div className={styles.step} key="otp">
             <div className={styles.otpLabelRow}>
-              <label htmlFor={ids.otp} className={styles.otpLabel}>
+              <label htmlFor={ids.otp} className={styles.otpLabel} data-ph-mask>
                 Code sent to +{country.dial} {display}
               </label>
               <button type="button" className={styles.textButton} onClick={editNumber} aria-label="Edit phone number">

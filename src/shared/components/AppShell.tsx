@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { track } from "@/shared/analytics/utils/track";
 import { ContactSheet } from "./ContactSheet";
 import { SiteFooter } from "./SiteFooter";
 import { TabBar, type Tab } from "./TabBar";
@@ -22,6 +23,10 @@ type AppShellProps = {
 export function AppShell({ current, children, savedDot, footer = true, footerSource }: AppShellProps) {
   const [contactOpen, setContactOpen] = useState(false);
   const pathname = usePathname();
+  const openContact = () => {
+    track("contact_sheet_opened", {});
+    setContactOpen(true);
+  };
 
   return (
     <>
@@ -32,13 +37,13 @@ export function AppShell({ current, children, savedDot, footer = true, footerSou
         shown
         current={current === "about" ? "explore" : current}
         savedDot={savedDot}
-        onContact={() => setContactOpen(true)}
+        onContact={openContact}
       />
       <ContactSheet open={contactOpen} onClose={() => setContactOpen(false)} />
       <TopNav
         current={current}
         savedDot={savedDot}
-        onContact={() => setContactOpen(true)}
+        onContact={openContact}
       />
       <div className={styles.shell}>
         <main id="main" tabIndex={-1} className={styles.main}>

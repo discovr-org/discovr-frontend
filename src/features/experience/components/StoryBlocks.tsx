@@ -4,19 +4,24 @@ import type { StoryBlock } from "@/types/experience";
 import styles from "../styles/storyBlocks.module.css";
 
 /** The About story: headings, quotes, photos, steps, callouts, checklists, FAQs, in order. */
-export function StoryBlocks({ blocks }: { blocks: StoryBlock[] }) {
+type StoryBlocksProps = {
+  blocks: StoryBlock[];
+  onFaqOpen?: (question: string) => void;
+};
+
+export function StoryBlocks({ blocks, onFaqOpen }: StoryBlocksProps) {
   return (
     <div className={`${styles.stack} ds-keep-lines`}>
       {blocks.map((block, i) => (
         <div key={i}>
-          <Block block={block} />
+          <Block block={block} onFaqOpen={onFaqOpen} />
         </div>
       ))}
     </div>
   );
 }
 
-function Block({ block }: { block: StoryBlock }) {
+function Block({ block, onFaqOpen }: { block: StoryBlock; onFaqOpen?: (question: string) => void }) {
   switch (block.type) {
     case "heading":
       return block.level === "section" ? (
@@ -127,7 +132,13 @@ function Block({ block }: { block: StoryBlock }) {
       return (
         <div className={styles.qa}>
           {block.items.map((item) => (
-            <details key={item.q} className={styles.qaItem}>
+            <details
+              key={item.q}
+              className={styles.qaItem}
+              onToggle={(e) => {
+                if (e.currentTarget.open) onFaqOpen?.(item.q);
+              }}
+            >
               <summary className={styles.qaSummary}>
                 <span className={styles.qaQuestion}>{item.q}</span>
                 <ChevronDownIcon />
