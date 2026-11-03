@@ -2,7 +2,13 @@
 /// <reference lib="webworker" />
 import { defaultCache } from "@serwist/next/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { CacheFirst, ExpirationPlugin, NetworkFirst, Serwist } from "serwist";
+import {
+  CacheFirst,
+  ExpirationPlugin,
+  NetworkFirst,
+  Serwist,
+  StaleWhileRevalidate,
+} from "serwist";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -30,6 +36,20 @@ const serwist = new Serwist({
           new ExpirationPlugin({
             maxEntries: 32,
             maxAgeSeconds: 60 * 60 * 24 * 30,
+          }),
+        ],
+      }),
+    },
+    // Feed and listings show the last copy at once; the API can take seconds to wake up.
+    {
+      matcher: ({ url, request }) =>
+        request.method === "GET" && url.pathname.startsWith("/v1/catalog/"),
+      handler: new StaleWhileRevalidate({
+        cacheName: "discovr-catalog",
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 64,
+            maxAgeSeconds: 60 * 60 * 24 * 7,
           }),
         ],
       }),
