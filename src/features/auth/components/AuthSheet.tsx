@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -24,6 +25,7 @@ import {
   stripDial,
   toE164,
 } from '@/features/auth/utils/phone';
+import { holdKeyboard, releasePrimer } from '@/features/auth/utils/keyboard';
 import styles from './AuthSheet.module.css';
 
 export type PhoneNumber = {
@@ -37,16 +39,31 @@ export type PhoneNumber = {
   nationalNumber: string;
 };
 
+export type VerifyResult =
+  | { ok: false }
+  /** isNewUser: true shows step 3 (name). Pass the stored name for returning users. */
+  | { ok: true; isNewUser: boolean; name?: string };
+
+export type AuthResult = {
+  phone: PhoneNumber;
+  isNewUser: boolean;
+  name?: string;
+};
+
 export type AuthSheetProps = {
   open: boolean;
   /** Scrim tap, Escape, swipe down or Android back. */
   onClose: () => void;
   /** Send the OTP. Throw to show "Couldn't send the code. Try again". */
   onSendCode: (phone: PhoneNumber) => Promise<void>;
-  /** Return true when the code is right, false when it is wrong. Throw for network errors. */
-  onVerifyCode: (phone: PhoneNumber, code: string) => Promise<boolean>;
-  /** Called after a correct code. Close the sheet and finish what the user tapped (Save, Call). */
-  onSuccess: (phone: PhoneNumber) => void;
+  /** { ok: false } for a wrong code. Throw for network errors. */
+  onVerifyCode: (phone: PhoneNumber, code: string) => Promise<VerifyResult>;
+  /** New accounts only. Throw to show "Couldn't save. Try again". */
+  onSaveName: (phone: PhoneNumber, name: string) => Promise<void>;
+  /** Signed in. Close the sheet and finish what the user tapped (Save, Call). */
+  onSuccess: (result: AuthResult) => void;
+  /** Button on the name step. Name the original action: "Save", "Call to book". Default "Done". */
+  ctaLabel?: string;
   termsHref: string;
   privacyHref: string;
   defaultCountry?: string;
@@ -57,11 +74,12 @@ export type AuthSheetProps = {
   codeLength?: number;
 };
 
-type Step = 'phone' | 'country' | 'otp';
+type Step = 'phone' | 'country' | 'otp' | 'name';
 
 const SEND_FAILED = "Couldn't send the code. Try again";
 const VERIFY_FAILED = "Couldn't check the code. Try again";
 const WRONG_CODE = 'Wrong code. Try again';
+const SAVE_FAILED = "Couldn't save. Try again";
 const OPEN_MS = 180;
 const CLOSE_MS = 120;
 
@@ -70,7 +88,9 @@ export function AuthSheet({
   onClose,
   onSendCode,
   onVerifyCode,
+  onSaveName,
   onSuccess,
+  ctaLabel = 'Done',
   termsHref,
   privacyHref,
   defaultCountry = 'IN',
@@ -88,6 +108,8 @@ export function AuthSheet({
     search: `${uid}-search`,
     otp: `${uid}-otp`,
     otpStatus: `${uid}-otp-status`,
+    name: `${uid}-name`,
+    nameErr: `${uid}-name-err`,
   };
 
   // Mount and animation state
@@ -100,7 +122,9 @@ export function AuthSheet({
   const [digits, setDigits] = useState('');
   const [phoneErr, setPhoneErr] = useState('');
   const [invalid, setInvalid] = useState(false);
-  const [agreed, setAgreed] = useState(true);
+  const [name, setName] = useState('');
+  const [nameErr, setNameErr] = useState('');
+  const [saving, setSaving] = useState(false);
   const [sending, setSending] = useState(false);
   const [query, setQuery] = useState('');
   const [code, setCode] = useState('');
@@ -118,10 +142,11 @@ export function AuthSheet({
   const phoneRef = useRef<HTMLInputElement>(null);
   const otpRef = useRef<HTMLInputElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const proxyRef = useRef<HTMLInputElement>(null);
+  const focusTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const sheetRef = useRef<HTMLDivElement>(null);
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const dragStart = useRef<number | null>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   const sendingRef = useRef(false);
@@ -135,7 +160,8 @@ export function AuthSheet({
     nationalNumber: digits,
   };
   const valid = isValidNational(digits, country);
-  const canSend = valid && agreed;
+  const canSend = valid;
+  const nameOk = name.trim().length > 0;
 
   // ---------- open / close ----------
   useEffect(() => {
@@ -149,6 +175,9 @@ export function AuthSheet({
       setInvalid(false);
       setChecking(false);
       setSending(false);
+      setSaving(false);
+      setName('');
+      setNameErr('');
       setDragY(0);
       const raf = requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
       return () => cancelAnimationFrame(raf);
@@ -186,12 +215,39 @@ export function AuthSheet({
     };
   }, [mounted]);
 
-  // Focus the step's main input. Inside the opening tap, so mobile keyboards open.
-  useEffect(() => {
+  // Put the cursor in each step's field so typing can start straight away.
+  // Retries until the field is mounted; then hands focus over from the keyboard primer.
+  useLayoutEffect(() => {
     if (!mounted) return;
-    const el = step === 'phone' ? phoneRef.current : step === 'otp' ? otpRef.current : searchRef.current;
-    el?.focus({ preventScroll: true });
+    clearTimeout(focusTimer.current);
+    let tries = 0;
+    const attempt = () => {
+      const el =
+        step === 'phone' ? phoneRef.current : step === 'otp' ? otpRef.current : step === 'name' ? nameRef.current : searchRef.current;
+      if (el) {
+        el.focus({ preventScroll: true });
+        if (el.type !== 'search') {
+          const n = el.value.length;
+          try {
+            el.setSelectionRange(n, n);
+          } catch {}
+        }
+      }
+      if (el && document.activeElement === el) {
+        releasePrimer();
+        return;
+      }
+      if (++tries < 8) focusTimer.current = setTimeout(attempt, 40);
+    };
+    attempt();
+    return () => clearTimeout(focusTimer.current);
   }, [mounted, step]);
+
+  /** Step changes that are not taps: keep focus on an input so the mobile keyboard stays up. */
+  const goTo = useCallback((next: Step) => {
+    holdKeyboard(proxyRef.current);
+    setStep(next);
+  }, []);
 
   // Resend countdown
   useEffect(() => {
@@ -200,7 +256,10 @@ export function AuthSheet({
     return () => clearInterval(t);
   }, [step, open]);
 
-  useEffect(() => () => clearTimeout(advanceTimer.current), []);
+  useEffect(() => () => {
+    clearTimeout(advanceTimer.current);
+    releasePrimer();
+  }, []);
 
   // ---------- actions ----------
   const sendCode = useCallback(
@@ -224,26 +283,25 @@ export function AuthSheet({
   );
 
   const submitPhone = useCallback(
-    async (d: string = digits, c: Country = country, consent: boolean = agreed) => {
+    async (d: string = digits, c: Country = country) => {
       clearTimeout(advanceTimer.current);
       if (!isValidNational(d, c)) {
         setPhoneErr(INVALID_NUMBER);
         setInvalid(true);
         return;
       }
-      if (!consent) return;
       setPhoneErr('');
       setInvalid(false);
       const ok = await sendCode({ e164: toE164(d, c), countryIso: c.iso, dialCode: c.dial, nationalNumber: d });
       if (ok) {
         setCode('');
         setOtpErr('');
-        setStep('otp');
+        goTo('otp');
       } else {
         setPhoneErr(SEND_FAILED);
       }
     },
-    [digits, country, agreed, sendCode],
+    [digits, country, sendCode, goTo],
   );
 
   const verify = useCallback(
@@ -253,12 +311,15 @@ export function AuthSheet({
       setChecking(true);
       setOtpErr('');
       try {
-        const ok = await onVerifyCode(phone, value);
-        if (ok) {
-          onSuccess(phone);
-        } else {
+        const result = await onVerifyCode(phone, value);
+        if (!result.ok) {
           setOtpErr(WRONG_CODE);
           setCode('');
+        } else if (result.isNewUser) {
+          setName('');
+          goTo('name');
+        } else {
+          onSuccess({ phone, isNewUser: false, name: result.name });
         }
       } catch {
         setOtpErr(VERIFY_FAILED);
@@ -269,7 +330,7 @@ export function AuthSheet({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [onVerifyCode, onSuccess, phone.e164],
+    [onVerifyCode, onSuccess, goTo, phone.e164],
   );
 
   // WebOTP: Android Chrome fills the code by itself.
@@ -302,8 +363,8 @@ export function AuthSheet({
     setPhoneErr(atMax && !ok ? INVALID_NUMBER : '');
     setInvalid(atMax && !ok);
     clearTimeout(advanceTimer.current);
-    if (autoAdvance && atMax && ok && agreed) {
-      advanceTimer.current = setTimeout(() => submitPhone(d, c, true), 350);
+    if (autoAdvance && atMax && ok) {
+      advanceTimer.current = setTimeout(() => submitPhone(d, c), 350);
     }
   };
 
@@ -335,6 +396,21 @@ export function AuthSheet({
     const ok = await sendCode(phone);
     if (!ok) setOtpErr(SEND_FAILED);
     otpRef.current?.focus();
+  };
+
+  const submitName = async () => {
+    const n = name.trim();
+    if (!n || saving) return;
+    setSaving(true);
+    setNameErr('');
+    try {
+      await onSaveName(phone, n);
+      onSuccess({ phone, isNewUser: true, name: n });
+    } catch {
+      setNameErr(SAVE_FAILED);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const editNumber = () => {
@@ -412,7 +488,7 @@ export function AuthSheet({
   if (!mounted || typeof document === 'undefined') return null;
 
   const secsLeft = Math.max(0, Math.ceil((resendAt - now) / 1000));
-  const stepNum = step === 'otp' ? 2 : 1;
+  const stepNum = step === 'otp' ? 2 : step === 'name' ? 3 : 1;
   const activeBox = Math.min(code.length, codeLength - 1);
   const display = formatNational(digits, country);
 
@@ -450,15 +526,26 @@ export function AuthSheet({
           <div
             className={styles.progress}
             role="progressbar"
-            aria-label={`Step ${stepNum} of 2`}
+            aria-label={`Step ${stepNum} of 3`}
             aria-valuemin={1}
-            aria-valuemax={2}
+            aria-valuemax={3}
             aria-valuenow={stepNum}
           >
             <span className={styles.segment} data-on="true" />
-            <span className={styles.segment} data-on={stepNum === 2 ? 'true' : 'false'} />
+            <span className={styles.segment} data-on={stepNum >= 2 ? 'true' : 'false'} />
+            <span className={styles.segment} data-on={stepNum === 3 ? 'true' : 'false'} />
           </div>
         </div>
+
+        <input
+          ref={proxyRef}
+          className={styles.proxy}
+          aria-hidden="true"
+          tabIndex={-1}
+          inputMode="numeric"
+          autoComplete="off"
+          readOnly
+        />
 
         {step !== 'country' && (
           <h2 id={ids.title} className={styles.title}>
@@ -522,39 +609,16 @@ export function AuthSheet({
             >
               {sending ? <span className={styles.spinner} aria-label="Sending code" /> : 'Send code'}
             </button>
-            <label className={styles.terms} htmlFor={ids.terms}>
-              <input
-                id={ids.terms}
-                type="checkbox"
-                className={styles.termsInput}
-                checked={agreed}
-                onChange={(e) => {
-                  setAgreed(e.target.checked);
-                  if (e.target.checked && valid && autoAdvance) {
-                    // Number was already complete: carry on as if it had just been typed.
-                    clearTimeout(advanceTimer.current);
-                    advanceTimer.current = setTimeout(() => submitPhone(digits, country, true), 350);
-                  }
-                }}
-              />
-              <span className={styles.box} aria-hidden="true">
-                {agreed && (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#061412" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 6 9 17l-5-5" />
-                  </svg>
-                )}
-              </span>
-              <span>
-                I agree to the{' '}
-                <a href={termsHref} target="_blank" rel="noopener noreferrer" className={styles.link}>
-                  Terms &amp; Conditions
-                </a>{' '}
-                and{' '}
-                <a href={privacyHref} target="_blank" rel="noopener noreferrer" className={styles.link}>
-                  Privacy Policy
-                </a>
-              </span>
-            </label>
+            <p className={styles.terms}>
+              By continuing you agree to the{' '}
+              <a href={termsHref} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                Terms &amp; Conditions
+              </a>{' '}
+              and{' '}
+              <a href={privacyHref} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                Privacy Policy
+              </a>
+            </p>
           </div>
         )}
 
@@ -672,6 +736,55 @@ export function AuthSheet({
                 </button>
               )}
             </div>
+          </div>
+        )}
+
+        {step === 'name' && (
+          <div className={styles.step} key="name">
+            <label htmlFor={ids.name} className={styles.label}>
+              Your name
+            </label>
+            <div className={styles.textField} data-error={nameErr ? 'true' : 'false'}>
+              <input
+                ref={nameRef}
+                id={ids.name}
+                className={styles.textInput}
+                type="text"
+                autoComplete="given-name"
+                autoCapitalize="words"
+                enterKeyHint="done"
+                maxLength={40}
+                placeholder="First name is enough"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setNameErr('');
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submitName();
+                  }
+                }}
+                aria-describedby={nameErr ? ids.nameErr : undefined}
+              />
+            </div>
+            {nameErr && (
+              <p id={ids.nameErr} role="alert" className={styles.error}>
+                <AlertIcon />
+                <span>{nameErr}</span>
+              </p>
+            )}
+            <button
+              type="button"
+              className={styles.primary}
+              aria-disabled={!nameOk}
+              aria-busy={saving}
+              data-disabled={!nameOk ? 'true' : 'false'}
+              onClick={submitName}
+            >
+              {saving ? <span className={styles.spinner} aria-label="Saving" /> : ctaLabel}
+            </button>
           </div>
         )}
       </div>

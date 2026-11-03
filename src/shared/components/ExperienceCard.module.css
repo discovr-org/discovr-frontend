@@ -148,21 +148,18 @@
   color: var(--accent-pink);
 }
 
-.save:focus-visible,
-.saveFoot:focus-visible {
+.save:focus-visible {
   outline: var(--border-focus) solid var(--focus-ring);
   outline-offset: var(--focus-offset);
 }
 
-.save svg,
-.saveFoot svg {
+.save svg {
   width: var(--size-icon-md);
   height: var(--size-icon-md);
   flex-shrink: 0;
 }
 
-.save[aria-pressed="true"] svg,
-.saveFoot[aria-pressed="true"] svg {
+.save[aria-pressed="true"] svg {
   fill: currentColor;
 }
 
@@ -270,40 +267,3 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Heart in the footer of a raised card. */
-.saveFoot {
-  position: relative;
-  z-index: 2;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--size-control-md);
-  height: var(--size-control-md);
-  margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-2)) calc(-1 * var(--space-2)) auto;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--ink-muted);
-  cursor: pointer;
-  flex-shrink: 0;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  user-select: none;
-}
-
-@media (hover: hover) {
-  .saveFoot:hover {
-    color: var(--ink-primary);
-  }
-}
-
-.saveFoot:active {
-  background: var(--brand-tint);
-}
-
-.saveFoot[aria-pressed="true"] {
-  background: var(--brand-tint);
-  color: var(--accent-pink);
-}

@@ -35,6 +35,15 @@
   outline: none;
 }
 
+.field:focus-within {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.field input:focus-visible {
+  outline: none;
+}
+
 .stack {
   display: flex;
   flex-direction: column;

@@ -50,7 +50,7 @@ export function ExperienceCard({
   const heart = onToggleSave ? (
     <button
       type="button"
-      className={portrait ? styles.save : styles.saveFoot}
+      className={styles.save}
       aria-label={`Save ${title}`}
       aria-pressed={saved}
       onClick={(e) => {
@@ -86,7 +86,7 @@ export function ExperienceCard({
           ) : (
             <div className={styles.img} aria-hidden />
           )}
-          {(portrait || tile) && heart}
+          {heart}
           {portrait && (
             <div className={styles.overlay}>
               <h3 className={styles.title}>{title}</h3>
@@ -117,12 +117,9 @@ export function ExperienceCard({
             {blurb && <p className={styles.blurb}>{blurb}</p>}
             {meta && <p className={styles.meta}>{meta}</p>}
           </Link>
-          {priceLabel || heart ? (
+          {priceLabel ? (
             <div className={styles.footer}>
-              {priceLabel ? (
-                <span className={styles.price}>{priceLabel}</span>
-              ) : null}
-              {heart}
+              <span className={styles.price}>{priceLabel}</span>
             </div>
           ) : null}
         </div>

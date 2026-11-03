@@ -11,7 +11,8 @@ export {
   toE164,
 } from "./phone";
 export { mockSendCode, mockVerifyCode } from "./mockOtp";
-export { requestOtp, verifyOtp, logoutSession } from "./authApi";
+export { requestOtp, verifyOtp, saveName, logoutSession } from "./authApi";
+export { holdKeyboard, primeKeyboard, releasePrimer } from "./keyboard";
 export {
   clearSession,
   readSession,

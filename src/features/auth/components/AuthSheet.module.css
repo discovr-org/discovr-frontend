@@ -82,7 +82,7 @@
 
 .progress {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 4px;
   margin-bottom: 20px;
 }
@@ -294,47 +294,10 @@
 /* ---------- terms ---------- */
 
 .terms {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-top: -4px;
-  cursor: pointer;
+  margin: -4px 0 0;
   font-size: 12px;
   line-height: 16px;
   color: var(--ink-muted);
-}
-
-/* 44px tap target centred on the 16px box */
-.termsInput {
-  position: absolute;
-  left: -14px;
-  top: -14px;
-  width: 44px;
-  height: 44px;
-  margin: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.box {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1px solid var(--line-strong);
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.termsInput:checked + .box {
-  border-color: var(--brand);
-  background: var(--brand);
-}
-.termsInput:focus-visible + .box {
-  outline: 2px solid var(--brand);
-  outline-offset: 2px;
 }
 
 .link {
@@ -345,6 +308,58 @@
 }
 .link:hover {
   color: var(--brand-hover);
+}
+
+/* Hidden input that holds focus between steps (keeps the mobile keyboard open) */
+.proxy {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+/* ---------- name ---------- */
+
+.textField {
+  height: 48px;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--line-strong);
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+}
+.textField:focus-within {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.textField[data-error='true'] {
+  border-color: var(--critical);
+}
+.textField[data-error='true']:focus-within {
+  outline: none;
+}
+
+.textInput {
+  all: unset;
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--ink-primary);
+}
+.textInput::placeholder {
+  color: var(--ink-subtle);
+  opacity: 1;
 }
 
 /* ---------- OTP ---------- */

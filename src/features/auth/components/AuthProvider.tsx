@@ -11,8 +11,10 @@ import {
 import {
   AuthSheet,
   type PhoneNumber,
+  type VerifyResult,
 } from "@/features/auth/components/AuthSheet";
-import { requestOtp, verifyOtp, logoutSession } from "@/features/auth/utils/authApi";
+import { requestOtp, verifyOtp, saveName, logoutSession } from "@/features/auth/utils/authApi";
+import { primeKeyboard } from "@/features/auth/utils/keyboard";
 import {
   clearSession,
   readSession,
@@ -22,6 +24,13 @@ import {
 import { useSaved } from "@/shared/components/SavedProvider";
 
 export type AuthIntent = "save" | "call" | "profile";
+
+/** Name-step button: finish the thing they tapped. */
+const CTA_LABEL: Record<AuthIntent, string> = {
+  save: "Save",
+  call: "Call to book",
+  profile: "Done",
+};
 
 type AuthContextValue = {
   user: SessionUser | null;
@@ -50,6 +59,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ifAuthed();
         return;
       }
+      // Must run inside the tap, or iOS won't open the keyboard for the sheet.
+      primeKeyboard();
       setPending(intent);
       setPendingAction(() => ifAuthed);
       setAuthOpen(true);
@@ -58,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const openAuth = useCallback((intent: AuthIntent = "profile") => {
+    primeKeyboard();
     setPending(intent);
     setPendingAction(null);
     setAuthOpen(true);
@@ -73,36 +85,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await requestOtp(phone);
   }, []);
 
+  // Signed in from here on, even if they drop off at the name step; the server asks again next time.
   const onVerifyCode = useCallback(
-    async (phone: PhoneNumber, code: string) => {
+    async (phone: PhoneNumber, code: string): Promise<VerifyResult> => {
       try {
         const result = await verifyOtp(phone, code);
         const next: SessionUser = {
           phoneE164: result.phoneE164,
           sessionId: result.sessionId,
           userId: result.userId,
+          name: result.name ?? undefined,
         };
         writeSession(next);
         setUser(next);
-        await saved.syncAfterLogin(result.sessionId);
-        setAuthOpen(false);
-        const action = pendingAction;
-        setPending(null);
-        setPendingAction(null);
-        action?.();
-        return true;
+        return { ok: true, isNewUser: result.isNewUser, name: result.name ?? undefined };
       } catch (err) {
         const message = err instanceof Error ? err.message : "";
-        if (/wrong code/i.test(message)) return false;
+        if (/wrong code/i.test(message)) return { ok: false };
         throw err;
       }
     },
-    [pendingAction, saved],
+    [],
   );
 
-  const onSuccess = useCallback((_phone: PhoneNumber) => {
-    // Session + sync already handled in onVerifyCode.
+  const onSaveName = useCallback(async (_phone: PhoneNumber, name: string) => {
+    const session = readSession();
+    if (!session) throw new Error("Not signed in");
+    const saved = await saveName(session.sessionId, name);
+    const next = { ...session, name: saved };
+    writeSession(next);
+    setUser(next);
   }, []);
+
+  const onSuccess = useCallback(
+    async () => {
+      const session = readSession();
+      if (session) await saved.syncAfterLogin(session.sessionId);
+      setAuthOpen(false);
+      const action = pendingAction;
+      setPending(null);
+      setPendingAction(null);
+      action?.();
+    },
+    [pendingAction, saved],
+  );
 
   const signOut = useCallback(async () => {
     const session = readSession();
@@ -132,7 +158,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         onClose={closeAuth}
         onSendCode={onSendCode}
         onVerifyCode={onVerifyCode}
+        onSaveName={onSaveName}
         onSuccess={onSuccess}
+        ctaLabel={CTA_LABEL[pending ?? "profile"]}
         termsHref="/legal/terms"
         privacyHref="/legal/privacy"
       />

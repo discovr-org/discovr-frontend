@@ -5,6 +5,8 @@ export type SessionUser = {
   /** Opaque Bearer token from `/v1/auth/otp/verify`. */
   sessionId: string;
   userId?: string;
+  /** First name from sign-up. Absent until the name step is done. */
+  name?: string;
 };
 
 const KEY = "discovr.session";
@@ -20,6 +22,7 @@ export function readSession(): SessionUser | null {
       phoneE164: parsed.phoneE164,
       sessionId: parsed.sessionId,
       userId: parsed.userId,
+      name: parsed.name || undefined,
     };
   } catch {
     return null;

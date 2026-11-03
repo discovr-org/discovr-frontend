@@ -124,7 +124,7 @@ export function ExploreFeed() {
             </span>
           </h1>
 
-        <form role="search" action="/" method="get" onSubmit={onSearchSubmit}>
+        <form className={styles.searchForm} role="search" action="/" method="get" onSubmit={onSearchSubmit}>
         <label className={styles.search}>
           <SearchIcon />
           <span className="vh">Search Goa</span>
