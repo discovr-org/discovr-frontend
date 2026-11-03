@@ -74,7 +74,7 @@ function venueStory(x: Experience): StoryBlock[] {
   const photo = x.photos[1] ?? x.photos[0];
   if (photo) blocks.push({ type: "photo", src: photo.src, alt: photo.alt });
   const price = venuePriceLine(x);
-  if (price) blocks.push({ type: "text", paragraphs: [{ text: "Charges", strong: true }, { text: price }] });
+  if (price) blocks.push({ type: "text", paragraphs: [{ text: "Price", strong: true }, { text: price }] });
   blocks.push({ type: "line" });
   return blocks;
 }

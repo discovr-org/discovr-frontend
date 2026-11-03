@@ -146,7 +146,7 @@ export function weekFromHours(
   });
 }
 
-/** "Open now · 9pm – 3am" / "Closed now · 9pm – 3am". */
+/** "Open now · 9pm – 3am" / "Closed now · Open from 9pm – 3am". */
 export function venueHoursStatus(
   timeSlot: string | undefined,
   timeZone = "Asia/Kolkata",
@@ -162,6 +162,6 @@ export function venueHoursStatus(
   return {
     open,
     status: open ? "Open now" : "Closed now",
-    hours: range.label,
+    hours: open ? range.label : `Open from ${range.label}`,
   };
 }
