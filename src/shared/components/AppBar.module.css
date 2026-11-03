@@ -5,8 +5,6 @@
   top: 0;
   left: 0;
   right: 0;
-  max-width: var(--size-content-max);
-  margin: 0 auto;
   z-index: var(--z-sticky);
   height: calc(var(--size-bar-app) + var(--safe-top));
   padding: var(--safe-top) var(--space-2) 0;

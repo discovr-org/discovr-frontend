@@ -117,6 +117,8 @@ export const ZoomOutIcon = (p: P) => (
   </Stroke>
 );
 /** The small tick inside the verified badge, drawn heavier so it survives at 11px. */
+export const TickIcon = (p: P) => <Stroke {...p}><path d="m5 13 4 4L19 7" /></Stroke>;
+export const InfoIcon = (p: P) => <Stroke {...p}><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v5M12 7.8v.1" /></Stroke>;
 export const VerifiedTickIcon = (p: P) => <Stroke strokeWidth={4} {...p}><path d="m5 13 4 4L19 7" /></Stroke>;
 export const MinusIcon = (p: P) => (
   <Stroke strokeWidth={2.5} {...p}>
@@ -145,3 +147,4 @@ export const MapIcon = (p: P) => (
     <path d="M9 4v14M15 6v14" />
   </Stroke>
 );
+export const SlidersIcon = (p: P) => <Stroke {...p}><path d="M4 7h9M17 7h3M13 4.5v5M4 17h3M11 17h9M7 14.5v5" /></Stroke>;

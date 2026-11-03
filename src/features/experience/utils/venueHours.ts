@@ -124,6 +124,28 @@ export function openTodayStatus(
   return null;
 }
 
+/**
+ * Mon → Sun rows from free-text days and a slot/range: "Every day" + "8 AM and 10 AM"
+ * → seven rows of "8am, 10am". `null` marks a day off. Empty when there are no times.
+ */
+export function weekFromHours(
+  days: string | undefined,
+  timeSlot: string | undefined,
+): Array<string | null> {
+  const range = parseTimeRange(timeSlot);
+  const times = range ? range.label : timeSlot ? tidyTimes(timeSlot).replace(/\s+and\s+/g, ", ") : "";
+  if (!times) return [];
+  const dayText = (days ?? "").toLowerCase();
+  // WEEKDAY_NAMES starts on Sunday; the rows start on Monday.
+  const names = [...WEEKDAY_NAMES.slice(1), WEEKDAY_NAMES[0]];
+  const named = names.filter((d) => dayText.includes(d) || dayText.includes(d.slice(0, 3)));
+  return names.map((d) => {
+    if (new RegExp(`${d}s?\\s+off|${d.slice(0, 3)}s?\\s+off`).test(dayText)) return null;
+    if (!dayText || EVERY_DAY.test(dayText) || /off/.test(dayText) || !named.length) return times;
+    return named.includes(d) ? times : null;
+  });
+}
+
 /** "Open now · 9pm – 3am" / "Closed now · 9pm – 3am". */
 export function venueHoursStatus(
   timeSlot: string | undefined,

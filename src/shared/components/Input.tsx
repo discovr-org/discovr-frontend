@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, type InputHTMLAttributes, type ReactNode } from "react";
+import { useId, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from "react";
 import { AlertIcon } from "./icons";
 import styles from "./Input.module.css";
 
@@ -64,6 +64,33 @@ export function Input({
           {error}
         </p>
       ) : hint ? (
+        <p className={styles.hint} id={hintId}>
+          {hint}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  label: string;
+  hint?: string;
+};
+
+/** Multi-line version of Input: same label, sunken box and hint. */
+export function Textarea({ label, hint, id, className, ...rest }: TextareaProps) {
+  const autoId = useId();
+  const fieldId = id ?? autoId;
+  const hintId = hint ? `${fieldId}-hint` : undefined;
+  return (
+    <div className={[styles.field, className].filter(Boolean).join(" ")}>
+      <label htmlFor={fieldId} className={styles.label}>
+        {label}
+      </label>
+      <div className={`${styles.box} ${styles.areaBox}`}>
+        <textarea id={fieldId} className={`${styles.input} ${styles.area}`} aria-describedby={hintId} {...rest} />
+      </div>
+      {hint ? (
         <p className={styles.hint} id={hintId}>
           {hint}
         </p>

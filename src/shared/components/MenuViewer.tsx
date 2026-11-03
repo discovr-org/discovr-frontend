@@ -175,7 +175,8 @@ export function MenuViewer({ open, startIndex, pages, venueName, onClose }: Menu
         <div className={styles.title}>
           <span className={styles.name}>{venueName} menu</span>
           <span className={styles.count} aria-live="polite">
-            {index + 1} of {n} · {label}
+            {index + 1} of {n}
+            {label ? ` · ${label}` : ""}
           </span>
         </div>
         <IconButton
@@ -207,7 +208,7 @@ export function MenuViewer({ open, startIndex, pages, venueName, onClose }: Menu
           }}
         >
           {pages.map((p, i) => (
-            <div key={p.src} className={styles.slide} role="group" aria-roledescription="page" aria-label={`${i + 1} of ${n}: ${p.label}`}>
+            <div key={p.src} className={styles.slide} role="group" aria-roledescription="page" aria-label={p.label ? `${i + 1} of ${n}: ${p.label}` : `${i + 1} of ${n}`}>
               <div className={styles.page}>
                 <Image src={p.src} alt={p.alt} fill sizes="(max-width: 480px) 200vw, 960px" loading={open ? "eager" : "lazy"} />
               </div>

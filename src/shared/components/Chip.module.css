@@ -1,26 +1,36 @@
 .chip {
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   flex-shrink: 0;
-  min-height: var(--size-control-md);
+  height: var(--size-control-sm);
+  margin: 0;
   padding: 0 var(--space-4);
   border-radius: var(--radius-pill);
   border: var(--border-hairline) solid var(--line-strong);
   background: transparent;
   color: var(--ink-primary);
-  font-family: inherit;
-  font-size: 13px;
-  line-height: 16px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-family: var(--font-sans);
+  font-size: var(--label-size);
+  line-height: var(--label-line);
+  font-weight: var(--label-weight);
+  letter-spacing: var(--label-tracking);
   cursor: pointer;
   white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 44px tap target on a 36px chip. */
+.chip::before {
+  content: "";
+  position: absolute;
+  inset: -4px 0;
 }
 
 .chip:hover {
-  background: var(--surface-sunken);
-}
-
-.chip:active {
-  background: var(--brand-tint);
+  border-color: var(--ink-muted);
 }
 
 .chip:focus-visible {
@@ -28,12 +38,19 @@
   outline-offset: var(--focus-offset);
 }
 
-.selected {
+.selected,
+.selected:hover {
   background: var(--brand-tint);
-  border-color: var(--brand-primary);
+  border-color: transparent;
   color: var(--ink-primary);
 }
 
-.selected:hover {
-  background: var(--brand-tint);
+.icon.icon {
+  padding-left: var(--space-3);
+}
+
+.icon svg {
+  flex: none;
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
 }

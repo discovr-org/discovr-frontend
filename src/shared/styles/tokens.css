@@ -102,6 +102,64 @@
   --photo-lift: inset 0 -28px 36px -16px rgba(6, 20, 18, 0.55);
 
   --control-scrim: rgba(6, 20, 18, 0.55);
+  --photo-control-scrim: #0614128c;
+  --photo-text-scrim: linear-gradient(to top, #061412b3, #06141200);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* type scale */
+  --display-xl-size: 56px;
+  --display-xl-line: 52px;
+  --display-xl-weight: 700;
+  --display-xl-tracking: -0.03em;
+  --display-lg-size: 40px;
+  --display-lg-line: 40px;
+  --display-lg-weight: 700;
+  --display-lg-tracking: -0.025em;
+  --display-md-size: 28px;
+  --display-md-line: 32px;
+  --display-md-weight: 700;
+  --display-md-tracking: -0.02em;
+  --title-size: 20px;
+  --title-line: 26px;
+  --title-weight: 600;
+  --title-tracking: -0.01em;
+  --body-size: 16px;
+  --body-line: 24px;
+  --body-weight: 400;
+  --body-sm-size: 14px;
+  --body-sm-line: 20px;
+  --body-sm-weight: 400;
+  --label-size: 13px;
+  --label-line: 16px;
+  --label-weight: 600;
+  --label-tracking: 0.01em;
+  --price-size: 18px;
+  --price-line: 22px;
+  --price-weight: 700;
+  --price-tracking: -0.01em;
+  --caption-size: 11px;
+  --caption-line: 14px;
+  --caption-weight: 600;
+  --caption-tracking: 0.08em;
+
+  /* layout */
+  --layout-width: var(--size-content-max);
+  --layout-gutter: var(--space-4);
+  --nav-bottom: calc(var(--size-bar-tab) + env(safe-area-inset-bottom));
+  --nav-top: 0px;
+}
+
+@media (min-width: 600px) {
+  :root {
+    --layout-width: 720px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --layout-width: 1200px;
+    --nav-bottom: 0px;
+    --nav-top: var(--size-bar-app);
+  }
 }

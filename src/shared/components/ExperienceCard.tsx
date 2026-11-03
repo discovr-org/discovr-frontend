@@ -5,7 +5,7 @@ import Link from "next/link";
 import { HeartIcon } from "./icons";
 import styles from "./ExperienceCard.module.css";
 
-export type ExperienceCardDensity = "portrait" | "landscape";
+export type ExperienceCardDensity = "portrait" | "landscape" | "tile";
 
 export type ExperienceCardProps = {
   href: string;
@@ -27,7 +27,7 @@ export type ExperienceCardProps = {
 
 /**
  * Listing card for the feed. Portrait for horizontal carousels;
- * landscape for the single-column shortlist.
+ * landscape for the single-column shortlist; tile (photo, then name and price) for grids.
  */
 export function ExperienceCard({
   href,
@@ -45,6 +45,7 @@ export function ExperienceCard({
 }: ExperienceCardProps) {
   const meta = [placeLabel, durationLabel].filter(Boolean).join(" · ");
   const portrait = density === "portrait";
+  const tile = density === "tile";
 
   const heart = onToggleSave ? (
     <button
@@ -65,16 +66,18 @@ export function ExperienceCard({
   return (
     <article className={[styles.card, styles[density]].join(" ")}>
       <Link href={href} className={styles.mediaLink}>
-        <div className={`${styles.media} photo-lift`}>
+        <div className={styles.media}>
           {imageSrc ? (
             <Image
               src={imageSrc}
               alt={imageAlt}
               fill
               sizes={
-                portrait
-                  ? "(min-width: 1024px) 340px, (min-width: 600px) 280px, 70vw"
-                  : "(min-width: 1024px) 560px, (min-width: 600px) 688px, 100vw"
+                tile
+                  ? "(min-width: 1024px) 288px, (min-width: 900px) 224px, (min-width: 600px) 344px, 50vw"
+                  : portrait
+                    ? "(min-width: 1024px) 340px, (min-width: 600px) 280px, 70vw"
+                    : "(min-width: 1024px) 560px, (min-width: 600px) 688px, 100vw"
               }
               priority={priority}
               className={styles.img}
@@ -83,7 +86,7 @@ export function ExperienceCard({
           ) : (
             <div className={styles.img} aria-hidden />
           )}
-          {portrait && heart}
+          {(portrait || tile) && heart}
           {portrait && (
             <div className={styles.overlay}>
               <h3 className={styles.title}>{title}</h3>
@@ -96,7 +99,18 @@ export function ExperienceCard({
         </div>
       </Link>
 
-      {!portrait && (
+      {tile && (
+        <>
+          <h3 className={styles.title}>
+            <Link href={href} className={styles.bodyLink}>
+              {title}
+            </Link>
+          </h3>
+          {priceLabel ? <p className={styles.tilePrice}>{priceLabel}</p> : null}
+        </>
+      )}
+
+      {density === "landscape" && (
         <div className={styles.body}>
           <Link href={href} className={styles.bodyLink}>
             <h3 className={styles.title}>{title}</h3>

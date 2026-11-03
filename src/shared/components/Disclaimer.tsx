@@ -17,26 +17,15 @@ const VERB: Record<HostCredit, string> = {
 export function Disclaimer({ hostName, credit = "hosted" }: DisclaimerProps) {
   const verb = VERB[credit];
   return (
-    <aside className={styles.wrap} aria-label="Disclaimer">
-      <div className={styles.box}>
-        <p className={styles.text}>
-          {hostName} {verb} this experience and handles the booking. discovr
-          isn&apos;t part of the booking or the payment. We&apos;ve been, and we
-          vouch for what&apos;s on this page, but check the price and terms with{" "}
-          {hostName} before you pay.
-        </p>
-        <a href="/legal/disclaimer" className={styles.link}>
-          Read the full disclaimer
-        </a>
-      </div>
-      <div className={styles.footer}>
-        <a href="/legal/privacy" className={styles.link}>
-          Report wrong information
-        </a>
-        <a href="tel:+918169992510" className={styles.link}>
-          Any problems with the experience? Contact us
-        </a>
-      </div>
+    <aside className={styles.root} aria-label="About booking">
+      <p>
+        {hostName} {verb} this experience and handles the booking. discovr isn&apos;t part of the
+        booking or the payment. We&apos;ve been, and we vouch for what&apos;s on this page, but check
+        the price and terms with {hostName} before you pay.
+      </p>
+      <a href="/legal/disclaimer" className={styles.link}>
+        Read the full disclaimer
+      </a>
     </aside>
   );
 }

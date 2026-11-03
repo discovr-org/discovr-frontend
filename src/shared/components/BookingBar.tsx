@@ -14,13 +14,11 @@ export interface BookingBarProps {
   walkIn?: boolean;
   /** The host's own booking page: adds "or book on {host}" under the button. */
   bookHref?: string;
-  /** "+ taxes" vs "inclusive of taxes" under the price. */
+  /** Adds "+ taxes" after "per person" when taxes are extra. */
   taxes?: "extra" | "inclusive";
   /** E.164 phone the CTA dials when no `onCallToBook` is passed. */
   phone: string;
   hostBusinessName: string;
-  /** true while the TabBar is showing: the bar moves up and sits on top of it. */
-  lifted: boolean;
   hidden?: boolean;
   /**
    * When set, the bone button runs this instead of dialling immediately.
@@ -41,7 +39,6 @@ export function BookingBar({
   taxes = "inclusive",
   phone,
   hostBusinessName,
-  lifted,
   hidden,
   onCallToBook,
 }: BookingBarProps) {
@@ -67,7 +64,7 @@ export function BookingBar({
   return (
     <footer
       ref={ref}
-      className={`${styles.bar} ${lifted ? styles.lifted : ""}`}
+      className={styles.bar}
       aria-label={askForPrice ? "Ask about this place" : "Book this experience"}
       hidden={hidden}
     >
@@ -79,8 +76,7 @@ export function BookingBar({
             <>
               <span className="t-price">From {rupees(priceFrom)}</span>
               <span className={styles.per}>
-                per person ·{" "}
-                {taxes === "extra" ? "+ taxes" : "inclusive of taxes"}
+                per person{taxes === "extra" ? " + taxes" : ""}
               </span>
             </>
           )}
@@ -95,21 +91,18 @@ export function BookingBar({
           </Button>
         )}
       </div>
-      {bookHref ? (
-        <a
-          className={styles.bookLink}
-          href={bookHref}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          or book on {hostBusinessName}
-        </a>
-      ) : (
-        <span className={styles.note}>
-          You&apos;ll speak to {hostBusinessName} directly.
-          {walkIn ? " No booking needed, just walk in" : null}
-        </span>
-      )}
+      <span className={styles.note}>
+        You&apos;ll speak to {hostBusinessName} directly.
+        {walkIn ? " No booking needed, just walk in" : null}
+        {bookHref ? (
+          <>
+            {" "}
+            <a className={styles.bookLink} href={bookHref} target="_blank" rel="noopener noreferrer">
+              or book on {hostBusinessName}
+            </a>
+          </>
+        ) : null}
+      </span>
     </footer>
   );
 }

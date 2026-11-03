@@ -1,0 +1,133 @@
+.top {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .top {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: var(--z-sticky);
+    display: block;
+    border-bottom: var(--border-hairline) solid transparent;
+    background: transparent;
+    font-family: var(--font-sans);
+    transition:
+      background-color var(--duration-enter) var(--ease-enter),
+      border-color var(--duration-enter) var(--ease-enter),
+      opacity var(--duration-enter) var(--ease-enter),
+      transform var(--duration-enter) var(--ease-enter),
+      visibility var(--duration-enter) linear;
+  }
+
+  :global(body[data-hero="visible"]) .top {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-100%);
+  }
+
+  .top[data-scrolled="true"] {
+    border-bottom-color: var(--line-subtle);
+    background: var(--surface-raised);
+  }
+
+  .inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    max-width: calc(var(--layout-width) + var(--layout-gutter) * 2);
+    height: var(--size-bar-app);
+    margin: 0 auto;
+    padding: 0 var(--layout-gutter);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex: none;
+  }
+
+  .wordmark {
+    display: block;
+  }
+
+  .grow {
+    flex: 1;
+  }
+
+  .items {
+    display: flex;
+    gap: var(--space-2);
+    flex: none;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: var(--size-control-md);
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    color: var(--ink-muted);
+    font-size: var(--label-size);
+    line-height: var(--label-line);
+    font-weight: var(--label-weight);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: color var(--duration-exit) var(--ease-exit);
+  }
+
+  .link:hover,
+  .account:hover,
+  .active,
+  .active:hover {
+    color: var(--ink-primary);
+  }
+
+  .link:focus-visible,
+  .account:focus-visible {
+    outline: var(--border-focus) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  .link:active {
+    background: var(--brand-tint);
+  }
+
+  .dot {
+    position: absolute;
+    top: var(--space-2);
+    right: var(--space-2);
+    box-sizing: content-box;
+    width: var(--space-2);
+    height: var(--space-2);
+    border: var(--border-focus) solid var(--surface-raised);
+    border-radius: var(--radius-pill);
+    background: var(--accent-pink);
+  }
+
+  .account {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--size-control-md);
+    height: var(--size-control-md);
+    border-radius: var(--radius-pill);
+    color: var(--ink-muted);
+  }
+
+  .account svg {
+    width: var(--size-icon-md);
+    height: var(--size-icon-md);
+  }
+}
+
+.linkButton {
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+}

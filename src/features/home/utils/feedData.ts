@@ -8,9 +8,12 @@ export type FeedItem = {
   imageAlt: string;
   blurb?: string;
   durationLabel?: string;
+  durationMinutes?: number;
   priceInr?: number;
   /** e.g. "+ taxes" */
   priceSuffix?: string;
+  /** venue = bar or restaurant (cards show no price); trip = everything else. */
+  format?: "trip" | "venue";
 };
 
 /** rail: tall cards you swipe sideways. stack: one big card each. */

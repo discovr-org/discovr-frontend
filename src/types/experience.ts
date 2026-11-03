@@ -82,6 +82,8 @@ export type ExperienceContent = {
   difficulty?: string;
   tagsOnDisplay?: string[];
   faqs?: Array<{ q: string; a: string }>;
+  /** The About story, in reading order. When absent the page builds one from the fields above. */
+  blocks?: StoryBlock[];
   links?: {
     maps?: ContentLink;
     book?: ContentLink;
@@ -90,6 +92,22 @@ export type ExperienceContent = {
     menu?: ContentLink;
   };
 };
+
+export type StoryBlock =
+  | { type: "heading"; level: "section" | "small"; text: string }
+  | { type: "line" }
+  | { type: "quote"; text: string; plain?: boolean; cite?: string }
+  /** `strong` paragraphs are labels ("Age"), the plain ones under them are values. */
+  | { type: "text"; paragraphs: Array<{ text: string; strong?: boolean }> }
+  | { type: "photo"; src: string; alt: string; caption?: string }
+  | {
+      type: "forNotFor";
+      columns: Array<{ title: string; tone: "included" | "bring"; items: string[] }>;
+    }
+  | { type: "steps"; items: Array<{ marker: string; title: string; caption?: string }> }
+  | { type: "callout"; tone: "heads_up" | "tip"; title: string; paragraphs: string[] }
+  | { type: "checklist"; title: string; items: string[] }
+  | { type: "faq"; items: Array<{ q: string; a: string }> };
 
 export interface ExperienceReviews {
   average: number;

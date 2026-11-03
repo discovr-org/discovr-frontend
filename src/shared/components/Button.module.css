@@ -37,6 +37,7 @@
 .primary svg {
   width: var(--size-icon-sm);
   height: var(--size-icon-sm);
+  flex-shrink: 0;
 }
 
 .secondary {
@@ -51,6 +52,25 @@
 }
 .secondary:active {
   background: var(--brand-tint);
+}
+
+.ghost {
+  height: var(--size-control-md);
+  padding: 0 var(--space-4);
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+}
+.ghost:hover {
+  color: var(--ink-primary);
+}
+
+/* Site pages (Saved, Account, About, forms) use the 140px primary. */
+.narrow {
+  min-width: 140px;
+}
+.fullWidth {
+  width: 100%;
 }
 
 .button[disabled] {

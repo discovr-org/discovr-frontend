@@ -21,7 +21,7 @@ export const CREDIT_LABEL: Record<HostCredit, string> = {
 export function HostRow({ host, showCredit = true }: HostRowProps) {
   const credit = host.credit ?? "hosted";
   const sub = [
-    host.verified ? "Verified business" : null,
+    host.verified ? "Verified" : null,
     host.experienceCount != null
       ? `${host.experienceCount} experiences`
       : null,

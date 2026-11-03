@@ -80,3 +80,16 @@
   height: 18px;
   flex-shrink: 0;
 }
+
+.areaBox {
+  height: auto;
+  align-items: stretch;
+}
+
+.area {
+  min-height: 120px;
+  padding-block: var(--space-3);
+  resize: vertical;
+  font: inherit;
+  font-size: 16px;
+}

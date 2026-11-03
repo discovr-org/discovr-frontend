@@ -22,6 +22,7 @@ type ApiListingCard = {
   durationMinutes?: number;
   priceInr?: number;
   priceAsk?: boolean;
+  format?: "trip" | "venue";
 };
 
 type ApiExperience = {
@@ -156,7 +157,9 @@ function mapApiCard(card: ApiListingCard): FeedItem {
     imageAlt: card.imageAlt ?? card.title,
     blurb: card.blurb,
     durationLabel: formatDuration(card.durationMinutes) || undefined,
+    durationMinutes: card.durationMinutes,
     priceInr: card.priceAsk ? undefined : card.priceInr,
+    format: card.format,
   };
 }
 

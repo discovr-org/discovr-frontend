@@ -8,6 +8,12 @@
   background: var(--surface-sunken);
 }
 
+@media (min-width: 1024px) {
+  .hero {
+    max-height: 560px;
+  }
+}
+
 .gallery {
   display: flex;
   width: 100%;
@@ -52,7 +58,7 @@
   bottom: var(--space-3);
   padding: var(--space-1) 10px;
   border-radius: var(--radius-pill);
-  background: var(--control-scrim);
+  background: color-mix(in srgb, var(--surface-canvas) 55%, transparent);
   color: var(--ink-primary);
   font-size: 13px;
   line-height: 16px;

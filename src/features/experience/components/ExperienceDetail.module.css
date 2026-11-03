@@ -1,48 +1,117 @@
-/* The phone column: full width up to size-content-max, centred, hairline edges on wider screens. */
-.app {
-  max-width: var(--size-content-max);
-  margin: 0 auto;
-  min-height: 100dvh;
-  background: var(--surface-canvas);
-  position: relative;
-}
-@media (min-width: 481px) {
-  .app {
-    border-left: var(--border-hairline) solid var(--line-subtle);
-    border-right: var(--border-hairline) solid var(--line-subtle);
-  }
-}
-
-/* Title, key details, verdict, tiles: space-5 apart, under the gallery. */
-.summary {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-  padding: var(--space-5) var(--space-4) 0;
-}
-
-.rule {
-  height: var(--border-hairline);
-  background: var(--line-subtle);
-  margin: var(--space-6) var(--space-4) 0;
-  border: 0;
-}
-
-/* Long-form sections, space-6 apart. Bottom padding clears the BookingBar and the TabBar. */
-.content {
+.page {
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-  padding: var(--space-6) var(--space-4) calc(var(--space-7) + var(--bb-h, 108px) + var(--size-bar-tab));
+  padding: 0 var(--layout-gutter) calc(var(--space-7) * 3);
+  margin-bottom: var(--space-6);
+}
+
+/* Photos run edge to edge on phones. */
+.heroWrap {
+  position: relative;
+  margin-inline: calc(-1 * var(--layout-gutter));
+}
+
+.columns {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.side {
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-5);
+}
+
+.policy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+}
+
+.textLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-control-md);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-primary);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: var(--space-1);
+  cursor: pointer;
+}
+
+.textLink:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
 }
 
 .related {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-/* Portrait cards carry a rail width; in the grid they fill their column. */
-.related > article {
-  width: 100%;
+@media (min-width: 900px) {
+  .related {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .page {
+    padding-bottom: var(--space-7);
+  }
+
+  .heroWrap {
+    margin-inline: 0;
+  }
+
+  .columns {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+    gap: var(--space-6);
+  }
+}
+
+@media print {
+  .side,
+  .links,
+  .related {
+    display: none;
+  }
 }

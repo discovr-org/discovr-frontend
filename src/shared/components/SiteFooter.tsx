@@ -1,12 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
-import { DISCOVR_PHONE } from "@/shared/utils/discovrContact";
+import { useId, useState, type FormEvent } from "react";
+import { DISCOVR_PHONE, DISCOVR_PHONE_DISPLAY } from "@/shared/utils/discovrContact";
 import { subscribeTripUpdates } from "@/shared/utils/tripUpdatesApi";
-import { Button } from "./Button";
 import { MessageIcon, PhoneIcon } from "./icons";
-import { Input } from "./Input";
 import styles from "./SiteFooter.module.css";
 
 type SiteFooterProps = {
@@ -16,6 +14,7 @@ type SiteFooterProps = {
 
 /** Page footer on home and listing pages: links, trip-updates signup, legal, wordmark. */
 export function SiteFooter({ source }: SiteFooterProps) {
+  const id = useId();
   const [phone, setPhone] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "done">("idle");
   const [error, setError] = useState<string>();
@@ -28,80 +27,113 @@ export function SiteFooter({ source }: SiteFooterProps) {
       await subscribeTripUpdates(phone, source);
       setState("done");
     } catch (err) {
-      setError(err instanceof Error ? err.message : undefined);
+      setError(err instanceof Error ? err.message : "That didn't go through. Try again.");
       setState("idle");
     }
   }
 
   return (
     <footer className={styles.footer}>
-      <h2 className={styles.title}>discovr the best of what Goa has to offer</h2>
-      <div className={styles.actions}>
-        <a
-          className={styles.circle}
-          href={`https://wa.me/${DISCOVR_PHONE.replace(/[^\d]/g, "")}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="WhatsApp us"
-        >
-          <MessageIcon />
-        </a>
-        <a className={styles.circle} href={`tel:${DISCOVR_PHONE}`} aria-label="Call us">
-          <PhoneIcon />
-        </a>
-      </div>
-      <nav className={styles.links} aria-label="More from discovr">
-        <Link href="/saved">Saved</Link>
-        <Link href="/about">About us</Link>
-        <Link href="/how-we-pick">How we pick</Link>
-        <Link href="/list-with-us">List with us</Link>
-        <Link href="/help">Help</Link>
-      </nav>
+      <div className={styles.inner}>
+        <div className={styles.grid}>
+          <div className={styles.intro}>
+            <p className={styles.promise}>discovr the best of what Goa has to offer</p>
+            <ul className={styles.icons} aria-label="Reach us">
+              <li>
+                <a
+                  className={styles.icon}
+                  href={`https://wa.me/${DISCOVR_PHONE.replace(/[^\d]/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="WhatsApp us"
+                >
+                  <MessageIcon />
+                </a>
+              </li>
+              <li>
+                <a
+                  className={styles.icon}
+                  href={`tel:${DISCOVR_PHONE}`}
+                  aria-label={`Call us on ${DISCOVR_PHONE_DISPLAY}`}
+                >
+                  <PhoneIcon />
+                </a>
+              </li>
+            </ul>
+          </div>
 
-      <form className={styles.signup} onSubmit={onSubmit}>
-        <h3 className={styles.signupTitle}>Planning your Goa trip soon?</h3>
-        <p className={styles.signupText}>
-          Drop your WhatsApp number and we&apos;ll send you anything exciting that
-          pops up.
-        </p>
-        {state === "done" ? (
-          <p className={styles.signupDone} role="status">
-            Done. We&apos;ll message you on WhatsApp.
-          </p>
-        ) : (
-          <>
-            <Input
-              label="WhatsApp number"
-              hideLabel
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="98765 43210"
-              maxLength={20}
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              error={error}
-              required
-            />
-            <Button variant="secondary" type="submit" disabled={state === "sending"}>
-              {state === "sending" ? "Sending…" : "Keep me posted"}
-            </Button>
-            <p className={styles.signupFine}>
-              On WhatsApp, only when something&apos;s worth it. Stop any time.
+          <nav className={styles.links} aria-label="Footer">
+            <ul>
+              <li><Link href="/saved">Saved</Link></li>
+              <li><Link href="/about">About us</Link></li>
+              <li><Link href="/how-we-pick">How we pick</Link></li>
+              <li><Link href="/list-with-us">List with us</Link></li>
+              <li><Link href="/help">Help</Link></li>
+            </ul>
+          </nav>
+
+          <section className={styles.news} aria-labelledby={`${id}-h`}>
+            <h2 id={`${id}-h`} className={styles.newsTitle}>
+              Planning your Goa trip soon?
+            </h2>
+            <p className={styles.newsText}>
+              Drop your WhatsApp number and we&apos;ll send you anything exciting that
+              pops up.
             </p>
-          </>
-        )}
-      </form>
+            {state === "done" ? (
+              <p className={styles.newsDone} role="status">
+                Done. We&apos;ll message you on WhatsApp.
+              </p>
+            ) : (
+              <form className={styles.newsForm} noValidate onSubmit={onSubmit}>
+                <label htmlFor={`${id}-phone`} className={styles.visuallyHidden}>
+                  WhatsApp number
+                </label>
+                <div className={styles.newsField} data-error={Boolean(error)}>
+                  <input
+                    id={`${id}-phone`}
+                    className={styles.newsInput}
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="98765 43210"
+                    maxLength={20}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    aria-invalid={Boolean(error)}
+                    aria-describedby={`${id}-fine`}
+                  />
+                  <button
+                    type="submit"
+                    className={styles.newsButton}
+                    aria-busy={state === "sending"}
+                    disabled={state === "sending"}
+                  >
+                    Keep me posted
+                  </button>
+                </div>
+                {error ? (
+                  <p id={`${id}-fine`} className={styles.newsError} role="alert">
+                    {error}
+                  </p>
+                ) : (
+                  <p id={`${id}-fine`} className={styles.newsFine}>
+                    On WhatsApp, only when something&apos;s worth it. Stop any time.
+                  </p>
+                )}
+              </form>
+            )}
+          </section>
+        </div>
 
-      <p className={styles.legal}>
-        <span>© discovr 2026</span>
-        <Link href="/legal/privacy">Privacy</Link>
-        <Link href="/legal/terms">Terms</Link>
-        <Link href="/legal/disclaimer">Disclaimer</Link>
-      </p>
-      <p className={styles.wordmark} aria-hidden="true">
-        discovr
-      </p>
+        <div className={styles.bottom}>
+          <span>© discovr 2026</span>
+          <Link href="/legal/privacy">Privacy</Link>
+          <Link href="/legal/terms">Terms</Link>
+          <Link href="/legal/disclaimer">Disclaimer</Link>
+        </div>
+        <div className={styles.mark} aria-hidden="true" />
+      </div>
     </footer>
   );
 }

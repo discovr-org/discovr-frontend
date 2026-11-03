@@ -33,7 +33,7 @@ export function TabBar({
   const href = { explore: "/", saved: "/saved", profile: "/profile", ...hrefs };
   const aria = (t: Tab) => (t === current ? ("page" as const) : undefined);
   return (
-    <nav className={`${styles.bar} ${shown ? styles.shown : ""}`} aria-label="Primary" onFocus={onFocusWithin}>
+    <nav className={`${styles.bar} ${shown ? styles.shown : ""}`} aria-label="Main" onFocus={onFocusWithin}>
       <div className={styles.row}>
         <Link href={href.explore} className={styles.item} aria-current={aria("explore")}>
           <CompassIcon />

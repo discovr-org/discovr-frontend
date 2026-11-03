@@ -28,7 +28,7 @@ export interface PolicyDisclosureProps {
 
 /**
  * Booking and cancellation policy: a raised card that toggles open.
- * Closed, it shows the title and the free-cancellation line. Open, it shows a
+ * Closed, it shows the title. Open, it shows a
  * "Booking policy" group and a "Cancellation policy" group of dotted pointers.
  * Opens instantly (no height animation); only the chevron turns.
  */
@@ -55,7 +55,6 @@ export function PolicyDisclosure({
             <FileTextIcon />
             <span className={styles.text}>
               <span className={styles.title}>Booking and cancellation policy</span>
-              <span className={styles.summary}>{policy.summary}</span>
             </span>
             <ChevronDownIcon className={styles.chevron} />
           </button>

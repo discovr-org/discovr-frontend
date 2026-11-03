@@ -10,14 +10,13 @@ export interface TitleBlockProps {
 
 /** The screen's h1 in display-md, then "by <host>" underlined as a link. */
 export function TitleBlock({ title, hostName, hostHref = "#host" }: TitleBlockProps) {
+  if (!hostName) return <h1 className="t-display-md">{title}</h1>;
   return (
     <div className={styles.block}>
       <h1 className="t-display-md">{title}</h1>
-      {hostName ? (
-        <p className={`t-body ${styles.byline}`}>
-          by <a href={hostHref}>{hostName}</a>
-        </p>
-      ) : null}
+      <p className={`t-body ${styles.byline}`}>
+        by <a href={hostHref}>{hostName}</a>
+      </p>
     </div>
   );
 }

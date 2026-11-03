@@ -13,6 +13,7 @@ import {
 import {
   openTodayStatus,
   venueHoursStatus,
+  weekFromHours,
 } from "@/features/experience/utils/venueHours";
 import {
   ArrowUpRightIcon,
@@ -46,6 +47,12 @@ export interface InfoListProps {
 const Sep = () => (
   <span className={styles.sep} aria-hidden="true">
     |
+  </span>
+);
+
+const Dot = () => (
+  <span className={styles.sep} aria-hidden="true">
+    ·
   </span>
 );
 
@@ -88,11 +95,25 @@ export function InfoList({
   const placeLabel = `${placeName}${place.distance ? `, ${place.distance}` : ""}. Open in Google Maps`;
   const peopleLine = durationPeopleLine(duration, groupSize);
 
-  const hoursDetail = [
-    hours?.days,
-    hours?.timeSlot,
-    hours?.bestTime ? `Best: ${hours.bestTime}` : null,
-  ].filter(Boolean) as string[];
+  const hoursWeek = weekFromHours(hours?.days, hours?.timeSlot);
+  const weekRows =
+    hoursWeek.length > 0 ? (
+      <ul className={styles.week} id={weekId} hidden={!open} aria-label="Opening hours">
+        {WEEK.map((day, i) => (
+          <li
+            key={day}
+            className={[styles.day, i === today ? styles.today : "", hoursWeek[i] ? "" : styles.off].join(" ").trim()}
+            aria-current={i === today ? "date" : undefined}
+          >
+            <span>
+              {day}
+              {i === today ? ", today" : ""}
+            </span>
+            <span>{hoursWeek[i] ?? "Closed"}</span>
+          </li>
+        ))}
+      </ul>
+    ) : null;
 
   return (
     <ul className={styles.list} aria-label="Key details">
@@ -103,13 +124,7 @@ export function InfoList({
             {askForPrice ? (
               "Ask for the price"
             ) : (
-              <>
-                From {rupees(priceFrom)} per person
-                <Sep />
-                <span className={styles.muted}>
-                  {taxes === "extra" ? "+ taxes" : "inclusive of taxes"}
-                </span>
-              </>
+              `From ${rupees(priceFrom)} per person${taxes === "extra" ? " + taxes" : ""}`
             )}
           </span>
         </li>
@@ -155,27 +170,14 @@ export function InfoList({
               </span>
               {openClosed.hours ? (
                 <>
-                  <Sep />
+                  <Dot />
                   {openClosed.hours}
                 </>
               ) : null}
             </span>
             <ChevronDownIcon className={styles.chev} />
           </button>
-          {hoursDetail.length > 0 ? (
-            <ul
-              className={styles.week}
-              id={weekId}
-              hidden={!open}
-              aria-label="Opening hours"
-            >
-              {hoursDetail.map((line) => (
-                <li key={line} className={styles.day}>
-                  <span>{line}</span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          {weekRows}
         </li>
       ) : null}
 
@@ -187,7 +189,7 @@ export function InfoList({
             aria-expanded={open}
             aria-controls={weekId}
             onClick={() => setOpen((o) => !o)}
-            disabled={hoursDetail.length === 0}
+            disabled={!weekRows}
           >
             <ClockIcon />
             <span className={styles.text}>
@@ -195,24 +197,9 @@ export function InfoList({
                 hours.bestTime ||
                 "Hours on request"}
             </span>
-            {hoursDetail.length > 0 ? (
-              <ChevronDownIcon className={styles.chev} />
-            ) : null}
+            {weekRows ? <ChevronDownIcon className={styles.chev} /> : null}
           </button>
-          {hoursDetail.length > 0 ? (
-            <ul
-              className={styles.week}
-              id={weekId}
-              hidden={!open}
-              aria-label="Opening hours"
-            >
-              {hoursDetail.map((line) => (
-                <li key={line} className={styles.day}>
-                  <span>{line}</span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          {weekRows}
         </li>
       ) : null}
 
@@ -239,7 +226,7 @@ export function InfoList({
               {summary &&
                 (summary.kind === "today" ? summary.times : summary.next) && (
                   <>
-                    <Sep />
+                    <Dot />
                     {summary.kind === "today" ? summary.times : summary.next}
                   </>
                 )}

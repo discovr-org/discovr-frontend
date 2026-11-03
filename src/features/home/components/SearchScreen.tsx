@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { priceLabel } from "@/features/home/utils/feedData";
+import { areaOf } from "@/features/home/utils/feedFilters";
+import { searchCards } from "@/features/home/utils/searchCards";
 import { AppShell } from "@/shared/components/AppShell";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { ExperienceCard } from "@/shared/components/ExperienceCard";
@@ -21,15 +23,7 @@ export function SearchScreen() {
   const auth = useAuth();
   const toast = useToast();
 
-  const results = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    if (!needle) return [];
-    return items.filter((item) => {
-      const hay =
-        `${item.title} ${item.placeLabel} ${item.blurb ?? ""}`.toLowerCase();
-      return hay.includes(needle);
-    });
-  }, [q, items]);
+  const results = useMemo(() => searchCards(items, q), [q, items]);
 
   return (
     <AppShell current="explore" savedDot={saved.hasAny}>
@@ -70,7 +64,7 @@ export function SearchScreen() {
               density="landscape"
               href={`/experiences/${item.slug}`}
               title={item.title}
-              placeLabel={item.placeLabel}
+              placeLabel={areaOf(item)}
               imageSrc={item.imageSrc}
               imageAlt={item.imageAlt}
               blurb={item.blurb}

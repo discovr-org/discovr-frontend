@@ -1,11 +1,9 @@
-/* Call-to-book footer. Fixed at every scroll position; rides up on top of the TabBar when it shows. */
+/* Call-to-book footer. Fixed at every scroll position; on phones it sits on top of the TabBar. */
 .bar {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  max-width: var(--size-content-max);
-  margin: 0 auto;
   z-index: var(--z-sticky);
   padding: var(--space-3) var(--space-4) calc(var(--space-4) + var(--safe-bottom));
   background: var(--surface-raised);
@@ -16,9 +14,19 @@
   gap: 10px;
   transition: transform var(--duration-exit) var(--ease-exit);
 }
-.lifted {
-  transform: translateY(calc(-1 * (var(--size-bar-tab) + var(--safe-bottom))));
-  transition: transform var(--duration-enter) var(--ease-enter);
+@media (max-width: 1023.98px) {
+  .bar {
+    bottom: calc(var(--size-bar-tab) + var(--safe-bottom));
+    padding-bottom: var(--space-4);
+  }
+}
+
+.money > :first-child {
+  white-space: nowrap;
+}
+
+.top > :last-child {
+  min-width: 0;
 }
 .top {
   display: flex;
@@ -40,7 +48,6 @@
 }
 
 .bookLink {
-  align-self: flex-end;
   font-size: 13px;
   line-height: 18px;
   color: var(--ink-muted);

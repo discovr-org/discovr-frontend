@@ -1,18 +1,41 @@
 .shell {
-  width: min(100%, var(--size-content-max));
-  margin-inline: auto;
+  width: 100%;
+  max-width: calc(var(--layout-width) + var(--layout-gutter) * 2);
   min-height: 100dvh;
-  background: var(--surface-canvas);
-  position: relative;
+  margin: 0 auto;
+  padding: var(--nav-top) 0 var(--nav-bottom);
 }
 
-.content {
-  padding-bottom: calc(var(--size-bar-tab) + var(--safe-bottom) + var(--space-6));
+/* The footer pads itself for the tab bar. */
+.shell:has(footer),
+.main:has(footer) {
+  padding-bottom: 0;
 }
 
-@media (min-width: 481px) {
-  .shell {
-    border-left: var(--border-hairline) solid var(--line-subtle);
-    border-right: var(--border-hairline) solid var(--line-subtle);
+.main {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: var(--space-6);
+  outline: none;
+}
+
+@media (min-width: 1024px) {
+  .main {
+    padding-top: var(--space-4);
   }
+}
+
+.skip {
+  position: fixed;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: var(--z-toast);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--brand-primary);
+  color: var(--brand-primary-on);
+  transform: translateY(-200%);
+}
+
+.skip:focus {
+  transform: none;
 }
