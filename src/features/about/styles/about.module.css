@@ -1,0 +1,139 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+.intro {
+  margin: calc(var(--space-3) - var(--space-7)) 0 0;
+  font-size: 18px;
+  line-height: 26px;
+  color: var(--ink-primary);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.section h2 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.section p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--ink-muted);
+}
+
+.link {
+  color: var(--ink-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.num {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: var(--border-hairline) solid var(--line-strong);
+  background: var(--surface-sunken);
+  color: var(--ink-primary);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.step h3 {
+  margin: 4px 0 var(--space-1);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  color: var(--ink-primary);
+}
+
+.cta {
+  margin-top: var(--space-2);
+}
+
+.faq {
+  display: flex;
+  flex-direction: column;
+}
+
+.faqItem {
+  border-bottom: var(--border-hairline) solid var(--line-subtle);
+}
+
+.faqItem:first-child {
+  border-top: var(--border-hairline) solid var(--line-subtle);
+}
+
+.faqSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--size-control-md);
+  padding: var(--space-3) 0;
+  list-style: none;
+  cursor: pointer;
+  color: var(--ink-primary);
+  font-size: var(--body-size);
+  line-height: var(--body-line);
+  font-weight: 700;
+}
+
+.faqSummary::-webkit-details-marker {
+  display: none;
+}
+
+@media (hover: hover) {
+  .faqSummary:hover {
+    color: var(--brand-primary-hover);
+  }
+}
+
+.faqSummary svg {
+  flex: none;
+  width: var(--size-icon-md);
+  height: var(--size-icon-md);
+  color: var(--ink-muted);
+  transition: transform var(--duration-instant) var(--ease-exit);
+}
+
+.faqItem[open] .faqSummary svg {
+  transform: rotate(180deg);
+}
+
+.section .faqAnswer {
+  padding-bottom: var(--space-4);
+  font-size: var(--body-sm-size);
+  line-height: var(--body-sm-line);
+}

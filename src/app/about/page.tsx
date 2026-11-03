@@ -1,16 +1,14 @@
-import Link from "next/link";
+import type { Metadata } from "next";
+import { ABOUT_INTRO, AboutPage } from "@/features/about/components/AboutPage";
 
-export default function AboutPage() {
-  return (
-    <div className="app-shell">
-      <h1 className="display-md">About us</h1>
-      <p className="body-muted" style={{ marginTop: "var(--space-3)" }}>
-        Eight things worth doing tonight, not eight hundred. We&apos;ve been to
-        all of them.
-      </p>
-      <p style={{ marginTop: "var(--space-4)" }}>
-        <Link href="/">Back to explore</Link>
-      </p>
-    </div>
-  );
+export const metadata: Metadata = {
+  title: "About | discovr",
+  description: ABOUT_INTRO,
+  alternates: { canonical: "https://www.discovr.in/about" },
+  openGraph: { title: "About discovr", description: ABOUT_INTRO, siteName: "discovr" },
+  twitter: { card: "summary", title: "About discovr", description: ABOUT_INTRO },
+};
+
+export default function Page() {
+  return <AboutPage />;
 }
