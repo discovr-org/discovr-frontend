@@ -10,7 +10,7 @@ import { apiBaseUrl, hasApiBaseUrl } from "@/shared/utils/apiBase";
 import type { FeedItem } from "@/features/home/utils/feedData";
 import { formatDuration } from "@/shared/utils/formatDuration";
 
-const FALLBACK_IMAGE = "/demo/jetty-dusk.png";
+export const FALLBACK_IMAGE = "/demo/jetty-dusk.png";
 
 type ApiListingCard = {
   slug: string;

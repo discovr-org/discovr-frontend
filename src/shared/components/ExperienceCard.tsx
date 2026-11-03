@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
+import { FALLBACK_IMAGE } from "@/shared/utils/catalogApi";
 import { HeartIcon } from "./icons";
 import styles from "./ExperienceCard.module.css";
 
@@ -43,6 +45,8 @@ export function ExperienceCard({
   onToggleSave,
   priority = false,
 }: ExperienceCardProps) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const src = failedSrc === imageSrc ? FALLBACK_IMAGE : imageSrc;
   const meta = [placeLabel, durationLabel].filter(Boolean).join(" · ");
   const portrait = density === "portrait";
   const tile = density === "tile";
@@ -67,9 +71,10 @@ export function ExperienceCard({
     <article className={[styles.card, styles[density]].join(" ")}>
       <Link href={href} className={styles.mediaLink}>
         <div className={styles.media}>
-          {imageSrc ? (
+          {src ? (
             <Image
-              src={imageSrc}
+              src={src}
+              onError={() => setFailedSrc(imageSrc)}
               alt={imageAlt}
               fill
               sizes={
@@ -81,7 +86,7 @@ export function ExperienceCard({
               }
               priority={priority}
               className={styles.img}
-              unoptimized={imageSrc.startsWith("http")}
+              unoptimized={src.startsWith("http")}
             />
           ) : (
             <div className={styles.img} aria-hidden />
