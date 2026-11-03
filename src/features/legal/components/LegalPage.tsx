@@ -6,17 +6,22 @@ export type LegalSection = { title: string; paragraphs: string[] };
 type LegalPageProps = {
   title: string;
   sections: LegalSection[];
+  lead?: string;
+  draft?: boolean;
   children?: ReactNode;
 };
 
-export function LegalPage({ title, sections, children }: LegalPageProps) {
+export function LegalPage({ title, sections, lead, draft = true, children }: LegalPageProps) {
   return (
     <div className="app-shell">
       <article className={styles.prose}>
         <h1 className="display-md">{title}</h1>
-        <p className={styles.review} role="note">
-          Draft wording. A lawyer reviews this page before launch.
-        </p>
+        {lead ? <p className={styles.lead}>{lead}</p> : null}
+        {draft ? (
+          <p className={styles.review} role="note">
+            Draft wording. A lawyer reviews this page before launch.
+          </p>
+        ) : null}
         {sections.map((section) => (
           <section key={section.title} className={styles.section}>
             <h2>{section.title}</h2>
