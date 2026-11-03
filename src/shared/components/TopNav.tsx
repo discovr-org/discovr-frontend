@@ -37,7 +37,7 @@ export function TopNav({ current, savedDot, onContact, onProfile }: TopNavProps)
       data-scrolled={scrolled}
       onClick={(e) => {
         const tab = (e.target as Element).closest<HTMLElement>("[data-tab]")?.dataset.tab;
-        if (tab) track("tab_clicked", { tab });
+        if (tab) track("tab_clicked", { tab, location: "top_nav" });
       }}
     >
       <div className={styles.inner}>

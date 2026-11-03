@@ -13,9 +13,12 @@ function onFooterClick(e: MouseEvent<HTMLElement>) {
   const a = (e.target as Element).closest("a");
   if (!a) return;
   const href = a.getAttribute("href") ?? "";
-  if (href.startsWith("tel:")) track("contact_clicked", { channel: "call", from: "footer" });
-  else if (href.startsWith("https://wa.me/")) track("contact_clicked", { channel: "whatsapp", from: "footer" });
-  else track("footer_link_clicked", { label: a.textContent?.trim() || href });
+  const label = a.getAttribute("aria-label") || a.textContent?.trim() || href;
+  const base = { cta_label: label, location: "footer" as const };
+  if (href.startsWith("tel:")) track("contact_clicked", { ...base, channel: "call", cta: "call_us" });
+  else if (href.startsWith("https://wa.me/")) {
+    track("contact_clicked", { ...base, channel: "whatsapp", cta: "whatsapp_us" });
+  } else track("footer_link_clicked", { ...base, cta: "footer_link", href });
 }
 
 type SiteFooterProps = {

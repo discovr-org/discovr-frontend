@@ -14,7 +14,7 @@ type HomeSectionProps = {
   /** 1-based order on the page. */
   position: number;
   isSaved: (slug: string) => boolean;
-  onToggleSave: (slug: string, from: string) => void;
+  onToggleSave: (slug: string) => void;
 };
 
 /** One titled home section: a sideways rail, or full-width cards stacked. */
@@ -54,7 +54,7 @@ export function HomeSection({ section, position, isSaved, onToggleSave }: HomeSe
                   imageSrc={item.imageSrc}
                   imageAlt={item.imageAlt}
                   saved={isSaved(item.slug)}
-                  onToggleSave={() => onToggleSave(item.slug, `home:${section.id}`)}
+                  onToggleSave={() => onToggleSave(item.slug)}
                   track={cardTrack(item, i)}
                 />
               </div>
@@ -75,7 +75,7 @@ export function HomeSection({ section, position, isSaved, onToggleSave }: HomeSe
                 durationLabel={item.durationLabel}
                 priceLabel={priceLabel(item)}
                 saved={isSaved(item.slug)}
-                onToggleSave={() => onToggleSave(item.slug, `home:${section.id}`)}
+                onToggleSave={() => onToggleSave(item.slug)}
                 track={cardTrack(item, i)}
               />
             ))}

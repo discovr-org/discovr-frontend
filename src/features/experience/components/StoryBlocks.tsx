@@ -6,7 +6,7 @@ import styles from "../styles/storyBlocks.module.css";
 /** The About story: headings, quotes, photos, steps, callouts, checklists, FAQs, in order. */
 type StoryBlocksProps = {
   blocks: StoryBlock[];
-  onFaqOpen?: (question: string) => void;
+  onFaqOpen?: (question: string, position: number) => void;
 };
 
 export function StoryBlocks({ blocks, onFaqOpen }: StoryBlocksProps) {
@@ -21,7 +21,7 @@ export function StoryBlocks({ blocks, onFaqOpen }: StoryBlocksProps) {
   );
 }
 
-function Block({ block, onFaqOpen }: { block: StoryBlock; onFaqOpen?: (question: string) => void }) {
+function Block({ block, onFaqOpen }: { block: StoryBlock; onFaqOpen?: (question: string, position: number) => void }) {
   switch (block.type) {
     case "heading":
       return block.level === "section" ? (
@@ -131,12 +131,12 @@ function Block({ block, onFaqOpen }: { block: StoryBlock; onFaqOpen?: (question:
     case "faq":
       return (
         <div className={styles.qa}>
-          {block.items.map((item) => (
+          {block.items.map((item, i) => (
             <details
               key={item.q}
               className={styles.qaItem}
               onToggle={(e) => {
-                if (e.currentTarget.open) onFaqOpen?.(item.q);
+                if (e.currentTarget.open) onFaqOpen?.(item.q, i + 1);
               }}
             >
               <summary className={styles.qaSummary}>

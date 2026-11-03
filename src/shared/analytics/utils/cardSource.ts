@@ -18,7 +18,11 @@ export function cardTrack(
   };
 }
 
-type Source = { list: CardList; section?: string; position: number; slug: string };
+type Source = {
+  list: CardList;
+  section?: string;
+  sectionTitle?: string;
+  position: number; slug: string };
 const KEY = "discovr.analytics.source";
 
 /** Remember which card opened a listing, so experience_viewed can say where the visit came from. */
@@ -27,6 +31,7 @@ export function rememberCardSource(card: CardProps): void {
     const source: Source = {
       list: card.list,
       section: card.section_id,
+      sectionTitle: card.section_title,
       position: card.position,
       slug: card.slug,
     };

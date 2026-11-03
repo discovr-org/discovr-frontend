@@ -51,10 +51,9 @@ export function ExploreFeed() {
   const auth = useAuth();
   const toast = useToast();
 
-  const onToggleSave = (slug: string, from: string) => {
+  const onToggleSave = (slug: string) => {
     const was = saved.isSaved(slug);
     saved.toggle(slug);
-    track(was ? "experience_unsaved" : "experience_saved", { slug, from });
     if (!was && !auth.user) {
       auth.openAuth("save");
       return;
@@ -253,7 +252,7 @@ export function ExploreFeed() {
                     durationLabel={item.durationLabel}
                     priceLabel={priceLabel(item)}
                     saved={saved.isSaved(item.slug)}
-                    onToggleSave={() => onToggleSave(item.slug, "search")}
+                    onToggleSave={() => onToggleSave(item.slug)}
                     track={cardTrack(item, i)}
                   />
                 ))}
@@ -295,7 +294,7 @@ export function ExploreFeed() {
                       imageSrc={item.imageSrc}
                       imageAlt={item.imageAlt}
                       saved={saved.isSaved(item.slug)}
-                      onToggleSave={() => onToggleSave(item.slug, "filters")}
+                      onToggleSave={() => onToggleSave(item.slug)}
                     />
                   </li>
                 ))}

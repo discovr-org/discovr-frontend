@@ -97,10 +97,6 @@ export function SearchScreen() {
                 onToggleSave={() => {
                   const was = saved.isSaved(item.slug);
                   saved.toggle(item.slug);
-                  track(was ? "experience_unsaved" : "experience_saved", {
-                    slug: item.slug,
-                    from: "search",
-                  });
                   if (!was && !auth.user) {
                     auth.openAuth("save");
                     return;

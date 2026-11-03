@@ -16,7 +16,6 @@ import { useSaved } from "@/shared/utils/useSaved";
 import styles from "@/features/saved/styles/savedScreen.module.css";
 import { TrackList } from "@/shared/analytics/components/TrackList";
 import { cardTrack } from "@/shared/analytics/utils/cardSource";
-import { track } from "@/shared/analytics/utils/track";
 
 export function SavedScreen() {
   const saved = useSaved();
@@ -118,7 +117,6 @@ export function SavedScreen() {
                   saved
                   onToggleSave={() => {
                     saved.toggle(item.slug);
-                    track("experience_unsaved", { slug: item.slug, from: "saved" });
                     toast("Removed from saved");
                   }}
                 />

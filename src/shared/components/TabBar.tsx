@@ -41,7 +41,7 @@ export function TabBar({
           className={styles.item}
           aria-current={aria("explore")}
           data-attr="tab-explore"
-          onClick={() => track("tab_clicked", { tab: "explore" })}
+          onClick={() => track("tab_clicked", { tab: "explore", location: "tab_bar" })}
         >
           <CompassIcon />
           <span className={styles.label}>Explore</span>
@@ -52,7 +52,7 @@ export function TabBar({
           aria-haspopup="dialog"
           data-attr="tab-contact"
           onClick={() => {
-            track("tab_clicked", { tab: "contact" });
+            track("tab_clicked", { tab: "contact", location: "tab_bar" });
             onContact();
           }}
         >
@@ -64,7 +64,7 @@ export function TabBar({
           className={styles.item}
           aria-current={aria("saved")}
           data-attr="tab-saved"
-          onClick={() => track("tab_clicked", { tab: "saved" })}
+          onClick={() => track("tab_clicked", { tab: "saved", location: "tab_bar" })}
         >
           <HeartIcon />
           <span className={styles.label}>Saved</span>
@@ -81,7 +81,7 @@ export function TabBar({
           aria-current={aria("profile")}
           data-attr="tab-profile"
           onClick={(e) => {
-            track("tab_clicked", { tab: "profile" });
+            track("tab_clicked", { tab: "profile", location: "tab_bar" });
             onProfile?.(e);
           }}
         >

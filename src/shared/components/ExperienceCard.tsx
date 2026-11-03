@@ -79,6 +79,12 @@ export function ExperienceCard({
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
+        if (cardEvent) {
+          trackEvent(saved ? "experience_unsaved" : "experience_saved", {
+            ...cardEvent,
+            location: "card",
+          });
+        }
         onToggleSave();
       }}
     >

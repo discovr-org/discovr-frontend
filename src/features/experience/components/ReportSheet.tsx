@@ -48,7 +48,7 @@ export function ReportSheet({
     ]
       .filter(Boolean)
       .join("\n");
-    track("report_submitted", { slug, kind: kind || "unspecified" });
+    track("report_submitted", { slug, title: listingTitle, kind: kind || "unspecified" });
     window.open(discovrWhatsApp(text), "_blank", "noopener,noreferrer");
     onClose();
   };

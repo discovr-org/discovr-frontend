@@ -23,8 +23,8 @@ type AppShellProps = {
 export function AppShell({ current, children, savedDot, footer = true, footerSource }: AppShellProps) {
   const [contactOpen, setContactOpen] = useState(false);
   const pathname = usePathname();
-  const openContact = () => {
-    track("contact_sheet_opened", {});
+  const openContact = (location: "tab_bar" | "top_nav") => {
+    track("contact_sheet_opened", { location });
     setContactOpen(true);
   };
 
@@ -37,13 +37,13 @@ export function AppShell({ current, children, savedDot, footer = true, footerSou
         shown
         current={current === "about" ? "explore" : current}
         savedDot={savedDot}
-        onContact={openContact}
+        onContact={() => openContact("tab_bar")}
       />
       <ContactSheet open={contactOpen} onClose={() => setContactOpen(false)} />
       <TopNav
         current={current}
         savedDot={savedDot}
-        onContact={openContact}
+        onContact={() => openContact("top_nav")}
       />
       <div className={styles.shell}>
         <main id="main" tabIndex={-1} className={styles.main}>

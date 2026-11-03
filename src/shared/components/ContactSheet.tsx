@@ -29,7 +29,12 @@ export function ContactSheet({ open, onClose, phone = DISCOVR_PHONE, phoneDispla
           icon={<PhoneIcon />}
           title="Call us"
           sub={phoneDisplay}
-          onClick={() => track("contact_clicked", { channel: "call", from: "contact_sheet" })}
+          onClick={() => track("contact_clicked", {
+              channel: "call",
+              cta: "call_us",
+              cta_label: "Call us",
+              location: "contact_sheet",
+            })}
         />
         <SheetOption
           href={wa}
@@ -37,7 +42,12 @@ export function ContactSheet({ open, onClose, phone = DISCOVR_PHONE, phoneDispla
           icon={<MessageIcon />}
           title="WhatsApp us"
           sub="Same number. We usually reply instantly."
-          onClick={() => track("contact_clicked", { channel: "whatsapp", from: "contact_sheet" })}
+          onClick={() => track("contact_clicked", {
+              channel: "whatsapp",
+              cta: "whatsapp_us",
+              cta_label: "WhatsApp us",
+              location: "contact_sheet",
+            })}
         />
       </SheetOptions>
     </Sheet>

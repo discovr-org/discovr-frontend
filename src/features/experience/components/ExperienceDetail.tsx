@@ -32,6 +32,7 @@ import { Verdict } from "@/shared/components/Verdict";
 import { useSaved } from "@/shared/utils/useSaved";
 import { TrackList } from "@/shared/analytics/components/TrackList";
 import { cardTrack, takeCardSource } from "@/shared/analytics/utils/cardSource";
+import type { ListingProps } from "@/shared/analytics/utils/events";
 import { track } from "@/shared/analytics/utils/track";
 import { useScrollDepth } from "@/shared/analytics/utils/useScrollDepth";
 import { useTrackView } from "@/shared/analytics/utils/useTrackView";
@@ -99,16 +100,13 @@ export function ExperienceDetail({
     if (!experience) return;
     const source = takeCardSource(experience.slug);
     track("experience_viewed", {
-      slug: experience.slug,
-      title: experience.title,
-      format: isVenueListing(experience) ? "venue" : "trip",
-      area: experience.place.neighborhood?.trim() || experience.place.name,
-      ...askPrice(experience),
+      ...listingProps(experience),
       book_via: experience.content?.bookVia === "link" ? "link" : "call",
       has_menu: Boolean(experience.menu?.pages.length),
       photos_count: experience.photos.length,
       source_list: source?.list,
       source_section: source?.section,
+      source_section_title: source?.sectionTitle,
       source_position: source?.position,
     });
   });
@@ -145,8 +143,8 @@ export function ExperienceDetail({
   const onToggleSave = useCallback(() => {
     if (!experience) return;
     track(saved ? "experience_unsaved" : "experience_saved", {
-      slug: experience.slug,
-      from: "listing",
+      ...listingProps(experience),
+      location: "app_bar",
     });
     if (saved) {
       setSavedAndNotify(false);
@@ -161,12 +159,15 @@ export function ExperienceDetail({
     auth.requireAuth("call", dialHost);
   }, [auth, dialHost]);
 
-  const share = useCallback(async () => {
+  const share = useCallback(async (location: "app_bar" | "action_row") => {
     const url = window.location.href.split("#")[0];
     const title = experience?.title ?? "discovr";
     if (experience) {
       track("share_clicked", {
-        slug: experience.slug,
+        ...listingProps(experience),
+        cta: "share",
+        cta_label: "Share",
+        location,
         method: typeof navigator.share === "function" ? "native" : "copy",
       });
     }
@@ -207,7 +208,7 @@ export function ExperienceDetail({
             hidden={chrome.barHidden}
             saved={saved}
             onBack={back}
-            onShare={share}
+            onShare={() => void share("app_bar")}
             onToggleSave={onToggleSave}
             onFocusWithin={chrome.reveal}
           />
@@ -218,7 +219,7 @@ export function ExperienceDetail({
               ref={heroRef}
               photos={experience!.photos}
               onIndexChange={(index, total) =>
-                track("hero_photo_changed", { slug: experience!.slug, index, total })
+                track("hero_photo_changed", { ...listingProps(experience!), index, total })
               }
             />
           ) : (
@@ -244,26 +245,37 @@ export function ExperienceDetail({
           <Populated
             experience={experience!}
             offline={state === "offline"}
-            onShare={share}
+            onShare={() => void share("action_row")}
             onOpenMenu={(index) => {
               track("menu_opened", {
-                slug: experience!.slug,
+                ...listingProps(experience!),
+                cta: "menu_page",
+                cta_label: "Menu",
+                location: "menu_section",
                 pages: experience!.menu?.pages.length ?? 0,
+                start_page: index + 1,
               });
               setMenuAt(index);
             }}
             onReport={() => {
-              track("report_opened", { slug: experience!.slug });
+              track("report_opened", {
+                ...listingProps(experience!),
+                cta: "report",
+                cta_label: "Report wrong information",
+                location: "listing_links",
+              });
               setReportOpen(true);
             }}
             onCallToBook={onCallToBook}
             onBookClick={(method) => {
               const x = experience!;
               track("book_clicked", {
-                slug: x.slug,
+                ...listingProps(x),
+                cta: method === "link" ? "book_on_site" : "call_to_book",
+                cta_label: method === "link" ? `Book on ${x.host.businessName}` : "Call to book",
+                location: "booking_bar",
                 method,
                 host: x.host.businessName,
-                ...askPrice(x),
                 gated_by_auth: method === "call" && !auth.user,
               });
             }}
@@ -271,10 +283,6 @@ export function ExperienceDetail({
             savedSlugs={savedStore.slugs}
             onToggleRelatedSave={(slug) => {
               const nowSaved = savedStore.toggle(slug);
-              track(nowSaved ? "experience_saved" : "experience_unsaved", {
-                slug,
-                from: "more_in_goa",
-              });
               if (nowSaved && !auth.user) {
                 auth.openAuth("save");
                 return;
@@ -307,7 +315,7 @@ export function ExperienceDetail({
           onClose={() => setMenuAt(null)}
           onPageChange={(index) =>
             track("menu_page_viewed", {
-              slug: experience.slug,
+              ...listingProps(experience),
               page: index + 1,
               pages: experience.menu?.pages.length ?? 0,
             })
@@ -359,20 +367,21 @@ function Populated({
   const storyRef = useTrackView<HTMLDivElement>(
     () =>
       track("story_viewed", {
-        slug: x.slug,
+        ...listingProps(x),
         blocks_count: blocks.length,
         photos_shown: blocks.some((b) => b.type === "photo"),
       }),
     x.slug,
   );
   const storyEndRef = useTrackView<HTMLDivElement>(
-    () => track("story_completed", { slug: x.slug, blocks_count: blocks.length }),
+    () => track("story_completed", { ...listingProps(x), blocks_count: blocks.length }),
     x.slug,
   );
-  const onContact = (action: "call" | "directions" | "hours") => {
-    if (action === "hours") track("hours_expanded", { slug: x.slug });
-    else track(action === "call" ? "call_clicked" : "directions_clicked", { slug: x.slug });
-  };
+  const onContact =
+    (location: "info_list" | "action_row") => (action: "call" | "directions" | "hours") => {
+      const cta = CONTACT_CTAS[action];
+      track(cta.event, { ...listingProps(x), cta: action, cta_label: cta.label, location });
+    };
 
   return (
     <>
@@ -402,7 +411,7 @@ function Populated({
               groupSize={x.groupSize}
               venue={venue}
               mapsHref={content.links?.maps?.url}
-              onAction={onContact}
+              onAction={onContact("info_list")}
             />
             <Verdict text={x.verdict} label={null} />
             <ActionRow
@@ -411,7 +420,7 @@ function Populated({
               directionsHref={mapsHref}
               instagramHandle={instagramHandle}
               onShare={onShare}
-              onAction={onContact}
+              onAction={onContact("action_row")}
             />
           </header>
 
@@ -420,7 +429,9 @@ function Populated({
             <div ref={storyRef} aria-hidden="true" />
             <StoryBlocks
               blocks={blocks}
-              onFaqOpen={(question) => track("faq_opened", { slug: x.slug, question })}
+              onFaqOpen={(question, position) =>
+                track("faq_opened", { ...listingProps(x), question, position, location: "story" })
+              }
             />
             <div ref={storyEndRef} aria-hidden="true" />
           </Section>
@@ -513,10 +524,24 @@ function Populated({
   );
 }
 
-/** Price fields for events, matching what the BookingBar shows (places always ask). */
-function askPrice(x: Experience): { ask_for_price: boolean; price_inr?: number } {
-  const ask = Boolean(x.price.askForPrice) || isVenueListing(x);
-  return ask ? { ask_for_price: true } : { ask_for_price: false, price_inr: x.price.fromAmount };
+const CONTACT_CTAS = {
+  call: { event: "call_clicked", label: "Call" },
+  directions: { event: "directions_clicked", label: "Directions" },
+  hours: { event: "hours_expanded", label: "Hours" },
+} as const;
+
+/** Listing fields for every listing-page event. Price matches the BookingBar (places always ask). */
+function listingProps(x: Experience): ListingProps {
+  const venue = isVenueListing(x);
+  const ask = Boolean(x.price.askForPrice) || venue;
+  return {
+    slug: x.slug,
+    title: x.title,
+    format: venue ? "venue" : "trip",
+    area: x.place.neighborhood?.trim() || x.place.name,
+    ask_for_price: ask,
+    ...(ask ? {} : { price_inr: x.price.fromAmount }),
+  };
 }
 
 /** Pull @handle from an Instagram profile URL when the host row has none. */

@@ -16,7 +16,34 @@ export type CardProps = {
 
 export type CardList = "home" | "search" | "saved" | "more_in_goa";
 
-type Slug = { slug: string };
+/** Sent with every listing-page event, so each one says which listing without a join. */
+export type ListingProps = {
+  slug: string;
+  title: string;
+  format: "trip" | "venue";
+  area?: string;
+  price_inr?: number;
+  ask_for_price: boolean;
+};
+
+/** Where a tap happened. */
+export type Location =
+  | "card"
+  | "app_bar"
+  | "action_row"
+  | "info_list"
+  | "booking_bar"
+  | "menu_section"
+  | "story"
+  | "listing_links"
+  | "tab_bar"
+  | "top_nav"
+  | "contact_sheet"
+  | "footer";
+
+/** Every button event: which button, the words on it, and where it sits. */
+type Cta = { cta: string; cta_label: string; location: Location };
+
 type Empty = Record<string, never>;
 
 /**
@@ -37,44 +64,41 @@ export type EventMap = {
   /** Clicks on results are experience_card_clicked with list "search" and search_query. */
   search_performed: { query: string; query_length: number; results_count: number };
 
-  // Listing page
-  experience_viewed: Slug & {
-    title: string;
-    format: "trip" | "venue";
-    area?: string;
-    price_inr?: number;
-    ask_for_price: boolean;
+  // Listing page (all carry ListingProps)
+  experience_viewed: ListingProps & {
     book_via: "call" | "link";
     has_menu: boolean;
     photos_count: number;
     source_list?: CardList;
     source_section?: string;
+    source_section_title?: string;
     source_position?: number;
   };
-  story_viewed: Slug & { blocks_count: number; photos_shown: boolean };
-  story_completed: Slug & { blocks_count: number };
-  faq_opened: Slug & { question: string };
-  hero_photo_changed: Slug & { index: number; total: number };
-  menu_opened: Slug & { pages: number };
-  menu_page_viewed: Slug & { page: number; pages: number };
-  hours_expanded: Slug;
-  directions_clicked: Slug;
-  call_clicked: Slug;
-  share_clicked: Slug & { method: "native" | "copy" };
-  report_opened: Slug;
+  story_viewed: ListingProps & { blocks_count: number; photos_shown: boolean };
+  story_completed: ListingProps & { blocks_count: number };
+  /** position is 1-based among the FAQs. */
+  faq_opened: ListingProps & { question: string; position: number; location: "story" };
+  hero_photo_changed: ListingProps & { index: number; total: number };
+  menu_opened: ListingProps & Cta & { pages: number; start_page: number };
+  menu_page_viewed: ListingProps & { page: number; pages: number };
+  hours_expanded: ListingProps & Cta;
+  directions_clicked: ListingProps & Cta;
+  call_clicked: ListingProps & Cta;
+  share_clicked: ListingProps & Cta & { method: "native" | "copy" };
+  report_opened: ListingProps & Cta;
   /** kind is one of the fixed "What's wrong?" options, never their text. */
-  report_submitted: Slug & { kind: string };
+  report_submitted: Pick<ListingProps, "slug" | "title"> & { kind: string };
 
   // Conversion
-  book_clicked: Slug & {
-    method: "call" | "link";
-    host: string;
-    price_inr?: number;
-    ask_for_price: boolean;
-    gated_by_auth: boolean;
-  };
-  experience_saved: Slug & { from: string };
-  experience_unsaved: Slug & { from: string };
+  book_clicked: ListingProps &
+    Cta & {
+      method: "call" | "link";
+      host: string;
+      gated_by_auth: boolean;
+    };
+  /** From a card: the card's list, section and position. From a listing: the listing. */
+  experience_saved: SaveProps;
+  experience_unsaved: SaveProps;
 
   // Sign-in (never the number)
   auth_sheet_opened: { intent: string };
@@ -86,10 +110,10 @@ export type EventMap = {
   signed_out: Empty;
 
   // Navigation and support
-  tab_clicked: { tab: string };
-  contact_sheet_opened: Empty;
-  contact_clicked: { channel: "whatsapp" | "call"; from: string };
-  footer_link_clicked: { label: string };
+  tab_clicked: { tab: string; location: "tab_bar" | "top_nav" };
+  contact_sheet_opened: { location: "tab_bar" | "top_nav" };
+  contact_clicked: Cta & { channel: "whatsapp" | "call" };
+  footer_link_clicked: Cta & { href: string };
   /** category is one of the fixed help options, never their message. */
   help_request_submitted: { category: string };
 
@@ -97,6 +121,10 @@ export type EventMap = {
   scroll_depth: { depth: 25 | 50 | 75 | 100; slug?: string };
   analytics_opted_out: Empty;
 };
+
+type SaveProps =
+  | (CardProps & { location: "card" })
+  | (ListingProps & { location: "app_bar" });
 
 type PiiField = "phone" | "phone_e164" | "phoneE164" | "name" | "first_name" | "email";
 type Expect<T extends true> = T;
