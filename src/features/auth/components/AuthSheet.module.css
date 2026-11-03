@@ -181,9 +181,12 @@
 .ccButton:active {
   background: var(--pressed-tint);
 }
-.ccButton:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 2px;
+/* The wrapping field draws the focus ring */
+.ccButton:focus-visible,
+.phoneInput:focus-visible,
+.searchInput:focus-visible,
+.textInput:focus-visible {
+  outline: none;
 }
 
 .flag {
