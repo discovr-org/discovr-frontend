@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "imagedelivery.net", pathname: "/**" },
       { protocol: "https", hostname: "*.supabase.co", pathname: "/**" },
       { protocol: "https", hostname: "media.discovr.in", pathname: "/**" },
+      { protocol: "https", hostname: "cdn.discovr.in", pathname: "/**" },
     ],
   },
   experimental: {
