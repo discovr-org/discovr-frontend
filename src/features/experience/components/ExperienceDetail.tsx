@@ -366,7 +366,7 @@ function Populated({
             priceFrom={x.price.fromAmount}
             askForPrice={x.price.askForPrice || venue}
             walkIn={venue && content.walkIn === true}
-            bookHref={venue ? undefined : content.links?.book?.url || undefined}
+            bookHref={content.bookVia === "link" ? content.links?.book?.url || undefined : undefined}
             taxes={x.price.taxes ?? "inclusive"}
             phone={x.host.phone}
             hostBusinessName={x.host.businessName}

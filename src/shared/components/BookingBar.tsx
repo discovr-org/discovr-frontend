@@ -12,7 +12,7 @@ export interface BookingBarProps {
   askForPrice?: boolean;
   /** Places that take walk-ins: the note says no booking is needed. */
   walkIn?: boolean;
-  /** The host's own booking page: adds "or book on {host}" under the button. */
+  /** The host's own booking page. When set, the button opens it instead of calling. */
   bookHref?: string;
   /** Adds "+ taxes" after "per person" when taxes are extra. */
   taxes?: "extra" | "inclusive";
@@ -81,7 +81,17 @@ export function BookingBar({
             </>
           )}
         </div>
-        {onCallToBook ? (
+        {bookHref ? (
+          <Button
+            variant="primary"
+            href={bookHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Book on ${hostBusinessName}'s site (opens in a new tab)`}
+          >
+            Book on {hostBusinessName}
+          </Button>
+        ) : onCallToBook ? (
           <Button variant="primary" onClick={onCallToBook} aria-label={callLabel} icon={<PhoneIcon />}>
             {cta}
           </Button>
@@ -92,16 +102,10 @@ export function BookingBar({
         )}
       </div>
       <span className={styles.note}>
-        You&apos;ll speak to {hostBusinessName} directly.
+        {bookHref
+          ? `You'll book on ${hostBusinessName}'s own page.`
+          : `You'll speak to ${hostBusinessName} directly.`}
         {walkIn ? " No booking needed, just walk in" : null}
-        {bookHref ? (
-          <>
-            {" "}
-            <a className={styles.bookLink} href={bookHref} target="_blank" rel="noopener noreferrer">
-              or book on {hostBusinessName}
-            </a>
-          </>
-        ) : null}
       </span>
     </footer>
   );

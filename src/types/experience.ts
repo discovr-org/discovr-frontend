@@ -42,7 +42,7 @@ export type ListingHours = {
   difficulty?: string;
 };
 
-export type ContentLink = { label: string; url: string };
+export type ContentLink = { url: string; label?: string };
 
 /** Extra sheet fields from the catalog API. */
 export type ExperienceContent = {
@@ -84,6 +84,8 @@ export type ExperienceContent = {
   faqs?: Array<{ q: string; a: string }>;
   /** The About story, in reading order. When absent the page builds one from the fields above. */
   blocks?: StoryBlock[];
+  /** "link" = the book button opens `links.book`; otherwise it calls the host. */
+  bookVia?: "call" | "link";
   links?: {
     maps?: ContentLink;
     book?: ContentLink;
