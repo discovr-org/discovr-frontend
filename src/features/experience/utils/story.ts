@@ -8,8 +8,8 @@ import { rupees } from "./schedule";
  */
 export function storyBlocks(x: Experience): StoryBlock[] {
   const stored = x.content?.blocks;
-  if (stored?.length) return stored;
-  return isVenueListing(x) ? venueStory(x) : tripStory(x);
+  const blocks = stored?.length ? stored : isVenueListing(x) ? venueStory(x) : tripStory(x);
+  return x.content?.hideStoryPhotos ? blocks.filter((b) => b.type !== "photo") : blocks;
 }
 
 function tripStory(x: Experience): StoryBlock[] {
