@@ -108,7 +108,7 @@ export function ExploreFeed() {
   return (
     <AppShell current="explore" savedDot={saved.hasAny}>
       <div className={styles.page}>
-        <header className={styles.brand}>
+        <header className={styles.brand} data-compact={filtering || searching}>
           <h1 className={styles.hero}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
