@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
         writeSession(next);
         setUser(next);
-        if (next.userId) identifyUser(next.userId);
+        if (next.userId) identifyUser(next.userId, next.name);
         track("otp_verified", { intent, needs_name: result.isNewUser || !result.name });
         return { ok: true, isNewUser: result.isNewUser, name: result.name ?? undefined };
       } catch (err) {
@@ -169,11 +169,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  // Returning visitors: link this device to their account by internal id.
+  // Returning visitors and the name step: link this device to their account and name.
   const userId = user?.userId;
+  const userName = user?.name;
   useEffect(() => {
-    if (userId) identifyUser(userId);
-  }, [userId]);
+    if (userId) identifyUser(userId, userName);
+  }, [userId, userName]);
 
   const value = useMemo(
     () => ({

@@ -58,9 +58,12 @@ export function stopAnalytics(): void {
   posthog.opt_out_capturing();
 }
 
-/** Link this device to the signed-in account by internal id only, never name or phone. */
-export function identifyUser(userId: string): void {
-  if (analyticsActive() && posthog.get_distinct_id() !== userId) posthog.identify(userId);
+/** Link this device to the signed-in account by internal id, with their name as a person property. Never the phone. */
+export function identifyUser(userId: string, name?: string): void {
+  if (!analyticsActive()) return;
+  const props = name ? { name } : undefined;
+  if (posthog.get_distinct_id() !== userId) posthog.identify(userId, props);
+  else if (props) posthog.setPersonProperties(props);
 }
 
 /** Forget the account on sign-out, so the next visitor on this device starts fresh. */
