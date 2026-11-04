@@ -356,11 +356,14 @@ function Populated({
   const venue = isVenueListing(x);
   // A place credits its host only when someone else owns it ("Owned by Shilpa Shetty").
   const showHost = !venue || x.host.credit === "owned";
+  // The place's own account beats the owner's (Bastian, not Shilpa Shetty).
   const instagramHandle =
-    x.host.instagramHandle?.trim() ||
-    instagramHandleFromUrl(content.links?.instagram?.url);
+    instagramHandleFromUrl(content.links?.instagram?.url) ||
+    x.host.instagramHandle?.trim();
   const policy = x.policy;
-  const hasPolicy = Boolean(policy && (policy.booking.length || policy.cancellation.length));
+  const terms = venue ? [policy?.summary, content.termsDetail].flatMap((t) => (t?.trim() ? [t.trim()] : [])) : [];
+  const hasPolicy = Boolean(terms.length || policy?.booking.length || policy?.cancellation.length);
+  const menuLink = content.links?.menu?.url?.trim();
   const blocks = storyBlocks(x);
 
   useScrollDepth(x.slug);
@@ -440,11 +443,23 @@ function Populated({
             <Section title="Menu" id="menu">
               <MenuPages pages={x.menu.pages} onOpen={(i) => onOpenMenu(i)} />
             </Section>
+          ) : menuLink ? (
+            <Section title="Menu" id="menu">
+              <a className={styles.textLink} href={menuLink} target="_blank" rel="noopener noreferrer">
+                See the menu on {x.host.businessName}&apos;s site
+              </a>
+            </Section>
           ) : null}
 
-          {!venue && hasPolicy ? (
+          {hasPolicy ? (
             <div className={styles.policy}>
-              <PolicyDisclosure key={x.slug} policy={policy!} hostName={x.host.businessName} />
+              <PolicyDisclosure
+                key={x.slug}
+                policy={policy ?? { summary: "", booking: [], cancellation: [] }}
+                hostName={x.host.businessName}
+                title={venue ? "Terms and policy" : undefined}
+                terms={terms}
+              />
             </div>
           ) : null}
 
@@ -481,7 +496,8 @@ function Populated({
         <aside className={styles.side}>
           <BookingBar
             priceFrom={x.price.fromAmount}
-            askForPrice={x.price.askForPrice || venue}
+            askForPrice={asksForPrice(x)}
+            unit={venue ? barUnit(content.priceUnit) : undefined}
             walkIn={venue && content.walkIn === true}
             bookHref={content.bookVia === "link" ? content.links?.book?.url || undefined : undefined}
             taxes={x.price.taxes ?? "inclusive"}
@@ -530,10 +546,10 @@ const CONTACT_CTAS = {
   hours: { event: "hours_expanded", label: "Hours" },
 } as const;
 
-/** Listing fields for every listing-page event. Price matches the BookingBar (places always ask). */
+/** Listing fields for every listing-page event. Price matches the BookingBar. */
 function listingProps(x: Experience): ListingProps {
   const venue = isVenueListing(x);
-  const ask = Boolean(x.price.askForPrice) || venue;
+  const ask = asksForPrice(x);
   return {
     slug: x.slug,
     title: x.title,
@@ -542,6 +558,17 @@ function listingProps(x: Experience): ListingProps {
     ask_for_price: ask,
     ...(ask ? {} : { price_inr: x.price.fromAmount }),
   };
+}
+
+/** Places ask only when they have no price set. */
+function asksForPrice(x: Experience): boolean {
+  return Boolean(x.price.askForPrice) || (isVenueListing(x) && !x.price.fromAmount);
+}
+
+/** A place's unit fits the bar only when short ("for two"); long notes stay in About. */
+function barUnit(unit: string | undefined): string {
+  const u = unit?.trim() ?? "";
+  return u.length > 0 && u.length <= 20 ? u.charAt(0).toLowerCase() + u.slice(1) : "";
 }
 
 /** Pull @handle from an Instagram profile URL when the host row has none. */

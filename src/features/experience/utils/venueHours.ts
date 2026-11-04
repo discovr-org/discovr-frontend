@@ -22,7 +22,6 @@ function parseClock(raw: string): number | null {
 }
 
 function formatClock(mins: number): string {
-  if (mins % 1440 === 0) return "midnight";
   const h24 = Math.floor(mins / 60) % 24;
   const m = mins % 60;
   const suffix = h24 >= 12 ? "pm" : "am";
@@ -114,10 +113,10 @@ export function openTodayStatus(
   const today = new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone })
     .format(now)
     .toLowerCase();
-  if (WEEKDAY_NAMES.includes(today) && new RegExp(`${today}s?\\s+off`).test(dayText)) {
+  if (WEEKDAY_NAMES.includes(today) && dayIsOff(dayText, today)) {
     return { open: false, status: "Closed today", hours: times };
   }
-  if (!dayText || EVERY_DAY.test(dayText) || dayText.includes(today)) {
+  if (!dayText || EVERY_DAY.test(dayText) || /off|closed/.test(dayText) || dayText.includes(today)) {
     if (!times) return null;
     return { open: true, status: "Open today", hours: times };
   }
@@ -140,13 +139,70 @@ export function weekFromHours(
   const names = [...WEEKDAY_NAMES.slice(1), WEEKDAY_NAMES[0]];
   const named = names.filter((d) => dayText.includes(d) || dayText.includes(d.slice(0, 3)));
   return names.map((d) => {
-    if (new RegExp(`${d}s?\\s+off|${d.slice(0, 3)}s?\\s+off`).test(dayText)) return null;
-    if (!dayText || EVERY_DAY.test(dayText) || /off/.test(dayText) || !named.length) return times;
+    if (dayIsOff(dayText, d)) return null;
+    if (!dayText || EVERY_DAY.test(dayText) || /off|closed/.test(dayText) || !named.length) return times;
     return named.includes(d) ? times : null;
   });
 }
 
-/** "Open now · 9pm – 3am" / "Closed now · Open from 9pm – 3am". */
+/** "Tuesdays off", "Tue off", "Closed Tuesday.", "Closed on Mon and Tue". */
+function dayIsOff(dayText: string, day: string): boolean {
+  const short = day.slice(0, 3);
+  if (new RegExp(`(${day}|${short})s?\\s+off`).test(dayText)) return true;
+  const closed = dayText.match(/closed\s+(?:on\s+)?([a-z,\s&]+)/);
+  return Boolean(closed && new RegExp(`\\b${short}`).test(closed[1]));
+}
+
+const SHORT_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
+type HoursInput = {
+  days?: string;
+  timeSlot?: string;
+  altDays?: string[];
+  altTimeSlot?: string;
+  closedDays?: string[];
+};
+
+function slotFor(hours: HoursInput, day: string): string | undefined {
+  const alt = hours.altTimeSlot?.trim();
+  return alt && hours.altDays?.includes(day) ? alt : hours.timeSlot;
+}
+
+/**
+ * Today's line, honouring picked closed days and other-hours days before the free text.
+ * `preferRange` tries an open–close range first (places), else slots first (trips).
+ */
+export function todayStatus(
+  hours: HoursInput,
+  preferRange: boolean,
+  timeZone = "Asia/Kolkata",
+  now: Date = new Date(),
+): VenueHoursStatus | null {
+  const today = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone }).format(now);
+  const todayLong = new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone }).format(now).toLowerCase();
+  if (hours.closedDays?.includes(today) || dayIsOff((hours.days ?? "").toLowerCase(), todayLong)) {
+    return { open: false, status: "Closed today", hours: "" };
+  }
+  const slot = slotFor(hours, today);
+  const range = venueHoursStatus(slot, timeZone, now);
+  const slots = openTodayStatus(hours.days, slot, timeZone, now);
+  return preferRange ? (range ?? slots) : (slots ?? range);
+}
+
+/** Mon → Sun rows, with picked closed days and other-hours days applied. */
+export function weekRows(hours: HoursInput): Array<string | null> {
+  const base = weekFromHours(hours.days, hours.timeSlot);
+  const alt = hours.altTimeSlot?.trim() ? weekFromHours(undefined, hours.altTimeSlot) : [];
+  const order = [...SHORT_DAYS.slice(1), SHORT_DAYS[0]];
+  if (!base.length && !alt.length) return [];
+  return order.map((d, i) => {
+    if (hours.closedDays?.includes(d)) return null;
+    if (alt.length && hours.altDays?.includes(d)) return alt[i];
+    return base.length ? base[i] : null;
+  });
+}
+
+/** "Open now · 9pm – 3am" / "Closed now · 9pm – 3am". */
 export function venueHoursStatus(
   timeSlot: string | undefined,
   timeZone = "Asia/Kolkata",
@@ -162,6 +218,6 @@ export function venueHoursStatus(
   return {
     open,
     status: open ? "Open now" : "Closed now",
-    hours: open ? range.label : `Open from ${range.label}`,
+    hours: range.label,
   };
 }

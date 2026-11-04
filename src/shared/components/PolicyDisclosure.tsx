@@ -22,6 +22,10 @@ export interface PolicyDisclosureProps {
   policy: Policy;
   /** Used in the final-terms note under the card. */
   hostName: string;
+  /** Card title. Defaults to "Booking and cancellation policy". */
+  title?: string;
+  /** Extra terms shown first, e.g. minimum spend or entry rules. */
+  terms?: string[];
   /** Closed by default. Render with `key={experience.slug}` so it closes again when the listing changes. */
   defaultOpen?: boolean;
 }
@@ -35,6 +39,8 @@ export interface PolicyDisclosureProps {
 export function PolicyDisclosure({
   policy,
   hostName,
+  title = "Booking and cancellation policy",
+  terms = [],
   defaultOpen = false,
 }: PolicyDisclosureProps) {
   const [open, setOpen] = useState(defaultOpen);
@@ -42,7 +48,7 @@ export function PolicyDisclosure({
   const showNote = policy.showFinalTermsNote !== false;
 
   return (
-    <section aria-label="Booking and cancellation policy">
+    <section aria-label={title}>
       <div className={styles.card}>
         <h2 className={styles.heading}>
           <button
@@ -54,12 +60,13 @@ export function PolicyDisclosure({
           >
             <FileTextIcon />
             <span className={styles.text}>
-              <span className={styles.title}>Booking and cancellation policy</span>
+              <span className={styles.title}>{title}</span>
             </span>
             <ChevronDownIcon className={styles.chevron} />
           </button>
         </h2>
         <div className={styles.body} id={bodyId} hidden={!open}>
+          <PolicyGroup title="Terms" items={terms} />
           <PolicyGroup title="Booking policy" items={policy.booking} />
           <PolicyGroup title="Cancellation policy" items={policy.cancellation} />
         </div>
@@ -74,6 +81,7 @@ export function PolicyDisclosure({
 }
 
 function PolicyGroup({ title, items }: { title: string; items: string[] }) {
+  if (!items.length) return null;
   return (
     <div className={styles.group}>
       <h3 className={styles.groupTitle}>{title}</h3>

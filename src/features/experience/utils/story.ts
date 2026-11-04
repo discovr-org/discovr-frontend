@@ -8,7 +8,8 @@ import { rupees } from "./schedule";
  */
 export function storyBlocks(x: Experience): StoryBlock[] {
   const stored = x.content?.blocks;
-  const blocks = stored?.length ? stored : isVenueListing(x) ? venueStory(x) : tripStory(x);
+  // Places always build from the admin fields so edits show up; their stored story only lends its photos.
+  const blocks = isVenueListing(x) ? venueStory(x) : stored?.length ? stored : tripStory(x);
   return x.content?.hideStoryPhotos ? blocks.filter((b) => b.type !== "photo") : blocks;
 }
 
@@ -68,24 +69,59 @@ function tripStory(x: Experience): StoryBlock[] {
 }
 
 function venueStory(x: Experience): StoryBlock[] {
+  const c = x.content ?? {};
   const blocks: StoryBlock[] = [{ type: "heading", level: "section", text: x.title }, { type: "line" }];
-  const lead = x.about?.trim() || x.content?.pitch?.trim();
+  const lead = x.about?.trim() || c.pitch?.trim();
   if (lead) blocks.push({ type: "quote", text: lead, plain: true });
+  const storedPhotos = (c.blocks ?? []).filter((b) => b.type === "photo");
   const photo = x.photos[1] ?? x.photos[0];
-  if (photo) blocks.push({ type: "photo", src: photo.src, alt: photo.alt });
-  const price = venuePriceLine(x);
-  if (price) blocks.push({ type: "text", paragraphs: [{ text: "Price", strong: true }, { text: price }] });
-  blocks.push({ type: "line" });
+  if (storedPhotos.length) blocks.push(...storedPhotos);
+  else if (photo) blocks.push({ type: "photo", src: photo.src, alt: photo.alt });
+  const facts = venueFacts(x);
+  if (facts.length) {
+    blocks.push({
+      type: "text",
+      paragraphs: facts.flatMap(([label, values]) => [
+        { text: label, strong: true },
+        ...values.map((text) => ({ text })),
+      ]),
+    });
+  }
+  const terms = c.termsDetail?.trim();
+  const tips = knowBeforeYouGo(x).filter((tip) => tip !== terms);
+  if (tips.length) blocks.push({ type: "callout", tone: "tip", title: "Know Before You Go", paragraphs: tips });
+  const faqs = (c.faqs ?? []).filter((f) => f.q.trim() && f.a.trim());
+  if (faqs.length) {
+    blocks.push({ type: "line" }, { type: "heading", level: "small", text: "FAQ's" }, { type: "faq", items: faqs });
+  }
   return blocks;
 }
 
-/** Places: the sheet's own price line, e.g. "₹3,000 for two (approx)". */
-function venuePriceLine(x: Experience): string {
+/** Places: every fact the admin holds, in the order someone deciding would ask. */
+function venueFacts(x: Experience): Array<[string, string[]]> {
+  const c = x.content ?? {};
+  const h = x.hours ?? {};
+  const rows: Array<[string, string | undefined]> = [
+    ["Best time", h.bestTime],
+    ["Time to spend", h.durationLabel || c.durationLabel],
+    ["Age", h.ageGroup],
+    ["Group size", h.minPeople],
+    ["Address", c.meetingPoint],
+    ["Also known as", c.aka],
+  ];
+  const price = venuePriceLines(x);
+  const facts: Array<[string, string[]]> = price.length ? [["Price", price]] : [];
+  for (const [label, value] of rows) if (value?.trim()) facts.push([label, [value.trim()]]);
+  return facts;
+}
+
+/** The sheet's price line and its unit, e.g. "₹3,000 for two (approx)" then "Cover is per person". */
+function venuePriceLines(x: Experience): string[] {
   const narrative = x.content?.priceNarrative?.trim();
-  if (narrative) return narrative;
-  if (x.price.askForPrice || !x.price.fromAmount) return "";
   const unit = x.content?.priceUnit?.trim();
-  return unit ? `${rupees(x.price.fromAmount)}, ${unit}` : `${rupees(x.price.fromAmount)} per person`;
+  if (narrative) return unit && !narrative.toLowerCase().includes(unit.toLowerCase()) ? [narrative, unit] : [narrative];
+  if (x.price.askForPrice || !x.price.fromAmount) return [];
+  return [unit ? `${rupees(x.price.fromAmount)}, ${unit}` : `${rupees(x.price.fromAmount)} per person`];
 }
 
 function detailFacts(x: Experience): Array<[string, string]> {

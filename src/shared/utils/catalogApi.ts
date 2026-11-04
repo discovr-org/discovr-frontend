@@ -60,6 +60,12 @@ function isWeekSchedule(value: unknown): value is WeekSchedule {
   return keys.every((k) => WEEKDAYS.includes(k as Weekday));
 }
 
+function weekdays(value: unknown): Weekday[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const days = WEEKDAYS.filter((d) => value.includes(d));
+  return days.length ? days : undefined;
+}
+
 function asListingHours(value: unknown): ListingHours | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   if (isWeekSchedule(value)) {
@@ -71,6 +77,9 @@ function asListingHours(value: unknown): ListingHours | undefined {
   return {
     days: typeof row.days === "string" ? row.days : undefined,
     timeSlot: typeof row.timeSlot === "string" ? row.timeSlot : undefined,
+    altDays: weekdays(row.altDays),
+    altTimeSlot: typeof row.altTimeSlot === "string" ? row.altTimeSlot : undefined,
+    closedDays: weekdays(row.closedDays),
     bestTime: typeof row.bestTime === "string" ? row.bestTime : undefined,
     ageGroup: typeof row.ageGroup === "string" ? row.ageGroup : undefined,
     minPeople: typeof row.minPeople === "string" ? row.minPeople : undefined,

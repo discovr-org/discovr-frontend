@@ -35,6 +35,10 @@ export interface Experience {
 export type ListingHours = {
   days?: string;
   timeSlot?: string;
+  /** Days with their own hours (e.g. weekends), shown with `altTimeSlot`. */
+  altDays?: Weekday[];
+  altTimeSlot?: string;
+  closedDays?: Weekday[];
   bestTime?: string;
   ageGroup?: string;
   minPeople?: string;

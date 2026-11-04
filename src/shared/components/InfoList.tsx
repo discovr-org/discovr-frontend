@@ -10,11 +10,7 @@ import {
   summarise,
   todayIndex,
 } from "@/features/experience/utils/schedule";
-import {
-  openTodayStatus,
-  venueHoursStatus,
-  weekFromHours,
-} from "@/features/experience/utils/venueHours";
+import { todayStatus, weekRows as hoursWeekRows } from "@/features/experience/utils/venueHours";
 import {
   ArrowUpRightIcon,
   ChevronDownIcon,
@@ -80,9 +76,7 @@ export function InfoList({
   };
   const weekId = useId();
   const today = todayIndex(timeZone);
-  const hasVenueHours = Boolean(
-    hours?.days || hours?.timeSlot || hours?.bestTime,
-  );
+  const hasVenueHours = Boolean(hours?.days || hours?.timeSlot || hours?.altTimeSlot || hours?.closedDays?.length);
   const hasTripTimes = WEEK.some((d) => (schedule[d] ?? []).length > 0);
   const useHours = venue || (hasVenueHours && !hasTripTimes);
   const showTripSchedule = !venue && !useHours;
@@ -90,19 +84,13 @@ export function InfoList({
   const showPeople = !venue;
   const summary = showTripSchedule ? summarise(schedule, today) : null;
   // Places: open/closed right now. Trips: open today and the slot times.
-  const openClosed = !useHours
-    ? null
-    : venue
-      ? (venueHoursStatus(hours?.timeSlot, timeZone) ??
-        openTodayStatus(hours?.days, hours?.timeSlot, timeZone))
-      : (openTodayStatus(hours?.days, hours?.timeSlot, timeZone) ??
-        venueHoursStatus(hours?.timeSlot, timeZone));
+  const openClosed = useHours && hours ? todayStatus(hours, venue, timeZone) : null;
   const pinHref = mapsHref || googleMapsPin(place.lat, place.lng);
   const placeName = place.neighborhood?.trim() || place.name;
   const placeLabel = `${placeName}${place.distance ? `, ${place.distance}` : ""}. Open in Google Maps`;
   const peopleLine = durationPeopleLine(duration, groupSize);
 
-  const hoursWeek = weekFromHours(hours?.days, hours?.timeSlot);
+  const hoursWeek = hours ? hoursWeekRows(hours) : [];
   const weekRows =
     hoursWeek.length > 0 ? (
       <ul className={styles.week} id={weekId} hidden={!open} aria-label="Opening hours">
@@ -201,9 +189,7 @@ export function InfoList({
           >
             <ClockIcon />
             <span className={styles.text}>
-              {[hours.days, hours.timeSlot].filter(Boolean).join(" · ") ||
-                hours.bestTime ||
-                "Hours on request"}
+              {[hours.days, hours.timeSlot].filter(Boolean).join(" · ") || "Hours on request"}
             </span>
             {weekRows ? <ChevronDownIcon className={styles.chev} /> : null}
           </button>

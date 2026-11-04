@@ -13,7 +13,9 @@ export interface BookingBarProps {
   walkIn?: boolean;
   /** The host's own booking page. When set, the button opens it instead of calling. */
   bookHref?: string;
-  /** Adds "+ taxes" after "per person" when taxes are extra. */
+  /** What the price buys, e.g. "for two". Defaults to "per person"; empty hides it. */
+  unit?: string;
+  /** Adds "+ taxes" after the unit when taxes are extra. */
   taxes?: "extra" | "inclusive";
   /** E.164 phone the CTA dials when no `onCallToBook` is passed. */
   phone: string;
@@ -37,6 +39,7 @@ export function BookingBar({
   askForPrice,
   bookHref,
   walkIn,
+  unit = "per person",
   taxes = "inclusive",
   phone,
   hostBusinessName,
@@ -81,9 +84,11 @@ export function BookingBar({
         ) : (
           <>
             <span className="t-price">From {rupees(priceFrom)}</span>
-            <span className={styles.unit}>
-              per person{taxes === "extra" ? " + taxes" : ""}
-            </span>
+            {unit || taxes === "extra" ? (
+              <span className={styles.unit}>
+                {[unit, taxes === "extra" ? "+ taxes" : ""].filter(Boolean).join(" ")}
+              </span>
+            ) : null}
           </>
         )}
         {walkIn ? <span className={styles.unit}>No booking needed, just walk in</span> : null}
