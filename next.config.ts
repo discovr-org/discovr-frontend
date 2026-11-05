@@ -1,4 +1,7 @@
 import type { NextConfig } from "next";
+import { tshirtQrDestination } from "./src/shared/analytics/utils/qrCampaign";
+
+const tshirtQr = tshirtQrDestination();
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
@@ -30,6 +33,9 @@ const nextConfig: NextConfig = {
     return [
       { source: "/privacy", destination: "/legal/privacy", permanent: true },
       { source: "/terms", destination: "/legal/terms", permanent: true },
+      // T-shirt QR. Temporary so we can change where it lands without reprinting.
+      { source: "/q/t", destination: tshirtQr, permanent: false },
+      { source: "/q/t/", destination: tshirtQr, permanent: false },
     ];
   },
 };

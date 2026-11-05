@@ -1,6 +1,14 @@
 import posthog from "posthog-js";
 import { isAnalyticsOn } from "./analyticsConsent";
 import { pageTypeOf } from "./pageType";
+import {
+  isTshirtQrLanding,
+  markQrCampaignSent,
+  pendingQrCampaign,
+  rememberQrCampaign,
+  stripTshirtUtms,
+  TSHIRT_QR,
+} from "./qrCampaign";
 
 const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || "/ingest";
@@ -13,6 +21,8 @@ export function analyticsActive(): boolean {
 /** Called once at boot. Does nothing without a key or when analytics is off on this device. */
 export function bootAnalytics(): void {
   if (isAnalyticsOn()) startAnalytics();
+  // PostHog reads the shirt query during boot. If it never starts, still leave a clean URL.
+  if (typeof window !== "undefined") stripTshirtUtms();
 }
 
 /** Load PostHog, or resume it after the visitor turns analytics back on. */
@@ -21,6 +31,7 @@ export function startAnalytics(): void {
   if (posthog.__loaded) {
     posthog.opt_in_capturing();
     posthog.startSessionRecording();
+    claimTshirtQr();
     return;
   }
   posthog.init(KEY, {
@@ -46,6 +57,7 @@ export function startAnalytics(): void {
         app_version: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "dev",
       });
       if (process.env.NODE_ENV === "development") ph.debug();
+      claimTshirtQr();
     },
   });
 }
@@ -64,11 +76,35 @@ export function identifyUser(userId: string, name?: string): void {
   const props = name ? { name } : undefined;
   if (posthog.get_distinct_id() !== userId) posthog.identify(userId, props);
   else if (props) posthog.setPersonProperties(props);
+  const campaign = pendingQrCampaign();
+  if (campaign) {
+    posthog.setPersonProperties(undefined, { qr_campaign: campaign });
+    markQrCampaignSent();
+  }
 }
 
 /** Forget the account on sign-out, so the next visitor on this device starts fresh. */
 export function resetUser(): void {
   if (posthog.__loaded) posthog.reset();
+}
+
+/**
+ * One shirt scan. Must run while the utm query is still on the URL, before we hide it.
+ * PostHog's own pageview fires just after this, and keeps the tags for the rest of the visit.
+ */
+function claimTshirtQr(): void {
+  if (!isTshirtQrLanding(window.location.search)) return;
+  if (analyticsActive()) {
+    const props = {
+      utm_source: TSHIRT_QR.source,
+      utm_medium: TSHIRT_QR.medium,
+      utm_campaign: TSHIRT_QR.campaign,
+    };
+    posthog.register_for_session(props);
+    posthog.capture("qr_scanned", props);
+    rememberQrCampaign(TSHIRT_QR.campaign);
+  }
+  stripTshirtUtms();
 }
 
 function isStandalone(): boolean {

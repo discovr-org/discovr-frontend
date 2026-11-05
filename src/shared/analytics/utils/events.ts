@@ -120,6 +120,8 @@ export type EventMap = {
   // Page
   scroll_depth: { depth: 25 | 50 | 75 | 100; slug?: string };
   analytics_opted_out: Empty;
+  /** A printed QR opened the site. Same utm_* values PostHog stores for the visit. */
+  qr_scanned: { utm_source: string; utm_medium: string; utm_campaign: string };
 };
 
 type SaveProps =
