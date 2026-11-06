@@ -26,6 +26,8 @@ export interface BookingBarProps {
    * Use to gate the call behind login (signup prototype).
    */
   onCallToBook?: () => void;
+  /** When set, the booking link runs this instead of opening `bookHref` (e.g. to gate it behind login). */
+  onBookLink?: (href: string) => void;
   /** Told on every tap of the button, before it calls or opens the booking page. */
   onBookClick?: (method: "call" | "link") => void;
 }
@@ -45,6 +47,7 @@ export function BookingBar({
   hostBusinessName,
   hidden,
   onCallToBook,
+  onBookLink,
   onBookClick,
 }: BookingBarProps) {
   const ref = useRef<HTMLElement>(null);
@@ -101,7 +104,12 @@ export function BookingBar({
           rel="noopener noreferrer"
           aria-label={`Book on ${hostBusinessName}'s site (opens in a new tab)`}
           data-attr="book-cta"
-          onClick={() => onBookClick?.("link")}
+          onClick={(e) => {
+            onBookClick?.("link");
+            if (!onBookLink) return;
+            e.preventDefault();
+            onBookLink(bookHref);
+          }}
         >
           Book on {hostBusinessName}
         </a>

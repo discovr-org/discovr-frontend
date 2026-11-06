@@ -159,6 +159,18 @@ export function ExperienceDetail({
     auth.requireAuth("call", dialHost);
   }, [auth, dialHost]);
 
+  const onBookLink = useCallback(
+    (href: string) => {
+      auth.requireAuth("book", () => {
+        // After login this runs outside the tap, so browsers may block the new tab; then go there in this one.
+        const tab = window.open(href, "_blank");
+        if (tab) tab.opener = null;
+        else window.location.assign(href);
+      });
+    },
+    [auth],
+  );
+
   const share = useCallback(async (location: "app_bar" | "action_row") => {
     const url = window.location.href.split("#")[0];
     const title = experience?.title ?? "discovr";
@@ -267,6 +279,7 @@ export function ExperienceDetail({
               setReportOpen(true);
             }}
             onCallToBook={onCallToBook}
+            onBookLink={onBookLink}
             onBookClick={(method) => {
               const x = experience!;
               track("book_clicked", {
@@ -276,7 +289,7 @@ export function ExperienceDetail({
                 location: "booking_bar",
                 method,
                 host: x.host.businessName,
-                gated_by_auth: method === "call" && !auth.user,
+                gated_by_auth: !auth.user,
               });
             }}
             related={related}
@@ -333,6 +346,7 @@ function Populated({
   onOpenMenu,
   onReport,
   onCallToBook,
+  onBookLink,
   onBookClick,
   related,
   savedSlugs,
@@ -344,6 +358,7 @@ function Populated({
   onOpenMenu: (index: number) => void;
   onReport: () => void;
   onCallToBook: () => void;
+  onBookLink: (href: string) => void;
   onBookClick: (method: "call" | "link") => void;
   related: FeedItem[];
   savedSlugs: string[];
@@ -424,6 +439,7 @@ function Populated({
               instagramHandle={instagramHandle}
               onShare={onShare}
               onAction={onContact("action_row")}
+              onCall={onCallToBook}
             />
           </header>
 
@@ -504,6 +520,7 @@ function Populated({
             phone={x.host.phone}
             hostBusinessName={x.host.businessName}
             onCallToBook={onCallToBook}
+            onBookLink={onBookLink}
             onBookClick={onBookClick}
           />
         </aside>

@@ -11,10 +11,12 @@ export interface ActionRowProps {
   onShare: () => void;
   /** Told when someone taps Call or Directions (the links still open as normal). */
   onAction?: (action: "call" | "directions") => void;
+  /** When set, Call runs this instead of dialling (e.g. to gate it behind login). */
+  onCall?: () => void;
 }
 
 /** Call, Directions, Instagram, Share. Real links where they leave the app. */
-export function ActionRow({ hostName, phone, directionsHref, instagramHandle, onShare, onAction }: ActionRowProps) {
+export function ActionRow({ hostName, phone, directionsHref, instagramHandle, onShare, onAction, onCall }: ActionRowProps) {
   const columns = instagramHandle ? 4 : 3;
   return (
     <div className={styles.row} style={columns === 3 ? { gridTemplateColumns: "repeat(3, 1fr)" } : undefined} role="group" aria-label="Contact the host">
@@ -22,7 +24,12 @@ export function ActionRow({ hostName, phone, directionsHref, instagramHandle, on
         className={styles.tile}
         href={`tel:${phone}`}
         aria-label={`Call ${hostName}`}
-        onClick={() => onAction?.("call")}
+        onClick={(e) => {
+          onAction?.("call");
+          if (!onCall) return;
+          e.preventDefault();
+          onCall();
+        }}
       >
         <PhoneIcon />
         <span>Call</span>

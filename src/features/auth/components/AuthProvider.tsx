@@ -26,12 +26,13 @@ import { useSaved } from "@/shared/components/SavedProvider";
 import { identifyUser, resetUser } from "@/shared/analytics/utils/posthog";
 import { track } from "@/shared/analytics/utils/track";
 
-export type AuthIntent = "save" | "call" | "profile";
+export type AuthIntent = "save" | "call" | "book" | "profile";
 
 /** Name-step button: finish the thing they tapped. */
 const CTA_LABEL: Record<AuthIntent, string> = {
   save: "Save",
   call: "Call to book",
+  book: "Go to booking",
   profile: "Done",
 };
 
@@ -144,7 +145,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const onSuccess = useCallback(
     async () => {
       const session = readSession();
-      if (session) await saved.syncAfterLogin(session.sessionId);
+      // Saves stay on the device if this fails; don't strand them in the sheet over it.
+      if (session) await saved.syncAfterLogin(session.sessionId).catch(() => {});
       track("auth_sheet_closed", { intent, completed: true });
       setAuthOpen(false);
       const action = pendingAction;
