@@ -1,0 +1,13 @@
+# discovr
+
+> discovr is a small, hand-picked guide to things worth doing tonight in India: trips, food and drink, local hosts. Eight good picks, not eight hundred. Every listing has been visited by the team.
+
+## Key pages
+- [Home: today's picks](https://discovr.in/): the current short list
+- [About](https://discovr.in/about): who we are and why
+- [How we pick](https://discovr.in/how-we-pick): our rules for listing, prices, verdicts and reviews
+- [List with us](https://discovr.in/list-with-us): for hosts and venues
+- [Help and contact](https://discovr.in/help): call, WhatsApp or write to the team
+
+## Listings
+- [Sitemap](https://discovr.in/sitemap.xml): every experience page, one URL each

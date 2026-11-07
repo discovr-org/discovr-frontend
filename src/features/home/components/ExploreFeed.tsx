@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 // Filter chips (hidden for now) also need: FEED_FILTERS, FeedFilter, Chip, chipStyles, SlidersIcon.
-import { priceLabel } from "@/features/home/utils/feedData";
+import { priceLabel, type FeedItem } from "@/features/home/utils/feedData";
 import {
   NO_FILTERS,
   activeLabels,
@@ -35,7 +35,8 @@ import { useScrollDepth } from "@/shared/analytics/utils/useScrollDepth";
 
 const SEARCH_SETTLE_MS = 600;
 
-export function ExploreFeed() {
+/** `initialCards` come from the server so the first HTML already has every listing link. */
+export function ExploreFeed({ initialCards }: { initialCards?: FeedItem[] }) {
   const [filters, setFilters] = useState<FeedFilters>(NO_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -43,7 +44,7 @@ export function ExploreFeed() {
   const stickSentinel = useRef<HTMLDivElement>(null);
   const searchInput = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLParagraphElement>(null);
-  const cards = useCatalogCards();
+  const cards = useCatalogCards(initialCards);
   const sections = useMemo(() => buildHomeSections(cards.data ?? []), [cards.data]);
   // Cached data wins: only show loading/error when there is nothing to paint.
   const loadState = cards.data ? "ready" : cards.isError || !hasApiBaseUrl() ? "error" : "loading";

@@ -7,9 +7,9 @@ const LEAD =
   "discovr lists things to do in Goa that someone from our team has been to. That's the whole rule.";
 
 export const metadata: Metadata = {
-  title: "How we pick | discovr",
+  title: "How we pick",
   description: LEAD,
-  alternates: { canonical: "https://www.discovr.in/how-we-pick" },
+  alternates: { canonical: "https://discovr.in/how-we-pick" },
   openGraph: { title: "How we pick", description: LEAD, siteName: "discovr" },
   twitter: { card: "summary", title: "How we pick", description: LEAD },
 };

@@ -9,9 +9,9 @@ import {
 const DESCRIPTION = "What discovr collects, why, and what we never do with it.";
 
 export const metadata: Metadata = {
-  title: "Privacy | discovr",
+  title: "Privacy",
   description: DESCRIPTION,
-  alternates: { canonical: "https://www.discovr.in/legal/privacy" },
+  alternates: { canonical: "https://discovr.in/legal/privacy" },
   openGraph: { title: "Privacy", description: DESCRIPTION, siteName: "discovr" },
   twitter: { card: "summary", title: "Privacy", description: DESCRIPTION },
 };

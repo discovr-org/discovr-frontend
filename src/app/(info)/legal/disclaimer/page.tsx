@@ -5,9 +5,9 @@ const DESCRIPTION =
   "discovr doesn't take bookings or payments for the experiences on it. Hosts do. Here's what that means for you.";
 
 export const metadata: Metadata = {
-  title: "Disclaimer | discovr",
+  title: "Disclaimer",
   description: DESCRIPTION,
-  alternates: { canonical: "https://www.discovr.in/legal/disclaimer" },
+  alternates: { canonical: "https://discovr.in/legal/disclaimer" },
   openGraph: { title: "Disclaimer", description: DESCRIPTION, siteName: "discovr" },
   twitter: { card: "summary", title: "Disclaimer", description: DESCRIPTION },
 };

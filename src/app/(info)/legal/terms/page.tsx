@@ -4,9 +4,9 @@ import { LegalPage, type LegalSection } from "@/features/legal/components/LegalP
 const DESCRIPTION = "The rules for using discovr.";
 
 export const metadata: Metadata = {
-  title: "Terms | discovr",
+  title: "Terms",
   description: DESCRIPTION,
-  alternates: { canonical: "https://www.discovr.in/legal/terms" },
+  alternates: { canonical: "https://discovr.in/legal/terms" },
   openGraph: { title: "Terms", description: DESCRIPTION, siteName: "discovr" },
   twitter: { card: "summary", title: "Terms", description: DESCRIPTION },
 };

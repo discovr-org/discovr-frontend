@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { ABOUT_INTRO, AboutPage } from "@/features/about/components/AboutPage";
 
 export const metadata: Metadata = {
-  title: "About | discovr",
+  title: "About",
   description: ABOUT_INTRO,
-  alternates: { canonical: "https://www.discovr.in/about" },
+  alternates: { canonical: "https://discovr.in/about" },
   openGraph: { title: "About discovr", description: ABOUT_INTRO, siteName: "discovr" },
   twitter: { card: "summary", title: "About discovr", description: ABOUT_INTRO },
 };

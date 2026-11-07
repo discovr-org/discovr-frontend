@@ -31,6 +31,8 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // www -> non-www, keeps the path. Also set this in your host's domain settings.
+      { source: "/:path*", has: [{ type: "host", value: "www.discovr.in" }], destination: "https://discovr.in/:path*", permanent: true },
       { source: "/privacy", destination: "/legal/privacy", permanent: true },
       { source: "/terms", destination: "/legal/terms", permanent: true },
       // T-shirt QR. Temporary so we can change where it lands without reprinting.
