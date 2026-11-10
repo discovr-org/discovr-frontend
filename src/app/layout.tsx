@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { JsonLd } from "@/shared/seo/components/JsonLd";
-import { SITE_DESCRIPTION, SITE_URL } from "@/shared/seo/utils/site";
+import { GSC_VERIFICATION, GTM_ID, SITE_DESCRIPTION, SITE_URL } from "@/shared/seo/utils/site";
 import { Bricolage_Grotesque, Instrument_Sans } from "next/font/google";
 import { Providers } from "@/shared/components/Providers";
 import { color } from "@/shared/styles/tokens";
@@ -21,12 +21,9 @@ const instrument = Instrument_Sans({
   weight: ["400", "500", "600", "700"],
 });
 
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
-
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  // Paste the token from Search Console > Settings > Ownership > HTML tag.
-  verification: { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION },
+  verification: { google: GSC_VERIFICATION },
   openGraph: { siteName: "discovr", type: "website", locale: "en_IN", images: ["/icons/discovr-app-icon.png"] },
   twitter: { card: "summary" },
   title: {
@@ -77,14 +74,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body>
         <JsonLd data={SITE_SCHEMA} />
-        {GA_ID && (
-          <>
-            <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
-            <Script id="ga" strategy="afterInteractive">
-              {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${GA_ID}');`}
-            </Script>
-          </>
-        )}
+        {/* Google Tag Manager. Set up GA4 inside the GTM container. */}
+        <Script id="gtm" strategy="afterInteractive">
+          {`window.dataLayer=window.dataLayer||[];window.dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=document.getElementsByTagName('script')[0],j=document.createElement('script');j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id=${GTM_ID}';f.parentNode.insertBefore(j,f);`}
+        </Script>
+        <noscript>
+          <iframe src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`} height="0" width="0" style={{ display: "none", visibility: "hidden" }} />
+        </noscript>
         <Providers>{children}</Providers>
       </body>
     </html>

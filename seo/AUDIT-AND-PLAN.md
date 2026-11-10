@@ -114,3 +114,8 @@ Next, biggest wins first:
 - Home feed is fetched on the server and passed to `ExploreFeed` as `initialCards`, so first HTML has every `/experiences/<slug>` link. (`src/app/page.tsx`)
 - Each experience page ships JSON-LD: `LocalBusiness` (venues) or `TouristTrip` (trips), with offer, rating and FAQ when data exists. (`src/shared/seo/utils/experienceSchema.ts`)
 - Not yet verified against real API data. Check: view-source on `/` and one `/experiences/<slug>`, then Google Rich Results Test.
+
+## 7. Update: Search Console and analytics wired
+- Search Console token and GTM id (`GTM-TCB6TGCW`) live in `src/shared/seo/utils/site.ts`. No env vars.
+- Analytics is Google Tag Manager. Add the GA4 tag inside the GTM container (GA4 config tag, trigger: All Pages), then Publish.
+- Privacy page still needs a line about Google Analytics cookies.
