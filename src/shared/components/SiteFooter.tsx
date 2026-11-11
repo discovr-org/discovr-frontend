@@ -82,6 +82,7 @@ export function SiteFooter({ source }: SiteFooterProps) {
           <nav className={styles.links} aria-label="Footer">
             <ul>
               <li><Link href="/saved">Saved</Link></li>
+              <li><Link href="/goa">Things to do in Goa</Link></li>
               <li><Link href="/about">About us</Link></li>
               <li><Link href="/how-we-pick">How we pick</Link></li>
               <li><Link href="/list-with-us">List with us</Link></li>

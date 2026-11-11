@@ -9,5 +9,8 @@
 - [List with us](https://discovr.in/list-with-us): for hosts and venues
 - [Help and contact](https://discovr.in/help): call, WhatsApp or write to the team
 
+## Guides
+- [Things to do in Goa](https://discovr.in/goa): hubs by area (Anjuna, Assagao, Vagator and more) and by topic (nightlife, cocktails, kayaking)
+
 ## Listings
 - [Sitemap](https://discovr.in/sitemap.xml): every experience page, one URL each
