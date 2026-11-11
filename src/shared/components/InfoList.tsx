@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, useSyncExternalStore } from "react";
 import type { ListingHours, Place, WeekSchedule } from "@/types/experience";
 import { durationPeopleLine } from "@/features/experience/utils/durationPeople";
 import {
@@ -55,6 +55,22 @@ const Dot = () => (
 );
 
 /** Price, place, times (week grid or venue hours), duration and group size. */
+const noSubscribe = () => () => {};
+
+/**
+ * Current time, or null while rendering on the server.
+ * Reading the clock during render would stop the page being prerendered,
+ * and crawlers would only get a loading skeleton.
+ */
+function useNow(): Date | null {
+  const minute = useSyncExternalStore(
+    noSubscribe,
+    () => Math.floor(Date.now() / 60000),
+    () => null,
+  );
+  return minute === null ? null : new Date(minute * 60000);
+}
+
 export function InfoList({
   priceFrom,
   askForPrice,
@@ -75,16 +91,17 @@ export function InfoList({
     setOpen(!open);
   };
   const weekId = useId();
-  const today = todayIndex(timeZone);
+  const now = useNow();
+  const today = now ? todayIndex(timeZone, now) : -1;
   const hasVenueHours = Boolean(hours?.days || hours?.timeSlot || hours?.altTimeSlot || hours?.closedDays?.length);
   const hasTripTimes = WEEK.some((d) => (schedule[d] ?? []).length > 0);
   const useHours = venue || (hasVenueHours && !hasTripTimes);
   const showTripSchedule = !venue && !useHours;
   const showPrice = !venue;
   const showPeople = !venue;
-  const summary = showTripSchedule ? summarise(schedule, today) : null;
+  const summary = showTripSchedule && now ? summarise(schedule, today) : null;
   // Places: open/closed right now. Trips: open today and the slot times.
-  const openClosed = useHours && hours ? todayStatus(hours, venue, timeZone) : null;
+  const openClosed = useHours && hours && now ? todayStatus(hours, venue, timeZone, now) : null;
   const pinHref = mapsHref || googleMapsPin(place.lat, place.lng);
   const placeName = place.neighborhood?.trim() || place.name;
   const placeLabel = `${placeName}${place.distance ? `, ${place.distance}` : ""}. Open in Google Maps`;
@@ -215,7 +232,7 @@ export function InfoList({
                     : styles.critical
                 }
               >
-                {summary?.status}
+                {summary?.status ?? "Trip times"}
               </span>
               {summary &&
                 (summary.kind === "today" ? summary.times : summary.next) && (

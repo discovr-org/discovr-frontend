@@ -44,10 +44,13 @@ export function ExploreFeed({ initialCards }: { initialCards?: FeedItem[] }) {
   const stickSentinel = useRef<HTMLDivElement>(null);
   const searchInput = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLParagraphElement>(null);
-  const cards = useCatalogCards(initialCards);
-  const sections = useMemo(() => buildHomeSections(cards.data ?? []), [cards.data]);
+  const cards = useCatalogCards();
+  // The saved-cache wrapper hides query data while it restores, which blanked the server HTML.
+  // Fall back to the server's cards so crawlers (and first paint) get real listings.
+  const cardData = cards.data ?? initialCards;
+  const sections = useMemo(() => buildHomeSections(cardData ?? []), [cardData]);
   // Cached data wins: only show loading/error when there is nothing to paint.
-  const loadState = cards.data ? "ready" : cards.isError || !hasApiBaseUrl() ? "error" : "loading";
+  const loadState = cardData ? "ready" : cards.isError || !hasApiBaseUrl() ? "error" : "loading";
   const saved = useSaved();
   const auth = useAuth();
   const toast = useToast();
@@ -81,7 +84,7 @@ export function ExploreFeed({ initialCards }: { initialCards?: FeedItem[] }) {
     };
   }, []);
 
-  const allCards = useMemo(() => cards.data ?? [], [cards.data]);
+  const allCards = useMemo(() => cardData ?? [], [cardData]);
   const areas = useMemo(() => areasIn(allCards), [allCards]);
   const filtering = hasFilters(filters);
   const filtered = useMemo(() => applyFilters(allCards, filters), [allCards, filters]);
