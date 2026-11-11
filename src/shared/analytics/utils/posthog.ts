@@ -70,12 +70,19 @@ export function stopAnalytics(): void {
   posthog.opt_out_capturing();
 }
 
-/** Link this device to the signed-in account by internal id, with their name as a person property. Never the phone. */
-export function identifyUser(userId: string, name?: string): void {
+/** Link this device to the signed-in account by internal id, with name, phone and sign-up date as person properties. */
+export function identifyUser(
+  userId: string,
+  user: { name?: string; phoneE164?: string; createdAt?: string },
+): void {
   if (!analyticsActive()) return;
-  const props = name ? { name } : undefined;
-  if (posthog.get_distinct_id() !== userId) posthog.identify(userId, props);
-  else if (props) posthog.setPersonProperties(props);
+  const set = {
+    ...(user.name ? { name: user.name } : {}),
+    ...(user.phoneE164 ? { phone_number: user.phoneE164 } : {}),
+  };
+  const setOnce = user.createdAt ? { created_at: user.createdAt } : undefined;
+  if (posthog.get_distinct_id() !== userId) posthog.identify(userId, set, setOnce);
+  else if (Object.keys(set).length || setOnce) posthog.setPersonProperties(set, setOnce);
   const campaign = pendingQrCampaign();
   if (campaign) {
     posthog.setPersonProperties(undefined, { qr_campaign: campaign });

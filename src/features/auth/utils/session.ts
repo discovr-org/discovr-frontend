@@ -7,6 +7,8 @@ export type SessionUser = {
   userId?: string;
   /** First name from sign-up. Absent until the name step is done. */
   name?: string;
+  /** When the account was made. Missing on sessions saved before we stored it. */
+  createdAt?: string;
 };
 
 const KEY = "discovr.session";
@@ -23,6 +25,7 @@ export function readSession(): SessionUser | null {
       sessionId: parsed.sessionId,
       userId: parsed.userId,
       name: parsed.name || undefined,
+      createdAt: parsed.createdAt || undefined,
     };
   } catch {
     return null;

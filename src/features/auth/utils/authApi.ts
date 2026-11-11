@@ -43,11 +43,12 @@ export async function verifyOtp(
   userId: string;
   phoneE164: string;
   name: string | null;
+  createdAt?: string;
   isNewUser: boolean;
 }> {
   const data = await postJson<{
     sessionId: string;
-    user: { id: string; phone: string; name?: string | null };
+    user: { id: string; phone: string; name?: string | null; createdAt?: string };
     isNewUser?: boolean;
   }>("/v1/auth/otp/verify", { phone: phone.e164, code });
   const name = data.user.name ?? null;
@@ -56,6 +57,7 @@ export async function verifyOtp(
     userId: data.user.id,
     phoneE164: data.user.phone,
     name,
+    createdAt: data.user.createdAt,
     isNewUser: data.isNewUser ?? !name,
   };
 }
