@@ -431,6 +431,7 @@ function Populated({
               mapsHref={content.links?.maps?.url}
               onAction={onContact("info_list")}
             />
+            {x.hours?.bestTime ? <p className="t-body">Best time: {x.hours.bestTime}</p> : null}
             <Verdict text={x.verdict} label={null} />
             <ActionRow
               hostName={x.host.businessName}

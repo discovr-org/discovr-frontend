@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
+import { formatPrice } from "@/shared/utils/formatPrice";
 import { JsonLd } from "@/shared/seo/components/JsonLd";
 import { experienceSchema } from "@/shared/seo/utils/experienceSchema";
 import { ExperienceClient } from "@/features/experience/components/ExperienceClient";
@@ -36,7 +37,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const e = await getExperience(slug);
   if (!e) return { title: "Not found" };
-  const description = e.verdict || e.about.slice(0, 160);
+  // Decision first: price and best time, then the verdict.
+  const lead = [
+    !e.price.askForPrice && e.price.fromAmount > 0 ? `From ${formatPrice(e.price.fromAmount)}.` : "",
+    e.hours?.bestTime ? `Best time: ${e.hours.bestTime}` : "",
+  ].filter(Boolean);
+  const description = [...lead, e.verdict || e.about.slice(0, 160)].join(" ");
   const photo = e.photos[0];
   return {
     title: e.title,
