@@ -67,6 +67,18 @@ export default async function Page({ params }: PageProps) {
                 url: `${SITE_URL}/experiences/${item.slug}`,
               })),
             },
+            ...(hub.guide
+              ? [
+                  {
+                    "@type": "FAQPage",
+                    mainEntity: hub.guide.faqs.map((f) => ({
+                      "@type": "Question",
+                      name: f.q,
+                      acceptedAnswer: { "@type": "Answer", text: f.a },
+                    })),
+                  },
+                ]
+              : []),
           ],
         }}
       />

@@ -51,3 +51,35 @@
 .count {
   color: var(--ink-muted);
 }
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.table th,
+.table td {
+  padding: var(--space-2) var(--space-2) var(--space-2) 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line-subtle);
+}
+
+.table th {
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+.q {
+  margin: 0 0 var(--space-1);
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+}

@@ -1,6 +1,7 @@
 import type { FeedItem } from "@/features/home/utils/feedData";
 import { areaOf } from "@/features/home/utils/feedFilters";
 import { HOME_SECTIONS } from "@/features/home/utils/homeSections";
+import { GUIDES, type Guide } from "@/features/hubs/utils/guides";
 import { formatPrice } from "@/shared/utils/formatPrice";
 
 export type Hub = {
@@ -9,6 +10,8 @@ export type Hub = {
   title: string;
   intro: string;
   items: FeedItem[];
+  /** Hand-written answer, comparison table and FAQs, where we have them. */
+  guide?: Guide;
 };
 
 /** A hub with fewer listings than this would be a thin page. */
@@ -60,7 +63,9 @@ export function buildHubs(cards: FeedItem[]): Hub[] {
     const items = s.slugs.flatMap((slug) => bySlug.get(slug) ?? []);
     if (items.length < MIN_LISTINGS) return [];
     const title = TOPIC_TITLE[s.id] ?? s.title;
-    return [{ slug: TOPIC_SLUG[s.id] ?? s.id, title, intro: intro(items, "in Goa"), items }];
+    const slug = TOPIC_SLUG[s.id] ?? s.id;
+    const guide = GUIDES[slug];
+    return [{ slug, title, intro: guide?.answer ?? intro(items, "in Goa"), items, guide }];
   });
 
   const collections = COLLECTIONS.flatMap((c) => {
@@ -68,7 +73,7 @@ export function buildHubs(cards: FeedItem[]): Hub[] {
     const items = [...slugs].flatMap((slug) => bySlug.get(slug) ?? []);
     return items.length < MIN_LISTINGS
       ? []
-      : [{ slug: c.slug, title: c.title, intro: intro(items, "in Goa after dark"), items }];
+      : [{ slug: c.slug, title: c.title, intro: GUIDES[c.slug]?.answer ?? intro(items, "in Goa after dark"), items, guide: GUIDES[c.slug] }];
   });
 
   const byArea = new Map<string, FeedItem[]>();
@@ -79,12 +84,11 @@ export function buildHubs(cards: FeedItem[]): Hub[] {
   }
   const areas = [...byArea]
     .filter(([, items]) => items.length >= MIN_LISTINGS)
-    .map(([area, items]) => ({
-      slug: slugify(area),
-      title: `Things to do in ${area}, Goa`,
-      intro: intro(items, `in ${area}`),
-      items,
-    }));
+    .map(([area, items]) => {
+      const slug = slugify(area);
+      const guide = GUIDES[slug];
+      return { slug, title: `Things to do in ${area}, Goa`, intro: guide?.answer ?? intro(items, `in ${area}`), items, guide };
+    });
 
   return [...collections, ...areas, ...topics];
 }
