@@ -18,7 +18,20 @@ const MIN_LISTINGS = 2;
 const TOPIC_TITLE: Record<string, string> = {
   nightlife: "Nightlife in Goa",
   kayaking: "Kayaking in Goa",
+  sundowners: "Best sunset spots in Goa",
 };
+
+/** URL part when the section id isn't what people search. */
+const TOPIC_SLUG: Record<string, string> = { sundowners: "sunset-spots" };
+
+/** Pages that pull from several home sections, named after the way people ask. */
+const COLLECTIONS = [
+  {
+    slug: "at-night",
+    title: "What to do in Goa at night",
+    from: ["nightlife", "cocktails", "local-bars"],
+  },
+];
 
 /** Spellings we've seen for the same place. */
 const AREA_ALIAS: Record<string, string> = { Panjim: "Panaji" };
@@ -32,9 +45,10 @@ function names(items: FeedItem[]): string {
 
 /** Plain facts first, so a search or AI answer can quote the top of the page as is. */
 function intro(items: FeedItem[], where: string): string {
-  const prices = items.flatMap((i) => (i.priceInr ? [i.priceInr] : []));
+  // Venue prices mix entry fees and spend per person, so only trips quote a price.
+  const prices = items.flatMap((i) => (i.format === "trip" && i.priceInr ? [i.priceInr] : []));
   const price = prices.length
-    ? ` Starting prices run from ${formatPrice(Math.min(...prices))} to ${formatPrice(Math.max(...prices))}.`
+    ? ` Trips start from ${formatPrice(Math.min(...prices))} to ${formatPrice(Math.max(...prices))} a person.`
     : "";
   return `${items.length} places ${where} that someone from our team has been to: ${names(items)}.${price}`;
 }
@@ -46,7 +60,15 @@ export function buildHubs(cards: FeedItem[]): Hub[] {
     const items = s.slugs.flatMap((slug) => bySlug.get(slug) ?? []);
     if (items.length < MIN_LISTINGS) return [];
     const title = TOPIC_TITLE[s.id] ?? s.title;
-    return [{ slug: s.id, title, intro: intro(items, "in Goa"), items }];
+    return [{ slug: TOPIC_SLUG[s.id] ?? s.id, title, intro: intro(items, "in Goa"), items }];
+  });
+
+  const collections = COLLECTIONS.flatMap((c) => {
+    const slugs = new Set(HOME_SECTIONS.filter((s) => c.from.includes(s.id)).flatMap((s) => s.slugs));
+    const items = [...slugs].flatMap((slug) => bySlug.get(slug) ?? []);
+    return items.length < MIN_LISTINGS
+      ? []
+      : [{ slug: c.slug, title: c.title, intro: intro(items, "in Goa after dark"), items }];
   });
 
   const byArea = new Map<string, FeedItem[]>();
@@ -64,8 +86,8 @@ export function buildHubs(cards: FeedItem[]): Hub[] {
       items,
     }));
 
-  return [...areas, ...topics];
+  return [...collections, ...areas, ...topics];
 }
 
 /** Topic slugs that always exist, so the route has something to build even if the API is down. */
-export const FALLBACK_HUB_SLUGS = HOME_SECTIONS.map((s) => s.id);
+export const FALLBACK_HUB_SLUGS = ["at-night", ...HOME_SECTIONS.map((s) => TOPIC_SLUG[s.id] ?? s.id)];
