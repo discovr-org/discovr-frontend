@@ -15,6 +15,7 @@ import {
   readGeoPermission,
   rememberLocationDenied,
   requestDeviceFix,
+  resolveDevicePlace,
   writeDeviceFix,
   type GeoPermission,
   type LocationPlan,
@@ -84,6 +85,7 @@ async function locate(alive: () => boolean): Promise<void> {
     const fix = await requestDeviceFix();
     if (!alive()) return;
     writeDeviceFix(fix);
+    await resolveDevicePlace(fix);
     publishDeviceLocation(fix);
   } catch (err) {
     if (err instanceof LocationRequestError && err.reason === "denied") rememberLocationDenied();

@@ -6,6 +6,7 @@
 const FIX_KEY = "discovr.deviceLocation";
 const DENIED_KEY = "discovr.locationDenied";
 const ASKED_KEY = "discovr.locationAsked";
+const PLACE_KEY = "discovr.devicePlace";
 
 /** iOS moves the toolbar with a few pixels of scroll. A real scroll is past this. */
 export const FIRST_SCROLL_PX = 48;
@@ -35,7 +36,14 @@ export type DeviceLocationFields = {
   device_longitude: number;
   device_location_accuracy_m: number;
   location_source: "device";
+  /** Named place for the fix, e.g. "Anjuna", "Goa", "India". Absent until looked up. */
+  device_city?: string;
+  device_state?: string;
+  device_country?: string;
 };
+
+/** Where a fix is, in words. Stored with the coordinates it was looked up for. */
+export type DevicePlace = { latitude: number; longitude: number; city: string; state: string; country: string };
 
 export type GeoPermission = "granted" | "denied" | "prompt" | "unknown";
 
@@ -62,7 +70,16 @@ export function deviceLocationSupported(): boolean {
 }
 
 export function deviceLocationFields(fix: DeviceFix): DeviceLocationFields {
+  const place = readDevicePlace();
+  const named = place && near(place, fix) ? place : null;
   return {
+    ...(named
+      ? {
+          ...(named.city ? { device_city: named.city } : {}),
+          ...(named.state ? { device_state: named.state } : {}),
+          ...(named.country ? { device_country: named.country } : {}),
+        }
+      : {}),
     device_latitude: round5(fix.latitude),
     device_longitude: round5(fix.longitude),
     device_location_accuracy_m: Math.max(0, Math.round(fix.accuracy)),
@@ -73,6 +90,50 @@ export function deviceLocationFields(fix: DeviceFix): DeviceLocationFields {
 export function readDeviceFix(): DeviceFix | null {
   const value = readJson(localStorageOrNull(), FIX_KEY);
   return isFix(value) ? value : null;
+}
+
+function readDevicePlace(): DevicePlace | null {
+  const v = readJson(localStorageOrNull(), PLACE_KEY) as Partial<DevicePlace> | null;
+  return v && typeof v.latitude === "number" && typeof v.longitude === "number" ? (v as DevicePlace) : null;
+}
+
+/** Within about 5 km, so the same town keeps its name without a new lookup. */
+function near(a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }): boolean {
+  return Math.abs(a.latitude - b.latitude) < 0.05 && Math.abs(a.longitude - b.longitude) < 0.05;
+}
+
+/**
+ * Turn the fix into a place name once, then reuse it. Only the coordinates rounded to ~1 km
+ * leave the device for the lookup (BigDataCloud, no key; api-bdc.io is its current host). Returns null if it fails; callers carry on.
+ */
+export async function resolveDevicePlace(fix: DeviceFix): Promise<DevicePlace | null> {
+  const known = readDevicePlace();
+  if (known && near(known, fix)) return known;
+  try {
+    const q = new URLSearchParams({
+      latitude: fix.latitude.toFixed(2),
+      longitude: fix.longitude.toFixed(2),
+      localityLanguage: "en",
+    });
+    const res = await fetch(`https://api-bdc.io/data/reverse-geocode-client?${q}`, {
+      signal: AbortSignal.timeout(4_000),
+    });
+    if (!res.ok) return null;
+    const d = (await res.json()) as Record<string, unknown>;
+    const str = (v: unknown) => (typeof v === "string" ? v : "");
+    const place: DevicePlace = {
+      latitude: fix.latitude,
+      longitude: fix.longitude,
+      city: str(d.city) || str(d.locality),
+      state: str(d.principalSubdivision),
+      country: str(d.countryName),
+    };
+    if (!place.city && !place.state && !place.country) return null;
+    localStorageOrNull()?.setItem(PLACE_KEY, JSON.stringify(place));
+    return place;
+  } catch {
+    return null;
+  }
 }
 
 export function writeDeviceFix(fix: DeviceFix): void {

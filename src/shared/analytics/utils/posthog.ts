@@ -2,6 +2,7 @@ import posthog from "posthog-js";
 import {
   deviceLocationFields,
   readDeviceFix,
+  resolveDevicePlace,
   type DeviceFix,
   type DeviceLocationFields,
 } from "@/shared/utils/deviceLocation";
@@ -128,6 +129,10 @@ export function publishDeviceLocation(fix?: DeviceFix | null): void {
   if (!stored) return;
   const props = deviceLocationFields(stored);
   posthog.setPersonProperties(props);
+  // Saved fixes from before place names existed get one now; later events carry it.
+  if (!props.device_city && !props.device_state) {
+    void resolveDevicePlace(stored).then((p) => p && posthog.setPersonProperties(deviceLocationFields(stored)));
+  }
   if (sameSpot(props)) return;
   posthog.capture("location_captured", {
     device_latitude: props.device_latitude,
