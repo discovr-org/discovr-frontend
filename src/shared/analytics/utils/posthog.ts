@@ -58,7 +58,10 @@ export function startAnalytics(): void {
     // Replays hide everything typed and anything marked data-ph-mask (e.g. the phone on Profile).
     session_recording: { maskAllInputs: true, maskTextSelector: "[data-ph-mask]" },
     before_send: (event) => {
-      if (event) event.properties.page_type = pageTypeOf(window.location.pathname);
+      if (!event) return event;
+      event.properties.page_type = pageTypeOf(window.location.pathname);
+      const fix = readDeviceFix();
+      if (fix) Object.assign(event.properties, deviceLocationFields(fix));
       return event;
     },
     loaded: (ph) => {
@@ -115,16 +118,15 @@ export function resetUser(): void {
 const PUBLISHED_KEY = "discovr.locationPublished";
 
 /**
- * Put the device fix on later events.
+ * Every event already gets the saved fix in `before_send`. This sets it on the person
+ * and fires `location_captured` once per visit unless the spot moves by about 100m.
  * `$geoip_*` is still PostHog's IP guess (often wrong in Safari). Filter on `device_latitude`.
- * `location_captured` fires once per visit unless the spot moves by about 100m.
  */
 export function publishDeviceLocation(fix?: DeviceFix | null): void {
   if (!analyticsActive()) return;
   const stored = fix === undefined ? readDeviceFix() : fix;
   if (!stored) return;
   const props = deviceLocationFields(stored);
-  posthog.register(props);
   posthog.setPersonProperties(props);
   if (sameSpot(props)) return;
   posthog.capture("location_captured", {
