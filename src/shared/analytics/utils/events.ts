@@ -120,6 +120,15 @@ export type EventMap = {
   // Page
   scroll_depth: { depth: 25 | 50 | 75 | 100; slug?: string };
   analytics_opted_out: Empty;
+  /**
+   * One device fix per visit (or when the spot moves).
+   * Same fields are also registered on later events. `$geoip_*` stays the IP guess.
+   */
+  location_captured: {
+    device_latitude: number;
+    device_longitude: number;
+    device_location_accuracy_m: number;
+  };
   /** A printed QR opened the site. Same utm_* values PostHog stores for the visit. */
   qr_scanned: { utm_source: string; utm_medium: string; utm_campaign: string };
 };

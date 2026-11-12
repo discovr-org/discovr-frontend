@@ -25,19 +25,19 @@ const SECTIONS: LegalSection[] = [
       "When you leave your number on a collection page or a campaign link, with no code: the number, your name if you give one, and where you left it. We use it only to message you about that.",
       "When you save, review or write to us: what you save, the reviews and photos you send, and the messages you write.",
       "When you subscribe in the footer: your WhatsApp number, for our newsletter. Every message has a link to stop it.",
+      "Your location, only if you allow it. We ask once, after you scroll, and only when this device doesn't already have it. The spot stays on the device. When analytics is on, we send it to PostHog, because some browsers hide the real area.",
     ],
   },
   {
     title: "What we never collect",
     paragraphs: [
-      "Your exact location. To show what is close, we use the rough area your internet connection points to (about the size of a town), only while the page loads; we do not store it. If you tap Near me and allow it, your exact location stays in your browser to work out distances.",
       "We never send your name or phone number to our analytics.",
     ],
   },
   {
     title: "Why",
     paragraphs: [
-      "To show you what is close, to keep your saved things, to check reviews before they go up, to reply when you write to us, and to learn which pages help people.",
+      "To show you what is close, to keep your saved things, to check reviews before they go up, to reply when you write to us, and to learn which pages help people. If you allowed location, we also learn which area you're in.",
     ],
   },
   {
@@ -58,7 +58,7 @@ const SECTIONS: LegalSection[] = [
     title: "Analytics and replays",
     paragraphs: [
       "Analytics is on unless you turn it off below. If you turn it off, neither analytics tool above loads, and the site works exactly the same.",
-      "While it is on, we count which pages you open and which buttons you tap, and we replay some visits (PostHog) to see where people get stuck. Everything you type is hidden in replays, including your number. We never send your name or phone number to these tools. They see an anonymous ID.",
+      "While it is on, we count which pages you open and which buttons you tap, and we replay some visits (PostHog) to see where people get stuck. Everything you type is hidden in replays, including your number. We never send your name or phone number to these tools. They see an anonymous ID. If you allowed location, that spot is sent too.",
       "PostHog also notes errors the site runs into and how fast pages load, so we can fix them, and may now and then ask a one-question survey you can ignore.",
       "If you turn it off, that choice is kept on this device for 12 months. You can change it below at any time.",
     ],

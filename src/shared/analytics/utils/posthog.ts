@@ -1,4 +1,10 @@
 import posthog from "posthog-js";
+import {
+  deviceLocationFields,
+  readDeviceFix,
+  type DeviceFix,
+  type DeviceLocationFields,
+} from "@/shared/utils/deviceLocation";
 import { isAnalyticsOn } from "./analyticsConsent";
 import { pageTypeOf } from "./pageType";
 import {
@@ -13,9 +19,14 @@ import {
 const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || "/ingest";
 
+/** True when a PostHog key was baked into this build. */
+export function analyticsConfigured(): boolean {
+  return Boolean(KEY);
+}
+
 /** True once PostHog is loaded and the visitor hasn't turned analytics off. */
 export function analyticsActive(): boolean {
-  return Boolean(KEY) && posthog.__loaded && !posthog.has_opted_out_capturing();
+  return analyticsConfigured() && posthog.__loaded && !posthog.has_opted_out_capturing();
 }
 
 /** Called once at boot. Does nothing without a key or when analytics is off on this device. */
@@ -32,6 +43,7 @@ export function startAnalytics(): void {
     posthog.opt_in_capturing();
     posthog.startSessionRecording();
     claimTshirtQr();
+    publishDeviceLocation();
     return;
   }
   posthog.init(KEY, {
@@ -58,6 +70,7 @@ export function startAnalytics(): void {
       });
       if (process.env.NODE_ENV === "development") ph.debug();
       claimTshirtQr();
+      publishDeviceLocation();
     },
   });
 }
@@ -83,6 +96,8 @@ export function identifyUser(
   const setOnce = user.createdAt ? { created_at: user.createdAt } : undefined;
   if (posthog.get_distinct_id() !== userId) posthog.identify(userId, set, setOnce);
   else if (Object.keys(set).length || setOnce) posthog.setPersonProperties(set, setOnce);
+  // Anonymous profiles are off, so the device spot has to be set again after identify.
+  publishDeviceLocation();
   const campaign = pendingQrCampaign();
   if (campaign) {
     posthog.setPersonProperties(undefined, { qr_campaign: campaign });
@@ -92,7 +107,42 @@ export function identifyUser(
 
 /** Forget the account on sign-out, so the next visitor on this device starts fresh. */
 export function resetUser(): void {
-  if (posthog.__loaded) posthog.reset();
+  if (!posthog.__loaded) return;
+  posthog.reset();
+  publishDeviceLocation();
+}
+
+const PUBLISHED_KEY = "discovr.locationPublished";
+
+/**
+ * Put the device fix on later events.
+ * `$geoip_*` is still PostHog's IP guess (often wrong in Safari). Filter on `device_latitude`.
+ * `location_captured` fires once per visit unless the spot moves by about 100m.
+ */
+export function publishDeviceLocation(fix?: DeviceFix | null): void {
+  if (!analyticsActive()) return;
+  const stored = fix === undefined ? readDeviceFix() : fix;
+  if (!stored) return;
+  const props = deviceLocationFields(stored);
+  posthog.register(props);
+  posthog.setPersonProperties(props);
+  if (sameSpot(props)) return;
+  posthog.capture("location_captured", {
+    device_latitude: props.device_latitude,
+    device_longitude: props.device_longitude,
+    device_location_accuracy_m: props.device_location_accuracy_m,
+  });
+  try {
+    sessionStorage.setItem(
+      PUBLISHED_KEY,
+      JSON.stringify({
+        device_latitude: props.device_latitude,
+        device_longitude: props.device_longitude,
+      }),
+    );
+  } catch {
+    // The event already went out. A second one next time is acceptable.
+  }
 }
 
 /**
@@ -112,6 +162,22 @@ function claimTshirtQr(): void {
     rememberQrCampaign(TSHIRT_QR.campaign);
   }
   stripTshirtUtms();
+}
+
+function sameSpot(props: DeviceLocationFields): boolean {
+  try {
+    const raw = sessionStorage.getItem(PUBLISHED_KEY);
+    if (!raw) return false;
+    const prev = JSON.parse(raw) as { device_latitude?: unknown; device_longitude?: unknown };
+    if (typeof prev.device_latitude !== "number" || typeof prev.device_longitude !== "number") return false;
+    // ~100m. GPS noise should not send the event again.
+    return (
+      Math.abs(prev.device_latitude - props.device_latitude) < 0.001 &&
+      Math.abs(prev.device_longitude - props.device_longitude) < 0.001
+    );
+  } catch {
+    return false;
+  }
 }
 
 function isStandalone(): boolean {

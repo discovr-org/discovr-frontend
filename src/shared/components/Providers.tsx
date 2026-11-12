@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { AuthProvider } from "@/features/auth/components/AuthProvider";
+import { LocationAsk } from "@/shared/components/LocationAsk";
 import { QueryProvider } from "@/shared/components/QueryProvider";
 import { PwaProvider } from "@/shared/components/PwaProvider";
 import { SavedProvider } from "@/shared/components/SavedProvider";
@@ -13,7 +14,10 @@ export function Providers({ children }: { children: ReactNode }) {
     <PwaProvider>
       <ToastProvider>
         <SavedProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            <LocationAsk />
+          </AuthProvider>
         </SavedProvider>
       </ToastProvider>
     </PwaProvider>

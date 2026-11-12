@@ -64,6 +64,10 @@
 .ghost:hover {
   color: var(--ink-primary);
 }
+.ghost:active {
+  color: var(--ink-primary);
+  background: var(--brand-tint);
+}
 
 /* Site pages (Saved, Account, About, forms) use the 140px primary. */
 .narrow {
