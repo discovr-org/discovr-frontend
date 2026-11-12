@@ -1,12 +1,11 @@
 /**
  * One device location for the whole app.
  * Stored on the device. PostHog is a consumer, not the owner.
- * Safari only shows the permission prompt when getCurrentPosition runs inside a tap.
  */
 
 const FIX_KEY = "discovr.deviceLocation";
 const DENIED_KEY = "discovr.locationDenied";
-const DISMISS_KEY = "discovr.locationAsk.dismissed";
+const ASKED_KEY = "discovr.locationAsked";
 
 /** iOS moves the toolbar with a few pixels of scroll. A real scroll is past this. */
 export const FIRST_SCROLL_PX = 48;
@@ -103,18 +102,18 @@ export function rememberLocationDenied(): void {
   }
 }
 
-export function locationAskDismissed(): boolean {
+export function locationAskedThisVisit(): boolean {
   try {
-    return sessionStorage.getItem(DISMISS_KEY) === "1";
+    return sessionStorage.getItem(ASKED_KEY) === "1";
   } catch {
     return false;
   }
 }
 
-/** "Not now" lasts this visit. A new visit can ask once more. */
-export function dismissLocationAsk(): void {
+/** One browser prompt per visit, even if they close it without answering. */
+export function markLocationAsked(): void {
   try {
-    sessionStorage.setItem(DISMISS_KEY, "1");
+    sessionStorage.setItem(ASKED_KEY, "1");
   } catch {
     // Ignore. Worst case we ask again after a reload.
   }
@@ -137,10 +136,9 @@ export async function readGeoPermission(): Promise<GeoPermission> {
 }
 
 /**
- * Call this directly from a click or tap. The precise read starts in that same turn,
- * which is what Safari requires before it will show the prompt.
+ * Opens the browser's prompt when permission isn't settled yet.
  * A timeout or a miss falls back to a coarser, faster read. Permission is already
- * settled by then, so that second read does not need another tap.
+ * settled by then, so that second read does not prompt again.
  */
 export function requestDeviceFix(): Promise<DeviceFix> {
   return readPosition(PRECISE).catch((err: unknown) => {
@@ -156,13 +154,13 @@ export function requestDeviceFix(): Promise<DeviceFix> {
 
 /**
  * Ask only after a real scroll, and only when this device has no fix.
- * A granted permission refreshes quietly, with no bar and no prompt.
+ * A granted permission refreshes quietly, with no prompt.
  */
 export function planLocationAsk(input: {
   supported: boolean;
   fix: DeviceFix | null;
   permission: GeoPermission;
-  dismissed: boolean;
+  asked: boolean;
   deniedFlag: boolean;
   analyticsOn: boolean;
   scrolled: boolean;
@@ -176,7 +174,7 @@ export function planLocationAsk(input: {
   if (input.permission === "granted") return { kind: "refresh" };
 
   if (!input.scrolled) return { kind: "skip", until: "scroll" };
-  if (input.dismissed) return { kind: "skip", until: "never" };
+  if (input.asked) return { kind: "skip", until: "never" };
   // Old Safari can't tell us the permission. A previous hard deny should stick.
   if (input.deniedFlag && input.permission === "unknown") return { kind: "skip", until: "never" };
 
