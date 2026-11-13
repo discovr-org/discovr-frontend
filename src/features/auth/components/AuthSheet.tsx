@@ -121,6 +121,8 @@ export function AuthSheet({
 
   // Flow state
   const [step, setStep] = useState<Step>('phone');
+  const stepRef = useRef(step);
+  stepRef.current = step;
   const [iso, setIso] = useState(defaultCountry);
   const [digits, setDigits] = useState('');
   const [phoneErr, setPhoneErr] = useState('');
@@ -295,16 +297,22 @@ export function AuthSheet({
       }
       setPhoneErr('');
       setInvalid(false);
+      if (sendingRef.current) return;
+      // Go to the code step now; the request runs behind it. If it fails we come back with the error.
+      setCode('');
+      setOtpErr('');
+      setResendAt(Date.now() + resendSeconds * 1000);
+      setNow(Date.now());
+      goTo('otp');
       const ok = await sendCode({ e164: toE164(d, c), countryIso: c.iso, dialCode: c.dial, nationalNumber: d });
-      if (ok) {
-        setCode('');
-        setOtpErr('');
-        goTo('otp');
-      } else {
+      if (!ok) {
+        setResendAt(0);
         setPhoneErr(SEND_FAILED);
+        // Only pull them back if they are still waiting on the code step.
+        if (stepRef.current === 'otp') goTo('phone');
       }
     },
-    [digits, country, sendCode, goTo],
+    [digits, country, sendCode, goTo, resendSeconds],
   );
 
   const verify = useCallback(

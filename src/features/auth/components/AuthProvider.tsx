@@ -168,11 +168,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     const session = readSession();
-    if (session?.sessionId) await logoutSession(session.sessionId);
     track("signed_out", {});
     resetUser();
     clearSession();
     setUser(null);
+    // Signed out on this device at once; the server revokes the session in the background.
+    if (session?.sessionId) void logoutSession(session.sessionId);
   }, []);
 
   // Returning visitors and the name step: link this device to their account, name, phone and sign-up date.
