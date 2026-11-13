@@ -190,7 +190,8 @@ export default function TripEndPrompt({
             Till when are you in Goa?
           </h2>
           <p id={bodyId} className={styles.body}>
-            So we can show you what’s worth doing before you go.
+            <span aria-hidden="true">🎁&nbsp; </span>
+            We’ll send you a surprise before you leave to make your trip better!
           </p>
         </div>
 

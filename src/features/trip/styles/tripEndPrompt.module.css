@@ -42,13 +42,20 @@
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   box-shadow: var(--shadow-overlay);
   outline: none;
-  transform: translateY(110%);
-  transition: transform var(--duration-exit) var(--ease-exit);
+  /* The design's entrance: rise 24px while fading in. */
+  transform: translateY(24px);
+  opacity: 0;
+  transition:
+    transform var(--duration-exit) var(--ease-exit),
+    opacity var(--duration-exit) var(--ease-exit);
 }
 
 .root[data-visible] .sheet {
-  transform: translateY(0);
-  transition: transform var(--duration-enter) var(--ease-enter);
+  transform: none;
+  opacity: 1;
+  transition:
+    transform var(--duration-enter) var(--ease-enter),
+    opacity var(--duration-enter) var(--ease-enter);
 }
 
 .head {
