@@ -25,7 +25,8 @@ const SECTIONS: LegalSection[] = [
       "When you leave your number on a collection page or a campaign link, with no code: the number, your name if you give one, and where you left it. We use it only to message you about that.",
       "When you save, review or write to us: what you save, the reviews and photos you send, and the messages you write.",
       "When you subscribe in the footer: your WhatsApp number, for our newsletter. Every message has a link to stop it.",
-      "Your location, only if you allow it. We ask once, after you scroll, and only when this device doesn't already have it. The spot stays on the device. When analytics is on, we send it to PostHog, because some browsers hide the real area.",
+      "Your location, only if you allow it. We ask once, after you scroll, and only when this device doesn't already have it. The spot stays on the device. When analytics is on, we send it to PostHog, because some browsers hide the real area. We look up the town name for that spot once, sending only the spot rounded to about 1 km to BigDataCloud, and send the town, state and country with it.",
+      "The day you say you leave Goa, if you answer our \"Till when are you in Goa?\" question. We keep it with your account, or on this device if you aren't signed in, and when analytics is on we send it to PostHog.",
     ],
   },
   {
@@ -52,6 +53,7 @@ const SECTIONS: LegalSection[] = [
       "Hosting: Vercel. Database: Supabase. Images: Cloudflare.",
       "Sign-in codes: Twilio, by SMS. The newsletter: Twilio, on WhatsApp. They see your phone number so they can deliver the message.",
       "Analytics, unless you turn it off (see below): PostHog.",
+      "Town lookup, only if you allowed location: BigDataCloud. It sees the spot rounded to about 1 km, not who you are.",
     ],
   },
   {

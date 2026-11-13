@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { TripEndGate } from "@/features/trip/components/TripEndGate";
 import { AuthProvider } from "@/features/auth/components/AuthProvider";
 import { QueryProvider } from "@/shared/components/QueryProvider";
 import { PwaProvider } from "@/shared/components/PwaProvider";
@@ -15,7 +16,10 @@ export function Providers({ children }: { children: ReactNode }) {
     <PwaProvider>
       <ToastProvider>
         <SavedProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            <TripEndGate />
+          </AuthProvider>
         </SavedProvider>
       </ToastProvider>
     </PwaProvider>

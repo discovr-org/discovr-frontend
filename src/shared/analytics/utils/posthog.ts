@@ -79,6 +79,12 @@ export function startAnalytics(): void {
   });
 }
 
+/** Put their "Till when are you in Goa?" answer on the person. */
+export function setTripProperties(trip: { status: string; lastDay: string | null }): void {
+  if (!analyticsActive()) return;
+  posthog.setPersonProperties({ trip_status: trip.status, trip_last_day: trip.lastDay });
+}
+
 /** Stop sending anything from this device. */
 export function stopAnalytics(): void {
   if (!posthog.__loaded) return;

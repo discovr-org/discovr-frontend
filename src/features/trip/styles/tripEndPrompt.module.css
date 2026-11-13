@@ -1,0 +1,207 @@
+/* Every value is a discovr design token, with its current value as the fallback. */
+
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-scrim);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-family: var(--font-sans);
+  color: var(--ink-primary);
+}
+
+/* surface-canvas at opacity-scrim. Never black. Not tappable: this prompt cannot be dismissed. */
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--surface-canvas);
+  opacity: 0;
+  transition: opacity var(--duration-exit) var(--ease-exit);
+}
+
+.root[data-visible] .scrim {
+  opacity: var(--opacity-scrim);
+  transition: opacity var(--duration-enter) var(--ease-enter);
+}
+
+/* A Sheet without the grab handle, because it cannot be dragged away. */
+.sheet {
+  position: relative;
+  z-index: var(--z-sheet);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--size-content-max);
+  padding: var(--space-5);
+  padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: var(--surface-raised);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--shadow-overlay);
+  outline: none;
+  transform: translateY(110%);
+  transition: transform var(--duration-exit) var(--ease-exit);
+}
+
+.root[data-visible] .sheet {
+  transform: translateY(0);
+  transition: transform var(--duration-enter) var(--ease-enter);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* caption */
+.overline {
+  margin: 0;
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* Same heading style as the AuthSheet title, so the handoff reads as one flow. */
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* body-sm */
+.body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink-muted);
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* One answer only: after the first tap nothing else responds. */
+.options[data-locked] {
+  pointer-events: none;
+}
+
+.days {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.others {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.tile,
+.pill {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: var(--border-hairline) solid var(--line-strong);
+  color: var(--ink-primary);
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--duration-instant) linear,
+    border-color var(--duration-instant) linear;
+}
+
+.tile {
+  min-height: 64px;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+/* label */
+.tileTop {
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ink-muted);
+}
+
+/* price */
+.tileNum {
+  font-size: 18px;
+  line-height: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.tileLater {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Secondary button: label type, control-md, pill. */
+.pill {
+  min-height: var(--size-control-md);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+@media (hover: hover) {
+  .tile:hover,
+  .pill:hover {
+    border-color: var(--ink-muted);
+  }
+}
+
+/* Pressed and selected share one look: brand-tint, no border. */
+.tile:active,
+.pill:active,
+.tile[aria-pressed='true'],
+.pill[aria-pressed='true'] {
+  background: var(--brand-tint);
+  border-color: transparent;
+}
+
+.tile:focus-visible,
+.pill:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+/* Reduced motion: opacity only. */
+@media (prefers-reduced-motion: reduce) {
+  .sheet {
+    transform: none;
+    opacity: 0;
+    transition: opacity var(--duration-exit) linear;
+  }
+
+  .root[data-visible] .sheet {
+    opacity: 1;
+    transition: opacity var(--duration-enter) linear;
+  }
+}

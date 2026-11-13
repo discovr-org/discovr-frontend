@@ -129,6 +129,14 @@ export type EventMap = {
     device_longitude: number;
     device_location_accuracy_m: number;
   };
+  /** "Till when are you in Goa?" sheet came up. */
+  trip_end_shown: { had_answer: boolean };
+  trip_end_answered: {
+    status: "date" | "later" | "local" | "not_yet";
+    /** Only for a picked day: 0 = today. */
+    days_from_today?: number;
+    signed_in: boolean;
+  };
   /** A printed QR opened the site. Same utm_* values PostHog stores for the visit. */
   qr_scanned: { utm_source: string; utm_medium: string; utm_campaign: string };
 };
