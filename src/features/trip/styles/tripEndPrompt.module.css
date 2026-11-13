@@ -1,9 +1,10 @@
-/* Every value is a discovr design token, with its current value as the fallback. */
+/* Every value is a discovr design token. */
 
 .root {
   position: fixed;
   inset: 0;
-  z-index: var(--z-scrim);
+  /* Same level as the booking bar, and later in the page, so the sheet and its scrim cover it. */
+  z-index: var(--z-booking-bar);
   display: flex;
   align-items: flex-end;
   justify-content: center;

@@ -52,7 +52,7 @@ export default async function Page({ params }: PageProps) {
               "@type": "BreadcrumbList",
               itemListElement: [
                 { "@type": "ListItem", position: 1, name: "discovr", item: SITE_URL },
-                { "@type": "ListItem", position: 2, name: "Things to do in Goa", item: `${SITE_URL}/goa` },
+                { "@type": "ListItem", position: 2, name: "Things to do in Goa", item: `${SITE_URL}/goa-for-you` },
                 { "@type": "ListItem", position: 3, name: hub.title, item: url },
               ],
             },

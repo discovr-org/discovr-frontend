@@ -11,7 +11,7 @@ const INTRO = GOA_ANSWER;
 export const metadata: Metadata = {
   title: "Things to do in Goa",
   description: INTRO,
-  alternates: { canonical: "/goa" },
+  alternates: { canonical: "/goa-for-you" },
   openGraph: { title: "Things to do in Goa", description: INTRO },
 };
 
@@ -28,7 +28,7 @@ export default async function Page() {
               "@type": "BreadcrumbList",
               itemListElement: [
                 { "@type": "ListItem", position: 1, name: "discovr", item: SITE_URL },
-                { "@type": "ListItem", position: 2, name: "Things to do in Goa", item: `${SITE_URL}/goa` },
+                { "@type": "ListItem", position: 2, name: "Things to do in Goa", item: `${SITE_URL}/goa-for-you` },
               ],
             },
             {

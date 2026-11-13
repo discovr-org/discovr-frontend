@@ -33,6 +33,7 @@ const nextConfig: NextConfig = {
     return [
       // www -> non-www, keeps the path. Also set this in your host's domain settings.
       { source: "/:path*", has: [{ type: "host", value: "www.discovr.in" }], destination: "https://discovr.in/:path*", permanent: true },
+      { source: "/goa", destination: "/", permanent: true },
       { source: "/goa/sundowners", destination: "/goa/sunset-spots", permanent: true },
       { source: "/privacy", destination: "/legal/privacy", permanent: true },
       { source: "/terms", destination: "/legal/terms", permanent: true },
