@@ -6,6 +6,7 @@ import {
   CacheFirst,
   ExpirationPlugin,
   NetworkFirst,
+  NetworkOnly,
   Serwist,
   StaleWhileRevalidate,
 } from "serwist";
@@ -24,6 +25,8 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: [
+    // The install file carries a one-use login code, so it is never served from cache.
+    { matcher: ({ url }) => url.pathname === "/manifest.webmanifest", handler: new NetworkOnly() },
     // Confirmed bookings + tickets must stay readable with no signal.
     {
       matcher: ({ url }) =>

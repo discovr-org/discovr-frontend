@@ -60,6 +60,7 @@ export function startAnalytics(): void {
     session_recording: { maskAllInputs: true, maskTextSelector: "[data-ph-mask]" },
     before_send: (event) => {
       if (!event) return event;
+      scrubHandoff(event);
       event.properties.page_type = pageTypeOf(window.location.pathname);
       const fix = readDeviceFix();
       if (fix) Object.assign(event.properties, deviceLocationFields(fix));
@@ -196,4 +197,15 @@ function sameSpot(props: DeviceLocationFields): boolean {
 function isStandalone(): boolean {
   const nav = window.navigator as Navigator & { standalone?: boolean };
   return window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
+}
+
+/** The first page of an installed app is /?h=<login code>. The code never goes to analytics. */
+const HANDOFF = /([?&])h=[A-Za-z0-9_-]{20,}&?/g;
+function scrubHandoff(event: { properties?: Record<string, unknown>; $set?: Record<string, unknown>; $set_once?: Record<string, unknown> }) {
+  for (const bag of [event.properties, event.$set, event.$set_once]) {
+    if (!bag) continue;
+    for (const [k, v] of Object.entries(bag)) {
+      if (typeof v === "string" && v.includes("h=")) bag[k] = v.replace(HANDOFF, "$1").replace(/[?&]$/, "");
+    }
+  }
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/components/AuthProvider";
+import { readSession } from "@/features/auth/utils/session";
 import TripEndPrompt, { type TripEndAnswer } from "@/features/trip/components/TripEndPrompt";
 import { fetchTrip, saveTrip } from "@/features/trip/utils/tripApi";
 import { isoDay, readLocalTrip, shouldAsk, tripFromAnswer, writeLocalTrip, type Trip } from "@/features/trip/utils/trip";
@@ -96,6 +97,8 @@ export function TripEndGate() {
 
   const onAnswer = useCallback(
     (answer: TripEndAnswer) => {
+      // Ask the device, not a captured value: sign-in only opens for someone who is signed out right now.
+      const sessionId = readSession()?.sessionId;
       const next = tripFromAnswer(answer, isoDay(new Date()));
       setOpen(false);
       setReady(false);
@@ -116,7 +119,7 @@ export function TripEndGate() {
         openAuth("trip");
       }
     },
-    [sessionId, openAuth],
+    [openAuth],
   );
 
   return <TripEndPrompt open={open} onAnswer={onAnswer} />;
