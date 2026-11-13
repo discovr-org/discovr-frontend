@@ -9,7 +9,7 @@ import { setTripProperties } from "@/shared/analytics/utils/posthog";
 import { track } from "@/shared/analytics/utils/track";
 
 /** Seconds of real use (tab visible, touched or scrolled recently) before we ask. */
-const ACTIVE_SECONDS = 30;
+const ACTIVE_SECONDS = 10;
 const IDLE_AFTER_MS = 15_000;
 const ASKED_KEY = "discovr.tripAsked";
 /** Set when a guest answers, cleared once that answer is in their account. */
@@ -22,7 +22,7 @@ function clearUnsynced() {
   } catch {}
 }
 
-/** Asks "Till when are you in Goa?" once per visit, after 30 seconds of use, if we have no answer or it's time to ask again. */
+/** Asks "Till when are you in Goa?" once per visit, after 10 seconds of use, if we have no answer or it's time to ask again. */
 export function TripEndGate() {
   const { user, authOpen, openAuth } = useAuth();
   const sessionId = user?.sessionId;
@@ -62,7 +62,7 @@ export function TripEndGate() {
     if (trip) setTripProperties(trip);
   }, [trip]);
 
-  // 30 seconds of use, once per visit.
+  // 10 seconds of use, once per visit.
   useEffect(() => {
     if (trip === undefined || !shouldAsk(trip, isoDay(new Date()))) return;
     try {
