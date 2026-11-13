@@ -64,6 +64,8 @@ export type AuthSheetProps = {
   onSuccess: (result: AuthResult) => void;
   /** Button on the name step. Name the original action: "Save", "Call to book". Default "Done". */
   ctaLabel?: string;
+  /** Heading on the phone, code and name steps. Default "Log in or sign up to discovr". */
+  title?: string;
   termsHref: string;
   privacyHref: string;
   defaultCountry?: string;
@@ -91,6 +93,7 @@ export function AuthSheet({
   onSaveName,
   onSuccess,
   ctaLabel = 'Done',
+  title = 'Log in or sign up to discovr',
   termsHref,
   privacyHref,
   defaultCountry = 'IN',
@@ -549,7 +552,7 @@ export function AuthSheet({
 
         {step !== 'country' && (
           <h2 id={ids.title} className={styles.title}>
-            Log in or sign up to discovr
+            {title}
           </h2>
         )}
 

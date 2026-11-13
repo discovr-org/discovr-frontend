@@ -26,7 +26,7 @@ import { useSaved } from "@/shared/components/SavedProvider";
 import { identifyUser, resetUser } from "@/shared/analytics/utils/posthog";
 import { track } from "@/shared/analytics/utils/track";
 
-export type AuthIntent = "save" | "call" | "book" | "profile";
+export type AuthIntent = "save" | "call" | "book" | "profile" | "trip";
 
 /** Name-step button: finish the thing they tapped. */
 const CTA_LABEL: Record<AuthIntent, string> = {
@@ -34,7 +34,10 @@ const CTA_LABEL: Record<AuthIntent, string> = {
   call: "Call to book",
   book: "Go to booking",
   profile: "Done",
+  trip: "Send my surprise",
 };
+
+const TITLE: Partial<Record<AuthIntent, string>> = { trip: "You’ll get your surprise on WhatsApp" };
 
 type AuthContextValue = {
   user: SessionUser | null;
@@ -205,6 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         onSaveName={onSaveName}
         onSuccess={onSuccess}
         ctaLabel={CTA_LABEL[pending ?? "profile"]}
+        title={TITLE[pending ?? "profile"]}
         termsHref="/legal/terms"
         privacyHref="/legal/privacy"
       />

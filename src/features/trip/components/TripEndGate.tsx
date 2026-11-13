@@ -12,10 +12,19 @@ import { track } from "@/shared/analytics/utils/track";
 const ACTIVE_SECONDS = 30;
 const IDLE_AFTER_MS = 15_000;
 const ASKED_KEY = "discovr.tripAsked";
+/** Set when a guest answers, cleared once that answer is in their account. */
+const UNSYNCED_KEY = "discovr.tripUnsynced";
+
+function clearUnsynced() {
+  try {
+    sessionStorage.removeItem(UNSYNCED_KEY);
+    localStorage.removeItem(UNSYNCED_KEY);
+  } catch {}
+}
 
 /** Asks "Till when are you in Goa?" once per visit, after 30 seconds of use, if we have no answer or it's time to ask again. */
 export function TripEndGate() {
-  const { user, authOpen } = useAuth();
+  const { user, authOpen, openAuth } = useAuth();
   const sessionId = user?.sessionId;
   const [trip, setTrip] = useState<Trip | null | undefined>(undefined); // undefined = still finding out
   const [ready, setReady] = useState(false);
@@ -30,9 +39,16 @@ export function TripEndGate() {
       return;
     }
     setTrip(undefined);
+    let unsynced = false;
+    try {
+      unsynced = sessionStorage.getItem(UNSYNCED_KEY) === "1" || localStorage.getItem(UNSYNCED_KEY) === "1";
+    } catch {}
     fetchTrip(sessionId)
       .then(async (saved) => {
-        const known = saved ?? (local ? await saveTrip(sessionId, local).catch(() => local) : null);
+        // An answer given as a guest is newer than anything on the account, so it wins.
+        const push = local && (unsynced || !saved);
+        const known = push ? await saveTrip(sessionId, local).catch(() => local) : saved;
+        if (push) clearUnsynced();
         if (alive) setTrip(known);
       })
       .catch(() => alive && setTrip(local)); // API down: fall back to this device, don't nag twice
@@ -90,9 +106,17 @@ export function TripEndGate() {
         days_from_today: answer.kind === "date" ? answer.daysFromToday : undefined,
         signed_in: Boolean(sessionId),
       });
-      if (sessionId) saveTrip(sessionId, next).catch(() => {}); // kept on the device; moves up next visit
+      if (sessionId) {
+        saveTrip(sessionId, next).catch(() => {}); // kept on the device; moves up next visit
+      } else {
+        // Guest: keep it on the device, then ask them to sign up. It moves to their account when they do.
+        try {
+          localStorage.setItem(UNSYNCED_KEY, "1");
+        } catch {}
+        openAuth("trip");
+      }
     },
-    [sessionId],
+    [sessionId, openAuth],
   );
 
   return <TripEndPrompt open={open} onAnswer={onAnswer} />;
