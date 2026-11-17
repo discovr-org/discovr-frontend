@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { AlertIcon, ChevronDownIcon, CrossIcon, InfoIcon, TickIcon } from "@/shared/components/icons";
 import type { StoryBlock } from "@/types/experience";
+import { rupees } from "../utils/schedule";
 import styles from "../styles/storyBlocks.module.css";
 
 /** The About story: headings, quotes, photos, steps, callouts, checklists, FAQs, in order. */
@@ -10,11 +11,21 @@ type StoryBlocksProps = {
 };
 
 export function StoryBlocks({ blocks, onFaqOpen }: StoryBlocksProps) {
+  // Two `half` blocks in a row sit side by side; a lone one stays full width.
+  const rows: StoryBlock[][] = [];
+  for (let i = 0; i < blocks.length; i++) {
+    if (blocks[i].size === "half" && blocks[i + 1]?.size === "half") rows.push([blocks[i], blocks[++i]]);
+    else rows.push([blocks[i]]);
+  }
   return (
     <div className={`${styles.stack} ds-keep-lines`}>
-      {blocks.map((block, i) => (
-        <div key={i}>
-          <Block block={block} onFaqOpen={onFaqOpen} />
+      {rows.map((row, i) => (
+        <div key={i} className={row.length === 2 ? styles.halfPair : undefined}>
+          {row.map((block, j) => (
+            <div key={j}>
+              <Block block={block} onFaqOpen={onFaqOpen} />
+            </div>
+          ))}
         </div>
       ))}
     </div>
@@ -125,6 +136,37 @@ function Block({ block, onFaqOpen }: { block: StoryBlock; onFaqOpen?: (question:
                 <span>{item}</span>
               </li>
             ))}
+          </ul>
+        </div>
+      );
+    case "stats":
+      return (
+        <dl className={styles.stats}>
+          {block.items.map((item, i) => (
+            <div key={i} className={styles.stat}>
+              <dt className={styles.statLabel}>{item.label}</dt>
+              <dd className={styles.statValue}>{item.value}</dd>
+            </div>
+          ))}
+        </dl>
+      );
+    case "packages":
+      return (
+        <div className={styles.packages}>
+          {block.title ? <h4 className={styles.headingSmall}>{block.title}</h4> : null}
+          <ul className={styles.packageList}>
+            {block.items.map((item, i) => {
+              const amount = Number(item.price.replace(/[^\d.]/g, ""));
+              return (
+                <li key={i} className={styles.packageRow}>
+                  <div>
+                    <p className={styles.packageName}>{item.name}</p>
+                    {item.detail ? <p className={styles.caption}>{item.detail}</p> : null}
+                  </div>
+                  <p className={styles.packagePrice}>{amount > 0 ? rupees(amount) : item.price}</p>
+                </li>
+              );
+            })}
           </ul>
         </div>
       );

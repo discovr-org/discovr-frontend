@@ -9,7 +9,7 @@ import { rupees } from "./schedule";
 export function storyBlocks(x: Experience): StoryBlock[] {
   const stored = x.content?.blocks;
   // Places always build from the admin fields so edits show up; their stored story only lends its photos.
-  const blocks = isVenueListing(x) ? venueStory(x) : stored?.length ? stored : tripStory(x);
+  const blocks = isVenueListing(x) ? venueStory(x) : stored?.length ? stored.filter((b) => b.show !== false) : tripStory(x);
   return x.content?.hideStoryPhotos ? blocks.filter((b) => b.type !== "photo") : blocks;
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { isVenueListing } from "@/features/experience/utils/listingKind";
@@ -37,6 +37,7 @@ import { track } from "@/shared/analytics/utils/track";
 import { useScrollDepth } from "@/shared/analytics/utils/useScrollDepth";
 import { useTrackView } from "@/shared/analytics/utils/useTrackView";
 import type { Experience, ScreenState } from "@/types/experience";
+import { isFixedShown, orderedSections, type SectionId } from "../utils/sections";
 import { storyBlocks } from "../utils/story";
 import { ReportSheet } from "./ReportSheet";
 import { StoryBlocks } from "./StoryBlocks";
@@ -401,23 +402,15 @@ function Populated({
       track(cta.event, { ...listingProps(x), cta: action, cta_label: cta.label, location });
     };
 
-  return (
-    <>
-      <div className={styles.columns}>
-        <div className={styles.main}>
-          <header className={styles.head}>
-            {offline && (
-              <Banner
-                tone="notice"
-                icon={<WifiOffIcon />}
-                title="You're offline"
-                text="Showing what we had. Times may be out of date."
-              />
-            )}
+  const parts: Record<SectionId, ReactNode> = {
+    title: (
             <TitleBlock
               title={x.title}
               hostName={showHost ? x.host.businessName : undefined}
             />
+    ),
+    info: (
+      <>
             <InfoList
               priceFrom={x.price.fromAmount}
               askForPrice={x.price.askForPrice}
@@ -432,7 +425,12 @@ function Populated({
               onAction={onContact("info_list")}
             />
             {x.hours?.bestTime ? <p className="t-body">Best time: {x.hours.bestTime}</p> : null}
+      </>
+    ),
+    verdict: (
             <Verdict text={x.verdict} label={null} />
+    ),
+    actions: (
             <ActionRow
               hostName={x.host.businessName}
               phone={x.host.phone}
@@ -442,8 +440,8 @@ function Populated({
               onAction={onContact("action_row")}
               onCall={onCallToBook}
             />
-          </header>
-
+    ),
+    about: (
           <Section title="About">
             {/* Start and end markers: a long story is never half on screen at once. */}
             <div ref={storyRef} aria-hidden="true" />
@@ -456,6 +454,9 @@ function Populated({
             <div ref={storyEndRef} aria-hidden="true" />
           </Section>
 
+    ),
+    menu: (
+      <>
           {x.menu && x.menu.pages.length > 0 ? (
             <Section title="Menu" id="menu">
               <MenuPages pages={x.menu.pages} onOpen={(i) => onOpenMenu(i)} />
@@ -468,6 +469,10 @@ function Populated({
             </Section>
           ) : null}
 
+      </>
+    ),
+    policy: (
+      <>
           {hasPolicy ? (
             <div className={styles.policy}>
               <PolicyDisclosure
@@ -480,12 +485,20 @@ function Populated({
             </div>
           ) : null}
 
+      </>
+    ),
+    host: (
+      <>
           {showHost ? (
             <Section title={`${CREDIT_LABEL[x.host.credit ?? "hosted"]} ${x.host.businessName}`} id="host">
               <HostRow host={x.host} showCredit={false} />
             </Section>
           ) : null}
 
+      </>
+    ),
+    reviews: (
+      <>
           {x.reviews && x.reviews.count > 0 && (
             <ReviewList
               reviews={x.reviews.items}
@@ -497,6 +510,44 @@ function Populated({
               }}
             />
           )}
+
+      </>
+    ),
+  };
+
+  // The admin can reorder and hide parts. With no saved layout this is the page as it always was.
+  // Title, info, verdict and actions that sit together share one <header>.
+  const headParts: SectionId[] = ["title", "info", "verdict", "actions"];
+  const offlineBanner = offline ? (
+    <Banner
+      tone="notice"
+      icon={<WifiOffIcon />}
+      title="You're offline"
+      text="Showing what we had. Times may be out of date."
+    />
+  ) : null;
+  const body: ReactNode[] = [];
+  let run: ReactNode[] = [];
+  const flush = () => {
+    if (run.length) body.push(<header key={`head-${body.length}`} className={styles.head}>{run}</header>);
+    run = [];
+  };
+  for (const section of orderedSections(content)) {
+    if (!section.show) continue;
+    if (headParts.includes(section.id)) run.push(<Fragment key={section.id}>{parts[section.id]}</Fragment>);
+    else {
+      flush();
+      body.push(<Fragment key={section.id}>{parts[section.id]}</Fragment>);
+    }
+  }
+  flush();
+
+  return (
+    <>
+      <div className={styles.columns}>
+        <div className={styles.main}>
+          {offlineBanner}
+          {body}
 
           <Disclaimer hostName={x.host.businessName} credit={x.host.credit ?? "hosted"} />
 
@@ -511,7 +562,7 @@ function Populated({
         </div>
 
         <aside className={styles.side}>
-          <BookingBar
+          {isFixedShown(content, "booking") ? <BookingBar
             priceFrom={x.price.fromAmount}
             askForPrice={asksForPrice(x)}
             unit={venue ? barUnit(content.priceUnit) : undefined}
@@ -523,11 +574,11 @@ function Populated({
             onCallToBook={onCallToBook}
             onBookLink={onBookLink}
             onBookClick={onBookClick}
-          />
+          /> : null}
         </aside>
       </div>
 
-      {related.length > 0 && (
+      {related.length > 0 && isFixedShown(content, "more") && (
         <section className={styles.block} aria-labelledby="more-related">
           <h2 id="more-related" className="t-title">
             More in Goa

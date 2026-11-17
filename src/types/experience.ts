@@ -88,6 +88,8 @@ export type ExperienceContent = {
   faqs?: Array<{ q: string; a: string }>;
   /** The About story, in reading order. When absent the page builds one from the fields above. */
   blocks?: StoryBlock[];
+  /** Order and visibility of the page parts, set in the admin. Missing = the default page. */
+  sections?: Array<{ id: string; show?: boolean }>;
   /** "link" = the book button opens `links.book`; otherwise it calls the host. */
   bookVia?: "call" | "link";
   /** true = skip photo blocks in the story. */
@@ -101,7 +103,11 @@ export type ExperienceContent = {
   };
 };
 
-export type StoryBlock =
+/** Set by the admin page builder. `show: false` hides the block; two `half` blocks in a row sit side by side. */
+export type StoryBlockFlags = { show?: boolean; size?: "full" | "half" };
+
+export type StoryBlock = StoryBlockFlags &
+  (
   | { type: "heading"; level: "section" | "small"; text: string }
   | { type: "line" }
   | { type: "quote"; text: string; plain?: boolean; cite?: string }
@@ -115,7 +121,12 @@ export type StoryBlock =
   | { type: "steps"; items: Array<{ marker: string; title: string; caption?: string }> }
   | { type: "callout"; tone: "heads_up" | "tip"; title: string; paragraphs: string[] }
   | { type: "checklist"; title: string; items: string[] }
-  | { type: "faq"; items: Array<{ q: string; a: string }> };
+  | { type: "faq"; items: Array<{ q: string; a: string }> }
+  /** Small tiles, e.g. Age / Fitness level. */
+  | { type: "stats"; items: Array<{ label: string; value: string }> }
+  /** Price rows. `price` is the amount in rupees, as typed. */
+  | { type: "packages"; title?: string; items: Array<{ name: string; detail?: string; price: string }> }
+  );
 
 export interface ExperienceReviews {
   average: number;
