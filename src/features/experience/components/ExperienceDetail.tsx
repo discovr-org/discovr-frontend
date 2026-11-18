@@ -38,7 +38,7 @@ import { useScrollDepth } from "@/shared/analytics/utils/useScrollDepth";
 import { useTrackView } from "@/shared/analytics/utils/useTrackView";
 import type { Experience, ScreenState } from "@/types/experience";
 import { isFixedShown, orderedSections, type SectionId } from "../utils/sections";
-import { storyBlocks } from "../utils/story";
+import { storyBlocks, storyIndexes } from "../utils/story";
 import { ReportSheet } from "./ReportSheet";
 import { StoryBlocks } from "./StoryBlocks";
 import styles from "./ExperienceDetail.module.css";
@@ -56,6 +56,8 @@ export interface ExperienceDetailProps {
   onSaveChange?: (saved: boolean) => void;
   /** Related cards from the catalog feed (API). */
   relatedItems?: FeedItem[];
+  /** Admin live preview: marks each part so the editor can select and arrange it. */
+  preview?: boolean;
 }
 
 /**
@@ -69,6 +71,7 @@ export function ExperienceDetail({
   initiallySaved = false,
   onSaveChange,
   relatedItems = [],
+  preview = false,
 }: ExperienceDetailProps) {
   const router = useRouter();
   const toast = useToast();
@@ -225,6 +228,8 @@ export function ExperienceDetail({
             onToggleSave={onToggleSave}
             onFocusWithin={chrome.reveal}
           />
+          {preview ? (
+            <div data-pv="part:gallery" style={{ display: "contents" }}>
           {error ? (
             <HeroPlaceholder ref={heroRef} />
           ) : loading ? null : experience!.photos.length > 0 ? (
@@ -237,6 +242,24 @@ export function ExperienceDetail({
             />
           ) : (
             <HeroPlaceholder ref={heroRef} />
+          )}
+            </div>
+          ) : (
+            <>
+          {error ? (
+            <HeroPlaceholder ref={heroRef} />
+          ) : loading ? null : experience!.photos.length > 0 ? (
+            <HeroGallery
+              ref={heroRef}
+              photos={experience!.photos}
+              onIndexChange={(index, total) =>
+                track("hero_photo_changed", { ...listingProps(experience!), index, total })
+              }
+            />
+          ) : (
+            <HeroPlaceholder ref={heroRef} />
+          )}
+            </>
           )}
         </div>
 
@@ -256,6 +279,7 @@ export function ExperienceDetail({
           <ExperienceDetailSkeleton summaryClassName={styles.head} />
         ) : (
           <Populated
+            preview={preview}
             experience={experience!}
             offline={state === "offline"}
             onShare={() => void share("action_row")}
@@ -341,6 +365,7 @@ export function ExperienceDetail({
 }
 
 function Populated({
+  preview,
   experience: x,
   offline,
   onShare,
@@ -353,6 +378,7 @@ function Populated({
   savedSlugs,
   onToggleRelatedSave,
 }: {
+  preview: boolean;
   experience: Experience;
   offline: boolean;
   onShare: () => void;
@@ -447,6 +473,7 @@ function Populated({
             <div ref={storyRef} aria-hidden="true" />
             <StoryBlocks
               blocks={blocks}
+              indexes={preview ? storyIndexes(x) : undefined}
               onFaqOpen={(question, position) =>
                 track("faq_opened", { ...listingProps(x), question, position, location: "story" })
               }
@@ -532,12 +559,32 @@ function Populated({
     if (run.length) body.push(<header key={`head-${body.length}`} className={styles.head}>{run}</header>);
     run = [];
   };
+  const present: Record<SectionId, boolean> = {
+    title: true,
+    info: true,
+    verdict: true,
+    actions: true,
+    about: true,
+    menu: Boolean(x.menu && x.menu.pages.length > 0) || Boolean(menuLink),
+    policy: hasPolicy,
+    host: showHost,
+    reviews: Boolean(x.reviews && x.reviews.count > 0),
+  };
+  // In the admin preview each part sits in a marked wrapper, so a click can name it.
+  const mark = (id: SectionId) =>
+    preview ? (
+      <div key={id} data-pv={`part:${id}`}>
+        {parts[id]}
+      </div>
+    ) : (
+      <Fragment key={id}>{parts[id]}</Fragment>
+    );
   for (const section of orderedSections(content)) {
-    if (!section.show) continue;
-    if (headParts.includes(section.id)) run.push(<Fragment key={section.id}>{parts[section.id]}</Fragment>);
+    if (!section.show || !present[section.id]) continue;
+    if (headParts.includes(section.id)) run.push(mark(section.id));
     else {
       flush();
-      body.push(<Fragment key={section.id}>{parts[section.id]}</Fragment>);
+      body.push(mark(section.id));
     }
   }
   flush();
@@ -562,7 +609,9 @@ function Populated({
         </div>
 
         <aside className={styles.side}>
-          {isFixedShown(content, "booking") ? <BookingBar
+          {isFixedShown(content, "booking") ? (
+            <div data-pv={preview ? "part:booking" : undefined} style={preview ? { display: "contents" } : undefined}>
+              <BookingBar
             priceFrom={x.price.fromAmount}
             askForPrice={asksForPrice(x)}
             unit={venue ? barUnit(content.priceUnit) : undefined}
@@ -574,12 +623,14 @@ function Populated({
             onCallToBook={onCallToBook}
             onBookLink={onBookLink}
             onBookClick={onBookClick}
-          /> : null}
+          />
+            </div>
+          ) : null}
         </aside>
       </div>
 
       {related.length > 0 && isFixedShown(content, "more") && (
-        <section className={styles.block} aria-labelledby="more-related">
+        <section className={styles.block} aria-labelledby="more-related" data-pv={preview ? "part:more" : undefined}>
           <h2 id="more-related" className="t-title">
             More in Goa
           </h2>

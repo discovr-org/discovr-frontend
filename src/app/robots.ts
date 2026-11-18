@@ -3,7 +3,7 @@ import { SITE_URL } from "@/shared/seo/utils/site";
 
 // Private screens are blocked from crawling, not tagged noindex.
 // AI crawlers are allowed on purpose: we want to be cited.
-const PRIVATE = ["/profile", "/saved", "/search", "/ingest/", "/q/", "/~offline"];
+const PRIVATE = ["/preview/", "/profile", "/saved", "/search", "/ingest/", "/q/", "/~offline"];
 
 // Named AI crawlers repeat the rules so a later edit to "*" can't block them by accident.
 const AI_BOTS = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "PerplexityBot", "Google-Extended"];

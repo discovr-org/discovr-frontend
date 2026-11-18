@@ -13,6 +13,14 @@ export function storyBlocks(x: Experience): StoryBlock[] {
   return x.content?.hideStoryPhotos ? blocks.filter((b) => b.type !== "photo") : blocks;
 }
 
+/** Original positions of the blocks `storyBlocks` shows, when the story is the stored one. Used by the admin preview. */
+export function storyIndexes(x: Experience): number[] | undefined {
+  const stored = x.content?.blocks;
+  if (isVenueListing(x) || !stored?.length) return undefined;
+  const shown = stored.map((_, i) => i).filter((i) => stored[i].show !== false);
+  return x.content?.hideStoryPhotos ? shown.filter((i) => stored[i].type !== "photo") : shown;
+}
+
 function tripStory(x: Experience): StoryBlock[] {
   const c = x.content ?? {};
   const blocks: StoryBlock[] = [{ type: "heading", level: "section", text: x.title }, { type: "line" }];

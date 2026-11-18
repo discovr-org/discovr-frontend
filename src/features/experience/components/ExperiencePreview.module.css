@@ -1,0 +1,80 @@
+/* Editor marks on the live page. The page itself is untouched; these only draw over it. */
+.root {
+  min-height: 100dvh;
+}
+
+.root :global([data-pv]) {
+  position: relative;
+  cursor: pointer;
+}
+
+.root :global([data-pv-hover]),
+.root :global([data-pv-hover] > *) {
+  outline: 1.5px dashed var(--ink-muted);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.root :global([data-pv-on]) {
+  outline: 2px solid var(--ink-primary);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+/* Wrappers with display: contents have no box, so mark what is inside. */
+.root :global([data-pv-on][style*="contents"]) {
+  outline: 0;
+}
+
+.root :global([data-pv-on][style*="contents"] > *) {
+  outline: 2px solid var(--ink-primary);
+  outline-offset: -2px;
+}
+
+/* Arrange mode: parts jiggle, a corner badge removes, the drop target is outlined. */
+.arrange :global([data-pv]:not([data-pv="part:gallery"]):not([data-pv="part:booking"]):not([data-pv="part:more"])) {
+  animation: jig 0.26s ease-in-out infinite alternate;
+  cursor: grab;
+}
+
+.arrange :global([data-pv]:not([data-pv="part:gallery"]):not([data-pv="part:booking"]):not([data-pv="part:more"])::before) {
+  content: "–";
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--ink-primary);
+  color: var(--surface-canvas);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.arrange :global([data-pv-drag]) {
+  opacity: 0.4;
+  animation: none;
+}
+
+.arrange :global([data-pv-over]) {
+  outline: 2px solid var(--ink-primary);
+  outline-offset: 4px;
+}
+
+@keyframes jig {
+  from {
+    transform: rotate(-0.4deg);
+  }
+  to {
+    transform: rotate(0.4deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrange :global([data-pv]) {
+    animation: none;
+  }
+}

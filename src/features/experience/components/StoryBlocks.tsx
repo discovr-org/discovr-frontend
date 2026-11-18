@@ -7,23 +7,25 @@ import styles from "../styles/storyBlocks.module.css";
 /** The About story: headings, quotes, photos, steps, callouts, checklists, FAQs, in order. */
 type StoryBlocksProps = {
   blocks: StoryBlock[];
+  /** Admin preview only: where each block sits in the saved story, so a click can name it. */
+  indexes?: number[];
   onFaqOpen?: (question: string, position: number) => void;
 };
 
-export function StoryBlocks({ blocks, onFaqOpen }: StoryBlocksProps) {
+export function StoryBlocks({ blocks, indexes, onFaqOpen }: StoryBlocksProps) {
   // Two `half` blocks in a row sit side by side; a lone one stays full width.
-  const rows: StoryBlock[][] = [];
+  const rows: number[][] = [];
   for (let i = 0; i < blocks.length; i++) {
-    if (blocks[i].size === "half" && blocks[i + 1]?.size === "half") rows.push([blocks[i], blocks[++i]]);
-    else rows.push([blocks[i]]);
+    if (blocks[i].size === "half" && blocks[i + 1]?.size === "half") rows.push([i, ++i]);
+    else rows.push([i]);
   }
   return (
     <div className={`${styles.stack} ds-keep-lines`}>
       {rows.map((row, i) => (
         <div key={i} className={row.length === 2 ? styles.halfPair : undefined}>
-          {row.map((block, j) => (
-            <div key={j}>
-              <Block block={block} onFaqOpen={onFaqOpen} />
+          {row.map((n) => (
+            <div key={n} data-pv={indexes ? `block:${indexes[n]}` : undefined}>
+              <Block block={blocks[n]} onFaqOpen={onFaqOpen} />
             </div>
           ))}
         </div>

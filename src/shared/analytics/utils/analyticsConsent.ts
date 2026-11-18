@@ -4,6 +4,8 @@ const TWELVE_MONTHS_MS = 365 * 24 * 60 * 60 * 1000;
 /** Analytics is on unless the visitor turned it off on this device in the last 12 months. */
 export function isAnalyticsOn(): boolean {
   if (typeof window === "undefined") return true;
+  // The admin editor's live preview is not a visitor.
+  if (window.location.pathname.startsWith("/preview")) return false;
   const offAt = Number(window.localStorage.getItem(KEY));
   if (!offAt) return true;
   if (Date.now() - offAt > TWELVE_MONTHS_MS) {
