@@ -1,5 +1,6 @@
 /** Where the order and visibility live: the listing's content, or its category's layout. */
-type SectionHolder = { sections?: Array<{ id: string; show?: boolean }> } | undefined;
+export type PartStyle = { space?: "none" | "large"; hide?: "mobile" | "desktop" };
+type SectionHolder = { sections?: Array<{ id: string; show?: boolean } & PartStyle> } | undefined;
 
 /** Parts of the listing page the admin can order and hide. */
 export type SectionId = "title" | "info" | "verdict" | "actions" | "about" | "menu" | "policy" | "host" | "reviews";
@@ -11,12 +12,12 @@ export const DEFAULT_SECTIONS: SectionId[] = ["title", "info", "verdict", "actio
 export type FixedId = "gallery" | "more" | "booking";
 
 /** Saved layout merged with the default: unknown ids dropped, missing ones kept in their default place. */
-export function orderedSections(content: SectionHolder): Array<{ id: SectionId; show: boolean }> {
+export function orderedSections(content: SectionHolder): Array<{ id: SectionId; show: boolean } & PartStyle> {
   const saved = content?.sections ?? [];
   const known = new Set<string>(DEFAULT_SECTIONS);
   const out = saved
     .filter((s, i) => known.has(s.id) && saved.findIndex((x) => x.id === s.id) === i)
-    .map((s) => ({ id: s.id as SectionId, show: s.show !== false }));
+    .map((s) => ({ id: s.id as SectionId, show: s.show !== false, ...(s.space ? { space: s.space } : {}), ...(s.hide ? { hide: s.hide } : {}) }));
   for (const id of DEFAULT_SECTIONS) {
     if (out.some((s) => s.id === id)) continue;
     // Keep a missing part right after the part that precedes it by default.

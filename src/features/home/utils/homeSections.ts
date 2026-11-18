@@ -1,6 +1,6 @@
 import type { FeedItem, FeedSection, SectionLayout } from "./feedData";
 
-type HomeSectionDef = {
+export type HomeSectionDef = {
   id: string;
   title: string;
   layout: SectionLayout;
@@ -8,7 +8,7 @@ type HomeSectionDef = {
   slugs: string[];
 };
 
-/** The home feed, top to bottom. Add, move or edit sections here. */
+/** The built-in feed. Used until the admin saves one, and by search and the topic pages. */
 export const HOME_SECTIONS: HomeSectionDef[] = [
   {
     id: "sundowners",
@@ -53,15 +53,18 @@ export const HOME_SECTIONS: HomeSectionDef[] = [
   { id: "tattoo", title: "Tattoo", layout: "stack", slugs: ["angel-tattoo"] },
 ];
 
+/** The admin's sections when it saved some, else the built-in feed. */
+export const sectionsOf = (saved?: HomeSectionDef[] | null): HomeSectionDef[] => (saved?.length ? saved : HOME_SECTIONS);
+
 /**
  * Fill each section with the cards the API returned. A listing shows once on the page:
  * if a slug sits in two sections, only the first keeps it. Sections with no live cards are dropped,
  * and a section left with one card shows it full width instead of as a rail.
  */
-export function buildHomeSections(cards: FeedItem[]): FeedSection[] {
+export function buildHomeSections(cards: FeedItem[], defs: HomeSectionDef[] = HOME_SECTIONS): FeedSection[] {
   const bySlug = new Map(cards.map((card) => [card.slug, card]));
   const shown = new Set<string>();
-  return HOME_SECTIONS.map(({ slugs, layout, ...section }) => {
+  return defs.map(({ slugs, layout, ...section }) => {
     const items = slugs.flatMap((slug) => {
       const card = bySlug.get(slug);
       if (!card || shown.has(slug)) return [];

@@ -4,7 +4,7 @@ import { buildHubs } from "@/features/hubs/utils/hubs";
 import { GOA_ANSWER, GOA_FAQS } from "@/features/hubs/utils/guides";
 import { JsonLd } from "@/shared/seo/components/JsonLd";
 import { SITE_URL } from "@/shared/seo/utils/site";
-import { getCatalogCards } from "@/shared/utils/catalogCached";
+import { getCatalogCards, getHomeSections } from "@/shared/utils/catalogCached";
 
 const INTRO = GOA_ANSWER;
 
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const cards = await getCatalogCards().catch(() => []);
-  const hubs = buildHubs(cards);
+  const hubs = buildHubs(cards, await getHomeSections());
   return (
     <>
       <JsonLd

@@ -4,19 +4,19 @@ import { HubPage } from "@/features/hubs/components/HubPage";
 import { FALLBACK_HUB_SLUGS, buildHubs } from "@/features/hubs/utils/hubs";
 import { JsonLd } from "@/shared/seo/components/JsonLd";
 import { SITE_URL } from "@/shared/seo/utils/site";
-import { getCatalogCards } from "@/shared/utils/catalogCached";
+import { getCatalogCards, getHomeSections } from "@/shared/utils/catalogCached";
 
 type PageProps = { params: Promise<{ hub: string }> };
 
 async function findHub(slug: string) {
   const cards = await getCatalogCards().catch(() => []);
-  const hubs = buildHubs(cards);
+  const hubs = buildHubs(cards, await getHomeSections());
   return { hub: hubs.find((h) => h.slug === slug), hubs };
 }
 
 export async function generateStaticParams() {
   const cards = await getCatalogCards().catch(() => []);
-  const slugs = buildHubs(cards).map((h) => h.slug);
+  const slugs = buildHubs(cards, await getHomeSections()).map((h) => h.slug);
   return (slugs.length ? slugs : FALLBACK_HUB_SLUGS).map((hub) => ({ hub }));
 }
 

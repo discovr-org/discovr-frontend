@@ -1,3 +1,5 @@
+import type { SiteSettings } from "@/shared/utils/siteSettings";
+import type { HomeSectionDef } from "@/features/home/utils/homeSections";
 import type {
   Experience,
   ExperienceContent,
@@ -188,6 +190,18 @@ async function getJson<T>(path: string): Promise<T | null> {
   } catch {
     return null;
   }
+}
+
+/** The words and links the admin set, or null when the API is out of reach. */
+export async function fetchSiteSettings(): Promise<Partial<SiteSettings> | null> {
+  const data = await getJson<{ settings: Partial<SiteSettings> }>("/v1/catalog/site");
+  return data?.settings ?? null;
+}
+
+/** The home sections the admin saved, or null when none were (the built-in feed then stays). */
+export async function fetchHomeFeed(): Promise<HomeSectionDef[] | null> {
+  const data = await getJson<{ sections: HomeSectionDef[] | null }>("/v1/catalog/home");
+  return data?.sections?.length ? data.sections : null;
 }
 
 /** Every live listing as a card. Which ones show where is up to the screen. */

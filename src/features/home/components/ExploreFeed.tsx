@@ -15,7 +15,7 @@ import {
 } from "@/features/home/utils/feedFilters";
 import { FilterSheet } from "@/features/home/components/FilterSheet";
 import { searchCards } from "@/features/home/utils/searchCards";
-import { buildHomeSections } from "@/features/home/utils/homeSections";
+import { buildHomeSections, sectionsOf, type HomeSectionDef } from "@/features/home/utils/homeSections";
 import styles from "@/features/home/styles/exploreFeed.module.css";
 import { AppShell } from "@/shared/components/AppShell";
 import { EmptyState } from "@/shared/components/EmptyState";
@@ -25,6 +25,9 @@ import { useAuth } from "@/features/auth/components/AuthProvider";
 import { useToast } from "@/shared/components/Toast";
 import { hasApiBaseUrl } from "@/shared/utils/apiBase";
 import { useCatalogCards } from "@/shared/utils/useCatalogCards";
+import { useHomeFeed } from "@/shared/utils/useHomeFeed";
+import { useSiteSettings } from "@/shared/utils/useSiteSettings";
+import type { SiteSettings } from "@/shared/utils/siteSettings";
 import { FeedSkeleton } from "@/features/home/components/FeedSkeleton";
 import { HomeSection } from "@/features/home/components/HomeSection";
 import { useSaved } from "@/shared/utils/useSaved";
@@ -36,7 +39,7 @@ import { useScrollDepth } from "@/shared/analytics/utils/useScrollDepth";
 const SEARCH_SETTLE_MS = 600;
 
 /** `initialCards` come from the server so the first HTML already has every listing link. */
-export function ExploreFeed({ initialCards }: { initialCards?: FeedItem[] }) {
+export function ExploreFeed({ initialCards, initialSections, initialSettings }: { initialCards?: FeedItem[]; initialSections?: HomeSectionDef[] | null; initialSettings?: Partial<SiteSettings> | null }) {
   const [filters, setFilters] = useState<FeedFilters>(NO_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -48,7 +51,11 @@ export function ExploreFeed({ initialCards }: { initialCards?: FeedItem[] }) {
   // The saved-cache wrapper hides query data while it restores, which blanked the server HTML.
   // Fall back to the server's cards so crawlers (and first paint) get real listings.
   const cardData = cards.data ?? initialCards;
-  const sections = useMemo(() => buildHomeSections(cardData ?? []), [cardData]);
+  const feed = useHomeFeed(initialSections);
+  const site = useSiteSettings(initialSettings);
+  // Admin's sections when saved; the built-in feed until then.
+  const defs = sectionsOf(feed.data);
+  const sections = useMemo(() => buildHomeSections(cardData ?? [], defs), [cardData, defs]);
   // Cached data wins: only show loading/error when there is nothing to paint.
   const loadState = cardData ? "ready" : cards.isError || !hasApiBaseUrl() ? "error" : "loading";
   const saved = useSaved();
@@ -93,7 +100,7 @@ export function ExploreFeed({ initialCards }: { initialCards?: FeedItem[] }) {
   const searching = needle.length > 0;
 
   const searchResults = useMemo(
-    () => (searching ? searchCards(allCards, needle) : []),
+    () => (searching ? searchCards(allCards, needle, defs) : []),
     [needle, searching, allCards],
   );
 
@@ -145,7 +152,7 @@ export function ExploreFeed({ initialCards }: { initialCards?: FeedItem[] }) {
               height={25}
             />
             <span className={styles.tagline}>
-              Goa, from people who know where to go
+              {site.tagline}
             </span>
           </h1>
 
@@ -160,7 +167,7 @@ export function ExploreFeed({ initialCards }: { initialCards?: FeedItem[] }) {
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search Goa"
+            placeholder={site.searchPlaceholder}
             enterKeyHint="search"
             autoComplete="off"
           />

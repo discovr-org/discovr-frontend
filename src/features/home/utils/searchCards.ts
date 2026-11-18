@@ -1,5 +1,5 @@
 import type { FeedItem } from "./feedData";
-import { HOME_SECTIONS } from "./homeSections";
+import { HOME_SECTIONS, type HomeSectionDef } from "./homeSections";
 
 /** Lowercase and strip accents: "Ānamiva" → "anamiva". */
 export function normalize(text: string): string {
@@ -40,11 +40,12 @@ function tokenScore(token: string, fieldWords: string[], weight: number, fuzzy: 
   return best;
 }
 
-const sectionTitlesBySlug = new Map<string, string[]>();
-for (const section of HOME_SECTIONS) {
-  for (const slug of section.slugs) {
-    sectionTitlesBySlug.set(slug, [...(sectionTitlesBySlug.get(slug) ?? []), section.title]);
+function titlesBySlug(defs: HomeSectionDef[]): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  for (const section of defs) {
+    for (const slug of section.slugs) map.set(slug, [...(map.get(slug) ?? []), section.title]);
   }
+  return map;
 }
 
 /**
@@ -52,14 +53,15 @@ for (const section of HOME_SECTIONS) {
  * home sections it sits in (so "nightlife" or "sundowners" work). Prefixes count;
  * one-letter typos only when nothing matches exactly. Best matches first.
  */
-export function searchCards(items: FeedItem[], query: string): FeedItem[] {
+export function searchCards(items: FeedItem[], query: string, defs: HomeSectionDef[] = HOME_SECTIONS): FeedItem[] {
   const tokens = words(query);
   if (!tokens.length) return [];
-  const exact = rank(items, tokens, false);
-  return exact.length ? exact : rank(items, tokens, true);
+  const titles = titlesBySlug(defs);
+  const exact = rank(items, tokens, false, titles);
+  return exact.length ? exact : rank(items, tokens, true, titles);
 }
 
-function rank(items: FeedItem[], tokens: string[], fuzzy: boolean): FeedItem[] {
+function rank(items: FeedItem[], tokens: string[], fuzzy: boolean, sectionTitlesBySlug: Map<string, string[]>): FeedItem[] {
   const scored: { item: FeedItem; score: number }[] = [];
   for (const item of items) {
     const fields: [string[], number][] = [

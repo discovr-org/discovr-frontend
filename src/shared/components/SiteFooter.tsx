@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { MouseEvent } from "react";
 import { track } from "@/shared/analytics/utils/track";
 // Trip-updates signup (hidden for now) also needs: useId, useState, FormEvent, subscribeTripUpdates.
+import { useSiteSettings } from "@/shared/utils/useSiteSettings";
 import { DISCOVR_PHONE, DISCOVR_PHONE_DISPLAY } from "@/shared/utils/discovrContact";
 import { MessageIcon, PhoneIcon } from "./icons";
 import styles from "./SiteFooter.module.css";
@@ -29,6 +30,7 @@ type SiteFooterProps = {
 /** Page footer on home and listing pages: links, trip-updates signup, legal, wordmark. */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used by the hidden trip-updates signup
 export function SiteFooter({ source }: SiteFooterProps) {
+  const site = useSiteSettings();
   /* Trip-updates signup: hidden for now, bring back with the section below.
   const id = useId();
   const [phone, setPhone] = useState("");
@@ -54,7 +56,7 @@ export function SiteFooter({ source }: SiteFooterProps) {
       <div className={styles.inner}>
         <div className={styles.grid}>
           <div className={styles.intro}>
-            <p className={styles.promise}>discovr the best of what Goa has to offer</p>
+            <p className={styles.promise}>{site.footerPromise}</p>
             <ul className={styles.icons} aria-label="Reach us">
               <li>
                 <a
@@ -81,12 +83,11 @@ export function SiteFooter({ source }: SiteFooterProps) {
 
           <nav className={styles.links} aria-label="Footer">
             <ul>
-              <li><Link href="/saved">Saved</Link></li>
-              <li><Link href="/goa-for-you">Things to do in Goa</Link></li>
-              <li><Link href="/about">About us</Link></li>
-              <li><Link href="/how-we-pick">How we pick</Link></li>
-              <li><Link href="/list-with-us">List with us</Link></li>
-              <li><Link href="/help">Help</Link></li>
+              {site.footerLinks.map((l) => (
+                <li key={l.href + l.label}>
+                  {l.href.startsWith("/") ? <Link href={l.href}>{l.label}</Link> : <a href={l.href} target="_blank" rel="noopener noreferrer">{l.label}</a>}
+                </li>
+              ))}
             </ul>
           </nav>
 

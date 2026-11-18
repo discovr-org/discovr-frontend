@@ -24,7 +24,7 @@ export function StoryBlocks({ blocks, indexes, onFaqOpen }: StoryBlocksProps) {
       {rows.map((row, i) => (
         <div key={i} className={row.length === 2 ? styles.halfPair : undefined}>
           {row.map((n) => (
-            <div key={n} data-pv={indexes ? `block:${indexes[n]}` : undefined}>
+            <div key={n} data-pv={indexes ? `block:${indexes[n]}` : undefined} data-space={blocks[n].space} data-hide={blocks[n].hide}>
               <Block block={blocks[n]} onFaqOpen={onFaqOpen} />
             </div>
           ))}

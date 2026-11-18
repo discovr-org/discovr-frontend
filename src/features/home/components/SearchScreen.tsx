@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { priceLabel } from "@/features/home/utils/feedData";
 import { areaOf } from "@/features/home/utils/feedFilters";
+import { sectionsOf } from "@/features/home/utils/homeSections";
 import { searchCards } from "@/features/home/utils/searchCards";
+import { useHomeFeed } from "@/shared/utils/useHomeFeed";
 import { AppShell } from "@/shared/components/AppShell";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { ExperienceCard } from "@/shared/components/ExperienceCard";
@@ -23,12 +25,14 @@ export function SearchScreen() {
   const [q, setQ] = useState("");
   const cards = useCatalogCards();
   const items = useMemo(() => cards.data ?? [], [cards.data]);
+  const feed = useHomeFeed();
+  const defs = sectionsOf(feed.data);
   const loadError = !cards.data && cards.isError;
   const saved = useSaved();
   const auth = useAuth();
   const toast = useToast();
 
-  const results = useMemo(() => searchCards(items, q), [q, items]);
+  const results = useMemo(() => searchCards(items, q, defs), [q, items, defs]);
   const needle = q.trim();
 
   // One event per pause in typing, not per keystroke.

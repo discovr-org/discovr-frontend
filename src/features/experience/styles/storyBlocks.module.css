@@ -4,6 +4,27 @@
   gap: var(--space-4);
 }
 
+/* Admin style settings on a block. */
+.stack [data-space="none"] {
+  margin-top: calc(var(--space-4) * -1);
+}
+
+.stack [data-space="large"] {
+  margin-top: var(--space-4);
+}
+
+@media (max-width: 899px) {
+  .stack [data-hide="mobile"] {
+    display: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .stack [data-hide="desktop"] {
+    display: none;
+  }
+}
+
 .headingSection {
   margin-top: var(--space-3);
   font-family: var(--font-display);

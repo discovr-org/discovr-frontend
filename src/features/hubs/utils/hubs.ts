@@ -1,6 +1,6 @@
 import type { FeedItem } from "@/features/home/utils/feedData";
 import { areaOf } from "@/features/home/utils/feedFilters";
-import { HOME_SECTIONS } from "@/features/home/utils/homeSections";
+import { HOME_SECTIONS, type HomeSectionDef } from "@/features/home/utils/homeSections";
 import { GUIDES, type Guide } from "@/features/hubs/utils/guides";
 import { formatPrice } from "@/shared/utils/formatPrice";
 
@@ -56,10 +56,10 @@ function intro(items: FeedItem[], where: string): string {
   return `${items.length} places ${where} that someone from our team has been to: ${names(items)}.${price}`;
 }
 
-export function buildHubs(cards: FeedItem[]): Hub[] {
+export function buildHubs(cards: FeedItem[], sections: HomeSectionDef[] = HOME_SECTIONS): Hub[] {
   const bySlug = new Map(cards.map((c) => [c.slug, c]));
 
-  const topics = HOME_SECTIONS.flatMap((s) => {
+  const topics = sections.flatMap((s) => {
     const items = s.slugs.flatMap((slug) => bySlug.get(slug) ?? []);
     if (items.length < MIN_LISTINGS) return [];
     const title = TOPIC_TITLE[s.id] ?? s.title;
@@ -69,7 +69,7 @@ export function buildHubs(cards: FeedItem[]): Hub[] {
   });
 
   const collections = COLLECTIONS.flatMap((c) => {
-    const slugs = new Set(HOME_SECTIONS.filter((s) => c.from.includes(s.id)).flatMap((s) => s.slugs));
+    const slugs = new Set(sections.filter((s) => c.from.includes(s.id)).flatMap((s) => s.slugs));
     const items = [...slugs].flatMap((slug) => bySlug.get(slug) ?? []);
     return items.length < MIN_LISTINGS
       ? []
