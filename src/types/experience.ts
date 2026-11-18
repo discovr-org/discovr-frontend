@@ -4,7 +4,8 @@ import type { Policy } from "@/shared/components/PolicyDisclosure";
 export interface Experience {
   slug: string;
   title: string;
-  host: Host;
+  /** `null` for a place with no host. */
+  host: Host | null;
   /** 4 to 8 photos. The first one is the cover and loads with priority. */
   photos: Photo[];
   /** One or two sentences in discovr's voice, from someone who went. No surrounding quotes. */
@@ -118,8 +119,14 @@ export type ExperienceContent = {
   blocks?: StoryBlock[];
   /** Order and visibility of the page parts, set in the admin. Missing = the default page. */
   sections?: Array<{ id: string; show?: boolean }>;
-  /** "link" = the book button opens `links.book`; otherwise it calls the host. */
-  bookVia?: "call" | "link";
+  /** "link" = the button opens `links.book` as "Book on <host>"; "custom" = same URL with `bookLabel`; otherwise it calls. */
+  bookVia?: "call" | "link" | "custom";
+  /** The label on the custom button. */
+  bookLabel?: string;
+  /** Replaces the left text of the booking bar ("From ₹300"). Empty = the price. */
+  barText?: string;
+  /** Small line under it. Empty = the unit ("per person"). */
+  barNote?: string;
   /** true = skip photo blocks in the story. */
   hideStoryPhotos?: boolean;
   links?: {

@@ -30,7 +30,7 @@ type ApiListingCard = {
 type ApiExperience = {
   slug: string;
   title: string;
-  host: Experience["host"];
+  host: Experience["host"] | null;
   photos: Experience["photos"];
   verdict: string;
   price: Experience["price"];
@@ -124,12 +124,14 @@ export function mapApiExperience(raw: ApiExperience): Experience {
   return {
     slug: raw.slug,
     title: raw.title,
-    host: {
-      ...raw.host,
-      languages: raw.host.languages?.length
-        ? raw.host.languages
-        : content.languages ?? [],
-    },
+    host: raw.host
+      ? {
+          ...raw.host,
+          languages: raw.host.languages?.length
+            ? raw.host.languages
+            : content.languages ?? [],
+        }
+      : null,
     photos: raw.photos ?? [],
     verdict: raw.verdict,
     price: {

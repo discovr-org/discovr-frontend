@@ -15,7 +15,7 @@ export function experienceSchema(e: Experience) {
     url,
     description: e.verdict || e.about,
     image: e.photos.map((p) => p.src),
-    inLanguage: e.host.languages.length ? e.host.languages : undefined,
+    inLanguage: e.host?.languages.length ? e.host.languages : undefined,
     ...(venue
       ? {
           address: e.place.neighborhood || e.place.name,
@@ -29,7 +29,7 @@ export function experienceSchema(e: Experience) {
             geo: { "@type": "GeoCoordinates", latitude: e.place.lat, longitude: e.place.lng },
           },
         }),
-    provider: { "@type": "Organization", name: e.host.businessName },
+    ...(e.host ? { provider: { "@type": "Organization", name: e.host.businessName } } : {}),
     ...(!e.price.askForPrice && e.price.fromAmount > 0
       ? {
           offers: {

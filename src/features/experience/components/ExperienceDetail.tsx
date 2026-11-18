@@ -140,8 +140,10 @@ export function ExperienceDetail({
 
   const dialHost = useCallback(() => {
     if (!experience) return;
-    toast(`Calling ${experience.host.businessName}`);
-    window.location.href = `tel:${experience.host.phone}`;
+    const phone = contactPhone(experience);
+    if (!phone) return;
+    toast(`Calling ${hostLabel(experience)}`);
+    window.location.href = `tel:${phone}`;
   }, [experience, toast]);
 
   const onToggleSave = useCallback(() => {
@@ -310,10 +312,10 @@ export function ExperienceDetail({
               track("book_clicked", {
                 ...listingProps(x),
                 cta: method === "link" ? "book_on_site" : "call_to_book",
-                cta_label: method === "link" ? `Book on ${x.host.businessName}` : "Call to book",
+                cta_label: method === "link" ? (x.content?.bookVia === "custom" && x.content.bookLabel) || `Book on ${hostLabel(x)}` : "Call to book",
                 location: "booking_bar",
                 method,
-                host: x.host.businessName,
+                host: hostLabel(x),
                 gated_by_auth: !auth.user,
               });
             }}
@@ -349,7 +351,7 @@ export function ExperienceDetail({
           open={menuAt !== null}
           startIndex={menuAt ?? 0}
           pages={experience.menu.pages}
-          venueName={experience.host.businessName}
+          venueName={hostLabel(experience)}
           onClose={() => setMenuAt(null)}
           onPageChange={(index) =>
             track("menu_page_viewed", {
@@ -399,11 +401,14 @@ function Populated({
     googleMapsDirections(x.place.lat, x.place.lng);
   const venue = isVenueListing(x);
   // A place credits its host only when someone else owns it ("Owned by Shilpa Shetty").
-  const showHost = !venue || x.host.credit === "owned";
+  const host = x.host;
+  const hostName = hostLabel(x);
+  const phone = contactPhone(x);
+  const showHost = Boolean(host) && (!venue || host?.credit === "owned");
   // The place's own account beats the owner's (Bastian, not Shilpa Shetty).
   const instagramHandle =
     instagramHandleFromUrl(content.links?.instagram?.url) ||
-    x.host.instagramHandle?.trim();
+    host?.instagramHandle?.trim();
   const policy = x.policy;
   const terms = venue ? [policy?.summary, content.termsDetail].flatMap((t) => (t?.trim() ? [t.trim()] : [])) : [];
   const hasPolicy = Boolean(terms.length || policy?.booking.length || policy?.cancellation.length);
@@ -434,7 +439,7 @@ function Populated({
     title: (
             <TitleBlock
               title={x.title}
-              hostName={showHost ? x.host.businessName : undefined}
+              hostName={showHost ? hostName : undefined}
             />
     ),
     info: (
@@ -460,8 +465,8 @@ function Populated({
     ),
     actions: (
             <ActionRow
-              hostName={x.host.businessName}
-              phone={x.host.phone}
+              hostName={hostName}
+              phone={phone}
               directionsHref={mapsHref}
               instagramHandle={instagramHandle}
               onShare={onShare}
@@ -493,7 +498,7 @@ function Populated({
           ) : menuLink ? (
             <Section title="Menu" id="menu">
               <a className={styles.textLink} href={menuLink} target="_blank" rel="noopener noreferrer">
-                See the menu on {x.host.businessName}&apos;s site
+                See the menu on {hostName}&apos;s site
               </a>
             </Section>
           ) : null}
@@ -507,7 +512,7 @@ function Populated({
               <PolicyDisclosure
                 key={x.slug}
                 policy={policy ?? { summary: "", booking: [], cancellation: [] }}
-                hostName={x.host.businessName}
+                hostName={hostName}
                 title={venue ? "Terms and policy" : undefined}
                 terms={terms}
               />
@@ -518,9 +523,9 @@ function Populated({
     ),
     host: (
       <>
-          {showHost ? (
-            <Section title={`${CREDIT_LABEL[x.host.credit ?? "hosted"]} ${x.host.businessName}`} id="host">
-              <HostRow host={x.host} showCredit={false} />
+          {showHost && host ? (
+            <Section title={`${CREDIT_LABEL[host.credit ?? "hosted"]} ${host.businessName}`} id="host">
+              <HostRow host={host} showCredit={false} />
             </Section>
           ) : null}
 
@@ -599,7 +604,7 @@ function Populated({
           {offlineBanner}
           {body}
 
-          <Disclaimer hostName={x.host.businessName} credit={x.host.credit ?? "hosted"} />
+          {host ? <Disclaimer hostName={host.businessName} credit={host.credit ?? "hosted"} /> : null}
 
           <div className={styles.links}>
             <button type="button" className={styles.textLink} onClick={onReport}>
@@ -619,10 +624,13 @@ function Populated({
             askForPrice={asksForPrice(x)}
             unit={venue ? barUnit(content.priceUnit) : undefined}
             walkIn={venue && content.walkIn === true}
-            bookHref={content.bookVia === "link" ? content.links?.book?.url || undefined : undefined}
+            bookHref={content.bookVia === "link" || content.bookVia === "custom" ? content.links?.book?.url || undefined : undefined}
+            bookLabel={content.bookVia === "custom" ? content.bookLabel : undefined}
+            leftText={content.barText}
+            leftNote={content.barNote}
             taxes={x.price.taxes ?? "inclusive"}
-            phone={x.host.phone}
-            hostBusinessName={x.host.businessName}
+            phone={phone}
+            hostBusinessName={hostName}
             onCallToBook={onCallToBook}
             onBookLink={onBookLink}
             onBookClick={onBookClick}
@@ -661,6 +669,16 @@ function Populated({
       )}
     </>
   );
+}
+
+/** Who the page names when it needs a name: the host, else the place itself. */
+function hostLabel(x: Experience): string {
+  return x.host?.businessName ?? x.place.name;
+}
+
+/** The number Call dials: the host's, else the first number on the listing. Empty = nothing to call. */
+function contactPhone(x: Experience): string {
+  return x.host?.phone || x.content?.phones?.find((p) => p.trim()) || "";
 }
 
 const CONTACT_CTAS = {

@@ -17,23 +17,25 @@ export interface ActionRowProps {
 
 /** Call, Directions, Instagram, Share. Real links where they leave the app. */
 export function ActionRow({ hostName, phone, directionsHref, instagramHandle, onShare, onAction, onCall }: ActionRowProps) {
-  const columns = instagramHandle ? 4 : 3;
+  const columns = 2 + (instagramHandle ? 1 : 0) + (phone ? 1 : 0);
   return (
-    <div className={styles.row} style={columns === 3 ? { gridTemplateColumns: "repeat(3, 1fr)" } : undefined} role="group" aria-label="Contact the host">
-      <a
-        className={styles.tile}
-        href={`tel:${phone}`}
-        aria-label={`Call ${hostName}`}
-        onClick={(e) => {
-          onAction?.("call");
-          if (!onCall) return;
-          e.preventDefault();
-          onCall();
-        }}
-      >
-        <PhoneIcon />
-        <span>Call</span>
-      </a>
+    <div className={styles.row} style={columns === 4 ? undefined : { gridTemplateColumns: `repeat(${columns}, 1fr)` }} role="group" aria-label="Contact the host">
+      {phone ? (
+        <a
+          className={styles.tile}
+          href={`tel:${phone}`}
+          aria-label={`Call ${hostName}`}
+          onClick={(e) => {
+            onAction?.("call");
+            if (!onCall) return;
+            e.preventDefault();
+            onCall();
+          }}
+        >
+          <PhoneIcon />
+          <span>Call</span>
+        </a>
+      ) : null}
       <a
         className={styles.tile}
         href={directionsHref}

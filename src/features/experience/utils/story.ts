@@ -68,7 +68,7 @@ function tripStory(x: Experience): StoryBlock[] {
       type: "steps",
       items: [
         { marker: "1.", title: "Find it on discovr", caption: "You're here already" },
-        { marker: "2.", title: "Call & book your slot", caption: `Call ${x.host.businessName} directly to book` },
+        { marker: "2.", title: "Call & book your slot", caption: x.host ? `Call ${x.host.businessName} directly to book` : "Call to book" },
         { marker: "3.", title: "Show up", caption: `Arrive at ${x.place.neighborhood?.trim() || x.place.name} on time for your slot` },
       ],
     },

@@ -13,6 +13,12 @@ export interface BookingBarProps {
   walkIn?: boolean;
   /** The host's own booking page. When set, the button opens it instead of calling. */
   bookHref?: string;
+  /** Label for the booking-page button. Defaults to "Book on <host>". */
+  bookLabel?: string;
+  /** Replaces the left text ("From ₹300"). */
+  leftText?: string;
+  /** Replaces the small line under it. */
+  leftNote?: string;
   /** What the price buys, e.g. "for two". Defaults to "per person"; empty hides it. */
   unit?: string;
   /** Adds "+ taxes" after the unit when taxes are extra. */
@@ -40,6 +46,9 @@ export function BookingBar({
   priceFrom,
   askForPrice,
   bookHref,
+  bookLabel,
+  leftText,
+  leftNote,
   walkIn,
   unit = "per person",
   taxes = "inclusive",
@@ -66,6 +75,10 @@ export function BookingBar({
     };
   }, [hidden, askForPrice, bookHref, walkIn]);
 
+  // The left text and the line under it: the admin's words when set, else the price and its unit.
+  const autoNote = askForPrice ? "" : [unit, taxes === "extra" ? "+ taxes" : ""].filter(Boolean).join(" ");
+  const note = leftNote?.trim() || (leftText?.trim() ? "" : autoNote);
+  const bookText = bookLabel?.trim() || `Book on ${hostBusinessName}`;
   const callLabel = `Call ${hostBusinessName} to book`;
   const callContent = (
     <>
@@ -82,18 +95,8 @@ export function BookingBar({
       hidden={hidden}
     >
       <div className={styles.money}>
-        {askForPrice ? (
-          <span className="t-price">Ask for the price</span>
-        ) : (
-          <>
-            <span className="t-price">From {rupees(priceFrom)}</span>
-            {unit || taxes === "extra" ? (
-              <span className={styles.unit}>
-                {[unit, taxes === "extra" ? "+ taxes" : ""].filter(Boolean).join(" ")}
-              </span>
-            ) : null}
-          </>
-        )}
+        <span className="t-price">{leftText || (askForPrice ? "Ask for the price" : `From ${rupees(priceFrom)}`)}</span>
+        {note ? <span className={styles.unit}>{note}</span> : null}
         {walkIn ? <span className={styles.unit}>No booking needed, just walk in</span> : null}
       </div>
       {bookHref ? (
@@ -102,7 +105,7 @@ export function BookingBar({
           href={bookHref}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={`Book on ${hostBusinessName}'s site (opens in a new tab)`}
+          aria-label={`${bookText} (opens in a new tab)`}
           data-attr="book-cta"
           onClick={(e) => {
             onBookClick?.("link");
@@ -111,9 +114,9 @@ export function BookingBar({
             onBookLink(bookHref);
           }}
         >
-          Book on {hostBusinessName}
+          {bookText}
         </a>
-      ) : onCallToBook ? (
+      ) : !phone ? null : onCallToBook ? (
         <button
           type="button"
           className={styles.cta}
