@@ -1,4 +1,5 @@
-import type { ExperienceContent } from "@/types/experience";
+/** Where the order and visibility live: the listing's content, or its category's layout. */
+type SectionHolder = { sections?: Array<{ id: string; show?: boolean }> } | undefined;
 
 /** Parts of the listing page the admin can order and hide. */
 export type SectionId = "title" | "info" | "verdict" | "actions" | "about" | "menu" | "policy" | "host" | "reviews";
@@ -10,7 +11,7 @@ export const DEFAULT_SECTIONS: SectionId[] = ["title", "info", "verdict", "actio
 export type FixedId = "gallery" | "more" | "booking";
 
 /** Saved layout merged with the default: unknown ids dropped, missing ones kept in their default place. */
-export function orderedSections(content: ExperienceContent | undefined): Array<{ id: SectionId; show: boolean }> {
+export function orderedSections(content: SectionHolder): Array<{ id: SectionId; show: boolean }> {
   const saved = content?.sections ?? [];
   const known = new Set<string>(DEFAULT_SECTIONS);
   const out = saved
@@ -27,7 +28,7 @@ export function orderedSections(content: ExperienceContent | undefined): Array<{
 }
 
 /** Fixed parts (photos, More in Goa, booking bar) are shown unless the admin switched them off. */
-export function isFixedShown(content: ExperienceContent | undefined, id: FixedId): boolean {
+export function isFixedShown(content: SectionHolder, id: FixedId): boolean {
   const saved = content?.sections?.find((s) => s.id === id);
   return saved ? saved.show !== false : true;
 }

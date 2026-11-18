@@ -392,6 +392,8 @@ function Populated({
   onToggleRelatedSave: (slug: string) => void;
 }) {
   const content = x.content ?? {};
+  // Order and visibility come from the category when there is one, else from the listing.
+  const layoutHolder = x.category ? x.category.layout : content;
   const mapsHref =
     content.links?.maps?.url ||
     googleMapsDirections(x.place.lat, x.place.lng);
@@ -579,7 +581,7 @@ function Populated({
     ) : (
       <Fragment key={id}>{parts[id]}</Fragment>
     );
-  for (const section of orderedSections(content)) {
+  for (const section of orderedSections(layoutHolder)) {
     if (!section.show || !present[section.id]) continue;
     if (headParts.includes(section.id)) run.push(mark(section.id));
     else {
@@ -609,7 +611,7 @@ function Populated({
         </div>
 
         <aside className={styles.side}>
-          {isFixedShown(content, "booking") ? (
+          {isFixedShown(layoutHolder, "booking") ? (
             <div data-pv={preview ? "part:booking" : undefined} style={preview ? { display: "contents" } : undefined}>
               <BookingBar
             priceFrom={x.price.fromAmount}
@@ -629,7 +631,7 @@ function Populated({
         </aside>
       </div>
 
-      {related.length > 0 && isFixedShown(content, "more") && (
+      {related.length > 0 && isFixedShown(layoutHolder, "more") && (
         <section className={styles.block} aria-labelledby="more-related" data-pv={preview ? "part:more" : undefined}>
           <h2 id="more-related" className="t-title">
             More in Goa

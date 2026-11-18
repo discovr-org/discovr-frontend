@@ -30,7 +30,31 @@ export interface Experience {
   hours?: ListingHours;
   tags?: string[];
   content?: ExperienceContent;
+  /** Set when the listing uses a category: the page layout it shares, filled from this listing's fields. */
+  category?: { slug: string; name: string; layout: CategoryLayout };
 }
+
+/** A category's page layout. Story blocks name the listing field they fill (`source`). */
+export type CategoryLayout = {
+  sections?: Array<{ id: string; show?: boolean }>;
+  story?: LayoutBlock[];
+};
+
+/** `when`: show the block only if this listing field is filled (for headings and dividers that belong to a section). */
+export type LayoutBlock = { size?: "full" | "half"; show?: boolean; when?: string } & (
+  | { type: "heading"; level: "section" | "small"; text?: string; source?: string }
+  | { type: "line" }
+  | { type: "text"; label?: string; text?: string; source?: string }
+  | { type: "quote"; text?: string; source?: string }
+  | { type: "checklist"; title: string; source: string }
+  | { type: "forNotFor"; columns: Array<{ title: string; tone: "included" | "bring"; source: string }> }
+  | { type: "callout"; tone: "heads_up" | "tip"; title: string; text?: string; source?: string }
+  | { type: "faq"; source?: string }
+  | { type: "steps"; source?: string }
+  | { type: "stats"; tiles: Array<{ label: string; source: string }> }
+  | { type: "packages"; title?: string; source?: string }
+  | { type: "photo"; source: string }
+);
 
 export type ListingHours = {
   days?: string;
@@ -86,6 +110,10 @@ export type ExperienceContent = {
   difficulty?: string;
   tagsOnDisplay?: string[];
   faqs?: Array<{ q: string; a: string }>;
+  /** Story fields a category layout can show: photos, process steps, price rows. */
+  storyPhotos?: Array<{ src: string; alt?: string; caption?: string }>;
+  steps?: Array<{ marker?: string; title: string; caption?: string }>;
+  packages?: Array<{ name: string; detail?: string; price: string }>;
   /** The About story, in reading order. When absent the page builds one from the fields above. */
   blocks?: StoryBlock[];
   /** Order and visibility of the page parts, set in the admin. Missing = the default page. */

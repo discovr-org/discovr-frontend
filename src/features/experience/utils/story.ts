@@ -1,4 +1,5 @@
 import type { Experience, ExperienceContent, StoryBlock } from "@/types/experience";
+import { resolveLayout } from "./layout";
 import { isVenueListing } from "./listingKind";
 import { rupees } from "./schedule";
 
@@ -7,6 +8,12 @@ import { rupees } from "./schedule";
  * them, else builds the same shape from the structured fields.
  */
 export function storyBlocks(x: Experience): StoryBlock[] {
+  // A category owns the story layout: it is filled from this listing's fields.
+  const layout = x.category?.layout.story;
+  if (layout) {
+    const blocks = resolveLayout(x, layout).map((r) => r.block);
+    return x.content?.hideStoryPhotos ? blocks.filter((b) => b.type !== "photo") : blocks;
+  }
   const stored = x.content?.blocks;
   // Places always build from the admin fields so edits show up; their stored story only lends its photos.
   const blocks = isVenueListing(x) ? venueStory(x) : stored?.length ? stored.filter((b) => b.show !== false) : tripStory(x);
@@ -15,6 +22,11 @@ export function storyBlocks(x: Experience): StoryBlock[] {
 
 /** Original positions of the blocks `storyBlocks` shows, when the story is the stored one. Used by the admin preview. */
 export function storyIndexes(x: Experience): number[] | undefined {
+  const layout = x.category?.layout.story;
+  if (layout) {
+    const shown = resolveLayout(x, layout);
+    return x.content?.hideStoryPhotos ? shown.filter((r) => r.block.type !== "photo").map((r) => r.index) : shown.map((r) => r.index);
+  }
   const stored = x.content?.blocks;
   if (isVenueListing(x) || !stored?.length) return undefined;
   const shown = stored.map((_, i) => i).filter((i) => stored[i].show !== false);

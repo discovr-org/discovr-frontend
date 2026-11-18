@@ -49,6 +49,7 @@ type ApiExperience = {
   reviews?: Experience["reviews"];
   tags?: string[];
   content?: ExperienceContent;
+  category?: Experience["category"];
 };
 
 const WEEKDAYS: Weekday[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -154,6 +155,7 @@ export function mapApiExperience(raw: ApiExperience): Experience {
     reviews: raw.reviews,
     tags: raw.tags ?? content.tagsOnDisplay ?? [],
     content,
+    category: raw.category,
   };
 }
 
