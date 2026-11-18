@@ -15,6 +15,35 @@ import styles from "./ExperiencePreview.module.css";
  */
 type EditorState = { selected: string | null; hover: string | null; arranging: boolean };
 
+const PART_LABEL: Record<string, string> = {
+  gallery: "Photo gallery",
+  title: "Title & price",
+  info: "Price, place & hours",
+  verdict: "Verdict",
+  actions: "Action buttons",
+  about: "About",
+  menu: "Menu",
+  policy: "Booking & cancellation",
+  host: "Host card",
+  reviews: "Reviews",
+  more: "More in Goa",
+  booking: "Booking bar",
+};
+const BLOCK_LABEL: Record<string, string> = {
+  heading: "Heading",
+  line: "Divider",
+  quote: "Quote",
+  text: "Text",
+  photo: "Photo",
+  forNotFor: "Included / Not included",
+  steps: "Steps",
+  callout: "Callout",
+  checklist: "Checklist",
+  faq: "FAQ",
+  stats: "Stat tiles",
+  packages: "Packages & prices",
+};
+
 const send = (message: Record<string, unknown>) => window.parent.postMessage(message, "*");
 const MOVABLE = /^(part:(title|info|verdict|actions|about|menu|policy|host|reviews)|block:\d+)$/;
 const kindOf = (id: string) => id.split(":")[0];
@@ -25,7 +54,8 @@ export function ExperiencePreview() {
   const [related, setRelated] = useState<FeedItem[]>([]);
   const [editor, setEditor] = useState<EditorState>({ selected: null, hover: null, arranging: false });
   const root = useRef<HTMLDivElement>(null);
-  const press = useRef<{ id: string; x: number; y: number; timer: number; dragging: boolean; over: string | null } | null>(null);
+  const press = useRef<{ id: string; x: number; y: number; timer: number; dragging: boolean; over: string | null; after: boolean; ghost: HTMLElement | null; dx: number; dy: number } | null>(null);
+  const line = useRef<HTMLDivElement | null>(null);
   const suppressClick = useRef(false);
 
   useEffect(() => {
@@ -52,19 +82,27 @@ export function ExperiencePreview() {
       n.removeAttribute("data-pv-on");
       n.removeAttribute("data-pv-hover");
     });
-    if (editor.selected) el.querySelector(`[data-pv="${editor.selected}"]`)?.setAttribute("data-pv-on", "");
+    if (editor.selected) {
+      const target = el.querySelector(`[data-pv="${editor.selected}"]`);
+      const [kind, key] = editor.selected.split(":");
+      const label = kind === "part" ? PART_LABEL[key] : BLOCK_LABEL[experience?.content?.blocks?.[Number(key)]?.type ?? ""];
+      target?.setAttribute("data-pv-on", "");
+      if (label) target?.setAttribute("data-pv-label", label);
+    }
     if (editor.hover && editor.hover !== editor.selected) el.querySelector(`[data-pv="${editor.hover}"]`)?.setAttribute("data-pv-hover", "");
   });
 
-  const clearOver = () => root.current?.querySelectorAll("[data-pv-over],[data-pv-drag]").forEach((n) => {
-    n.removeAttribute("data-pv-over");
-    n.removeAttribute("data-pv-drag");
-  });
+  const endDrag = () => {
+    root.current?.querySelectorAll("[data-pv-drag]").forEach((n) => n.removeAttribute("data-pv-drag"));
+    press.current?.ghost?.remove();
+    line.current?.remove();
+    line.current = null;
+  };
 
   function onPointerDown(e: ReactPointerEvent) {
     const id = idOf(e.target as Element);
     if (!id || e.button !== 0) return;
-    const entry = { id, x: e.clientX, y: e.clientY, dragging: false, over: null as string | null, timer: 0 };
+    const entry = { id, x: e.clientX, y: e.clientY, dragging: false, over: null as string | null, after: false, ghost: null as HTMLElement | null, dx: 0, dy: 0, timer: 0 };
     // Hold a part to start arranging, like the home screen.
     if (!editor.arranging && MOVABLE.test(id)) entry.timer = window.setTimeout(() => send({ type: "pv:arrange", on: true }), 420);
     press.current = entry;
@@ -75,31 +113,59 @@ export function ExperiencePreview() {
     if (!p) return;
     if (!p.dragging && Math.hypot(e.clientX - p.x, e.clientY - p.y) > 5) {
       window.clearTimeout(p.timer);
-      if (editor.arranging && MOVABLE.test(p.id)) {
+      const el = root.current?.querySelector<HTMLElement>(`[data-pv="${p.id}"]`);
+      if (editor.arranging && MOVABLE.test(p.id) && el) {
         p.dragging = true;
-        root.current?.querySelector(`[data-pv="${p.id}"]`)?.setAttribute("data-pv-drag", "");
+        const r = el.getBoundingClientRect();
+        // The lifted copy follows the pointer; the original stays as a faded placeholder.
+        const ghost = el.cloneNode(true) as HTMLElement;
+        ghost.removeAttribute("data-pv");
+        ghost.querySelectorAll("[data-pv]").forEach((n) => n.removeAttribute("data-pv"));
+        ghost.className = `${styles.ghost}`;
+        Object.assign(ghost.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px` });
+        document.body.appendChild(ghost);
+        p.ghost = ghost;
+        p.dx = p.x - r.left;
+        p.dy = p.y - r.top;
+        el.setAttribute("data-pv-drag", "");
       }
     }
     if (!p.dragging) return;
+    if (p.ghost) p.ghost.style.transform = `translate(${e.clientX - p.x}px, ${e.clientY - p.y}px) rotate(1.2deg) scale(1.03)`;
     // Let the page scroll while dragging near an edge.
     if (e.clientY < 70) window.scrollBy(0, -14);
     else if (e.clientY > window.innerHeight - 90) window.scrollBy(0, 14);
+    // Find what is under the pointer (the lifted copy ignores pointer events).
     const target = idOf(document.elementFromPoint(e.clientX, e.clientY));
-    root.current?.querySelectorAll("[data-pv-over]").forEach((n) => n.removeAttribute("data-pv-over"));
     p.over = target && target !== p.id && MOVABLE.test(target) && kindOf(target) === kindOf(p.id) ? target : null;
-    if (p.over) root.current?.querySelector(`[data-pv="${p.over}"]`)?.setAttribute("data-pv-over", "");
+    if (!p.over) {
+      line.current?.remove();
+      line.current = null;
+      return;
+    }
+    const r = root.current!.querySelector(`[data-pv="${p.over}"]`)!.getBoundingClientRect();
+    const sideBySide = r.width < window.innerWidth * 0.6;
+    p.after = sideBySide ? e.clientX > r.left + r.width / 2 : e.clientY > r.top + r.height / 2;
+    if (!line.current) {
+      line.current = document.createElement("div");
+      line.current.className = styles.line;
+      document.body.appendChild(line.current);
+    }
+    Object.assign(line.current.style, sideBySide
+      ? { left: `${(p.after ? r.right : r.left) - 2}px`, top: `${r.top}px`, width: "4px", height: `${r.height}px` }
+      : { left: `${r.left}px`, top: `${(p.after ? r.bottom : r.top) - 2}px`, width: `${r.width}px`, height: "4px" });
   }
 
   function onPointerUp() {
     const p = press.current;
-    press.current = null;
     if (!p) return;
     window.clearTimeout(p.timer);
     if (p.dragging) {
       suppressClick.current = true;
-      if (p.over) send({ type: "pv:move", from: p.id, to: p.over });
+      if (p.over) send({ type: "pv:move", from: p.id, to: p.over, after: p.after });
     }
-    clearOver();
+    endDrag();
+    press.current = null;
   }
 
   function onClickCapture(e: React.MouseEvent) {
