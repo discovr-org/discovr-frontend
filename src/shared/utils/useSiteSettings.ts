@@ -10,8 +10,8 @@ export function useSiteSettings(initial?: Partial<SiteSettings> | null): SiteSet
   const q = useQuery({
     queryKey: ["site-settings"],
     enabled: hasApiBaseUrl(),
-    initialData: initial ?? undefined,
     queryFn: async () => (await fetchSiteSettings()) ?? {},
   });
-  return withDefaults(q.data);
+  // Not `initialData`: react-query reads the clock for it, and the build refuses a clock read during prerender.
+  return withDefaults(q.data ?? initial);
 }
