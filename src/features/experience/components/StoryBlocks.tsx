@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { ReactNode } from "react";
 import { AlertIcon, ChevronDownIcon, CrossIcon, InfoIcon, TickIcon } from "@/shared/components/icons";
 import type { StoryBlock } from "@/types/experience";
 import { rupees } from "../utils/schedule";
@@ -9,10 +10,12 @@ type StoryBlocksProps = {
   blocks: StoryBlock[];
   /** Admin preview only: where each block sits in the saved story, so a click can name it. */
   indexes?: number[];
+  /** What a Menu block shows: the listing's menu pages or link. Drawn by the page, which owns the viewer. */
+  menu?: ReactNode;
   onFaqOpen?: (question: string, position: number) => void;
 };
 
-export function StoryBlocks({ blocks, indexes, onFaqOpen }: StoryBlocksProps) {
+export function StoryBlocks({ blocks, indexes, menu, onFaqOpen }: StoryBlocksProps) {
   // Two `half` blocks in a row sit side by side; a lone one stays full width.
   const rows: number[][] = [];
   for (let i = 0; i < blocks.length; i++) {
@@ -25,7 +28,7 @@ export function StoryBlocks({ blocks, indexes, onFaqOpen }: StoryBlocksProps) {
         <div key={i} className={row.length === 2 ? styles.halfPair : undefined}>
           {row.map((n) => (
             <div key={n} data-pv={indexes ? `block:${indexes[n]}` : undefined} data-space={blocks[n].space} data-hide={blocks[n].hide}>
-              <Block block={blocks[n]} onFaqOpen={onFaqOpen} />
+              <Block block={blocks[n]} menu={menu} onFaqOpen={onFaqOpen} />
             </div>
           ))}
         </div>
@@ -34,7 +37,7 @@ export function StoryBlocks({ blocks, indexes, onFaqOpen }: StoryBlocksProps) {
   );
 }
 
-function Block({ block, onFaqOpen }: { block: StoryBlock; onFaqOpen?: (question: string, position: number) => void }) {
+function Block({ block, menu, onFaqOpen }: { block: StoryBlock; menu?: ReactNode; onFaqOpen?: (question: string, position: number) => void }) {
   switch (block.type) {
     case "heading":
       return block.level === "section" ? (
@@ -44,6 +47,13 @@ function Block({ block, onFaqOpen }: { block: StoryBlock; onFaqOpen?: (question:
       );
     case "line":
       return <hr className={styles.line} />;
+    case "menu":
+      return (
+        <div id="menu">
+          <h3 className={styles.headingSection}>Menu</h3>
+          {menu}
+        </div>
+      );
     case "quote":
       return (
         <figure className={`${styles.quote} ${block.plain === false ? styles.quotePull : styles.quotePlain}`}>

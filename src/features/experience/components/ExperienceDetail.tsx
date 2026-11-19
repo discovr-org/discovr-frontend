@@ -435,6 +435,17 @@ function Populated({
       track(cta.event, { ...listingProps(x), cta: action, cta_label: cta.label, location });
     };
 
+  // The menu itself, shown as its own page part or, when the layout has a Menu block, inside the story.
+  const menuBody =
+    x.menu && x.menu.pages.length > 0 ? (
+      <MenuPages pages={x.menu.pages} onOpen={(i) => onOpenMenu(i)} />
+    ) : menuLink ? (
+      <a className={styles.textLink} href={menuLink} target="_blank" rel="noopener noreferrer">
+        See the menu on {hostName}&apos;s site
+      </a>
+    ) : null;
+  const storyHasMenu = blocks.some((b) => b.type === "menu");
+
   const parts: Record<SectionId, ReactNode> = {
     title: (
             <TitleBlock
@@ -480,6 +491,7 @@ function Populated({
             <div ref={storyRef} aria-hidden="true" />
             <StoryBlocks
               blocks={blocks}
+              menu={menuBody}
               indexes={preview ? storyIndexes(x) : undefined}
               onFaqOpen={(question, position) =>
                 track("faq_opened", { ...listingProps(x), question, position, location: "story" })
@@ -491,15 +503,9 @@ function Populated({
     ),
     menu: (
       <>
-          {x.menu && x.menu.pages.length > 0 ? (
+          {menuBody ? (
             <Section title="Menu" id="menu">
-              <MenuPages pages={x.menu.pages} onOpen={(i) => onOpenMenu(i)} />
-            </Section>
-          ) : menuLink ? (
-            <Section title="Menu" id="menu">
-              <a className={styles.textLink} href={menuLink} target="_blank" rel="noopener noreferrer">
-                See the menu on {hostName}&apos;s site
-              </a>
+              {menuBody}
             </Section>
           ) : null}
 
@@ -572,7 +578,8 @@ function Populated({
     verdict: true,
     actions: true,
     about: true,
-    menu: Boolean(x.menu && x.menu.pages.length > 0) || Boolean(menuLink),
+    // A Menu block in the story replaces the separate Menu part, so the menu is never shown twice.
+    menu: (Boolean(x.menu && x.menu.pages.length > 0) || Boolean(menuLink)) && !storyHasMenu,
     policy: hasPolicy,
     host: showHost,
     reviews: Boolean(x.reviews && x.reviews.count > 0),
