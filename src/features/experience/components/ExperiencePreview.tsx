@@ -47,6 +47,15 @@ const BLOCK_LABEL: Record<string, string> = {
 const send = (message: Record<string, unknown>) => window.parent.postMessage(message, "*");
 const MOVABLE = /^(part:(title|info|verdict|actions|about|menu|policy|host|reviews)|block:\d+)$/;
 const kindOf = (id: string) => id.split(":")[0];
+/**
+ * Where a lifted item may land. Parts go among parts and blocks among blocks. A page part may also drop into the story
+ * (onto a block), and a part that sits in the story may drop back onto a page row. About is the story itself.
+ */
+function canDrop(from: string, to: string, fromIsStoryPart: boolean): boolean {
+  if (kindOf(from) === kindOf(to)) return true;
+  if (kindOf(from) === "part") return kindOf(to) === "block" && from !== "part:about";
+  return fromIsStoryPart && to !== "part:about";
+}
 const idOf = (el: Element | null) => el?.closest<HTMLElement>("[data-pv]")?.dataset.pv ?? null;
 
 export function ExperiencePreview() {
@@ -137,7 +146,8 @@ export function ExperiencePreview() {
     else if (e.clientY > window.innerHeight - 90) window.scrollBy(0, 14);
     // Find what is under the pointer (the lifted copy ignores pointer events).
     const target = idOf(document.elementFromPoint(e.clientX, e.clientY));
-    p.over = target && target !== p.id && MOVABLE.test(target) && kindOf(target) === kindOf(p.id) ? target : null;
+    const fromIsStoryPart = Boolean(root.current?.querySelector(`[data-pv="${p.id}"]`)?.hasAttribute("data-pv-part"));
+    p.over = target && target !== p.id && MOVABLE.test(target) && canDrop(p.id, target, fromIsStoryPart) ? target : null;
     if (!p.over) {
       line.current?.remove();
       line.current = null;

@@ -605,7 +605,7 @@ function Populated({
       runStart = i + 1;
       if (present[b.id]) {
         pieces.push(
-          <div key={`part-${i}`} data-pv={storyIdx ? `block:${storyIdx[i]}` : undefined} data-space={b.space} data-hide={b.hide}>
+          <div key={`part-${i}`} data-pv={storyIdx ? `block:${storyIdx[i]}` : undefined} data-pv-part={storyIdx ? b.id : undefined} data-space={b.space} data-hide={b.hide}>
             {parts[b.id]}
           </div>,
         );
