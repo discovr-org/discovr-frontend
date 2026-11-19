@@ -45,7 +45,7 @@ export type CategoryLayout = {
 export type LayoutBlock = { size?: "full" | "half"; show?: boolean; when?: string; space?: "none" | "large"; hide?: "mobile" | "desktop" } & (
   | { type: "heading"; level: "section" | "small"; text?: string; source?: string }
   | { type: "line" }
-  | { type: "menu" }
+  | { type: "part"; id: "title" | "info" | "verdict" | "actions" | "menu" | "policy" | "host" | "reviews" }
   | { type: "text"; label?: string; text?: string; source?: string }
   | { type: "quote"; text?: string; source?: string }
   | { type: "checklist"; title: string; source: string }
@@ -153,7 +153,7 @@ export type StoryBlock = StoryBlockFlags &
   (
   | { type: "heading"; level: "section" | "small"; text: string }
   | { type: "line" }
-  | { type: "menu" }
+  | { type: "part"; id: "title" | "info" | "verdict" | "actions" | "menu" | "policy" | "host" | "reviews" }
   | { type: "quote"; text: string; plain?: boolean; cite?: string }
   /** `strong` paragraphs are labels ("Age"), the plain ones under them are values. */
   | { type: "text"; paragraphs: Array<{ text: string; strong?: boolean }> }

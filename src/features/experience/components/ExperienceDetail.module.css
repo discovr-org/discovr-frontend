@@ -25,6 +25,14 @@
   min-width: 0;
 }
 
+/* A story that holds page parts: its pieces stack the way the page's own parts do. */
+.storyParts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
 .side {
   min-width: 0;
 }

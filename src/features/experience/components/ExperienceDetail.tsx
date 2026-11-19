@@ -444,7 +444,6 @@ function Populated({
         See the menu on {hostName}&apos;s site
       </a>
     ) : null;
-  const storyHasMenu = blocks.some((b) => b.type === "menu");
 
   const parts: Record<SectionId, ReactNode> = {
     title: (
@@ -485,22 +484,7 @@ function Populated({
               onCall={onCallToBook}
             />
     ),
-    about: (
-          <Section title="About">
-            {/* Start and end markers: a long story is never half on screen at once. */}
-            <div ref={storyRef} aria-hidden="true" />
-            <StoryBlocks
-              blocks={blocks}
-              menu={menuBody}
-              indexes={preview ? storyIndexes(x) : undefined}
-              onFaqOpen={(question, position) =>
-                track("faq_opened", { ...listingProps(x), question, position, location: "story" })
-              }
-            />
-            <div ref={storyEndRef} aria-hidden="true" />
-          </Section>
-
-    ),
+    about: null, // set below, once we know which parts the story holds
     menu: (
       <>
           {menuBody ? (
@@ -578,8 +562,7 @@ function Populated({
     verdict: true,
     actions: true,
     about: true,
-    // A Menu block in the story replaces the separate Menu part, so the menu is never shown twice.
-    menu: (Boolean(x.menu && x.menu.pages.length > 0) || Boolean(menuLink)) && !storyHasMenu,
+    menu: Boolean(x.menu && x.menu.pages.length > 0) || Boolean(menuLink),
     policy: hasPolicy,
     host: showHost,
     reviews: Boolean(x.reviews && x.reviews.count > 0),
@@ -594,7 +577,48 @@ function Populated({
     ) : (
       <Fragment key={id}>{parts[id]}</Fragment>
     );
+  // A category can place page parts inside the story. The story is then drawn in pieces: runs of blocks, with those parts between.
+  const storyParts = new Set<SectionId>(blocks.flatMap((b) => (b.type === "part" ? [b.id] : [])));
+  const storyIdx = preview ? storyIndexes(x) : undefined;
+  const faqOpened = (question: string, position: number) => track("faq_opened", { ...listingProps(x), question, position, location: "story" });
+  if (storyParts.size === 0) {
+    parts.about = (
+      <Section title="About">
+        {/* Start and end markers: a long story is never half on screen at once. */}
+        <div ref={storyRef} aria-hidden="true" />
+        <StoryBlocks blocks={blocks} indexes={storyIdx} onFaqOpen={faqOpened} />
+        <div ref={storyEndRef} aria-hidden="true" />
+      </Section>
+    );
+  } else {
+    const pieces: ReactNode[] = [];
+    let runStart = 0;
+    const flushRun = (end: number) => {
+      if (end > runStart) pieces.push(<StoryBlocks key={`run-${runStart}`} blocks={blocks.slice(runStart, end)} indexes={storyIdx?.slice(runStart, end)} onFaqOpen={faqOpened} />);
+    };
+    blocks.forEach((b, i) => {
+      if (b.type !== "part") return;
+      flushRun(i);
+      runStart = i + 1;
+      if (present[b.id]) {
+        pieces.push(
+          <div key={`part-${i}`} data-pv={storyIdx ? `block:${storyIdx[i]}` : undefined} data-space={b.space} data-hide={b.hide}>
+            {parts[b.id]}
+          </div>,
+        );
+      }
+    });
+    flushRun(blocks.length);
+    parts.about = (
+      <div className={styles.storyParts}>
+        <div ref={storyRef} aria-hidden="true" />
+        {pieces}
+        <div ref={storyEndRef} aria-hidden="true" />
+      </div>
+    );
+  }
   for (const section of orderedSections(layoutHolder)) {
+    if (storyParts.has(section.id)) continue; // drawn inside the story
     if (!section.show || !present[section.id]) continue;
     if (headParts.includes(section.id)) run.push(mark(section.id, section));
     else {

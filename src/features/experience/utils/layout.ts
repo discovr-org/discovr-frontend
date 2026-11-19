@@ -43,8 +43,8 @@ function resolveBlock(x: Experience, b: LayoutBlock): StoryBlock | null {
   switch (b.type) {
     case "line":
       return { type: "line" };
-    case "menu":
-      return x.menu?.pages.length || text(x.content?.links?.menu?.url) ? { type: "menu" } : null;
+    case "part":
+      return { type: "part", id: b.id }; // the page draws it, and skips it if the listing has nothing for it
     case "heading": {
       const t = b.source ? text(valueOf(x, b.source)) : text(b.text);
       return t ? { type: "heading", level: b.level, text: t } : null;
