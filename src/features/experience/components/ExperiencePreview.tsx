@@ -169,8 +169,9 @@ export function ExperiencePreview() {
   }
 
   function onClickCapture(e: React.MouseEvent) {
-    // Nothing in the preview navigates, opens sheets, or toggles.
-    e.preventDefault();
+    // Nothing in the preview navigates or opens sheets. A FAQ question may open and close, so the admin can read the answers.
+    const opensFaq = !editor.arranging && Boolean((e.target as Element).closest("details > summary"));
+    if (!opensFaq) e.preventDefault();
     e.stopPropagation();
     if (suppressClick.current) {
       suppressClick.current = false;
