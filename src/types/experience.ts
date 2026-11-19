@@ -37,6 +37,8 @@ export interface Experience {
 
 /** A category's page layout. Story blocks name the listing field they fill (`source`). */
 export type CategoryLayout = {
+  /** Which buttons the Action buttons row shows, in order. */
+  actionButtons?: Array<"call" | "directions" | "instagram" | "whatsapp" | "website" | "share">;
   sections?: Array<{ id: string; show?: boolean }>;
   story?: LayoutBlock[];
 };
@@ -135,8 +137,11 @@ export type ExperienceContent = {
     book?: ContentLink;
     whatsapp?: ContentLink;
     instagram?: ContentLink;
+    website?: ContentLink;
     menu?: ContentLink;
   };
+  /** Which buttons the Action buttons row shows, in order. Missing = Call, Directions, Instagram, Share. */
+  actionButtons?: Array<"call" | "directions" | "instagram" | "whatsapp" | "website" | "share">;
 };
 
 /** Set by the admin page builder. `show: false` hides the block; two `half` blocks in a row sit side by side. */

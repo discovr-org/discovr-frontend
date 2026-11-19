@@ -479,6 +479,9 @@ function Populated({
               phone={phone}
               directionsHref={mapsHref}
               instagramHandle={instagramHandle}
+              whatsappHref={content.links?.whatsapp?.url?.trim() || undefined}
+              websiteHref={content.links?.website?.url?.trim() || undefined}
+              buttons={layoutHolder?.actionButtons?.length ? layoutHolder.actionButtons : undefined}
               onShare={onShare}
               onAction={onContact("action_row")}
               onCall={onCallToBook}

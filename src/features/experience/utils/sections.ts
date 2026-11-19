@@ -1,6 +1,8 @@
+import type { ActionButtonId } from "@/shared/components/ActionRow";
+
 /** Where the order and visibility live: the listing's content, or its category's layout. */
 export type PartStyle = { space?: "none" | "large"; hide?: "mobile" | "desktop" };
-type SectionHolder = { sections?: Array<{ id: string; show?: boolean } & PartStyle> } | undefined;
+type SectionHolder = { sections?: Array<{ id: string; show?: boolean } & PartStyle>; actionButtons?: ActionButtonId[] } | undefined;
 
 /** Parts of the listing page the admin can order and hide. */
 export type SectionId = "title" | "info" | "verdict" | "actions" | "about" | "menu" | "policy" | "host" | "reviews";
