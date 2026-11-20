@@ -3,6 +3,7 @@ import Script from "next/script";
 import { JsonLd } from "@/shared/seo/components/JsonLd";
 import { GSC_VERIFICATION, GTM_ID, SITE_DESCRIPTION, SITE_URL } from "@/shared/seo/utils/site";
 import { Bricolage_Grotesque, Instrument_Sans } from "next/font/google";
+import { VercelAnalytics } from "@/shared/analytics/components/VercelAnalytics";
 import { Providers } from "@/shared/components/Providers";
 import { color } from "@/shared/styles/tokens";
 import "@/shared/styles/globals.css";
@@ -83,6 +84,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <iframe src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`} height="0" width="0" style={{ display: "none", visibility: "hidden" }} />
         </noscript>
         <Providers>{children}</Providers>
+        <VercelAnalytics />
       </body>
     </html>
   );

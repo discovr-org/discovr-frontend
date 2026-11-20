@@ -13,6 +13,7 @@
     "@tanstack/query-sync-storage-persister": "^5.105.1",
     "@tanstack/react-query": "^5.105.1",
     "@tanstack/react-query-persist-client": "^5.105.1",
+    "@vercel/analytics": "^2.0.1",
     "next": "16.4.3",
     "posthog-js": "^1.445.1",
     "react": "19.3.0",
