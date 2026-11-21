@@ -8,7 +8,6 @@ import {
   DURATION_OPTIONS,
   NO_FILTERS,
   PRICE_OPTIONS,
-  TYPE_OPTIONS,
   WHEN_OPTIONS,
   type FeedFilters,
 } from "@/features/home/utils/feedFilters";
@@ -18,6 +17,8 @@ type FilterSheetProps = {
   open: boolean;
   onClose: () => void;
   areas: string[];
+  /** Categories that have a live listing. Empty hides the Type group. */
+  types: string[];
   value: FeedFilters;
   onApply: (next: FeedFilters) => void;
   /** Live count for the draft, read out to screen readers. */
@@ -27,7 +28,7 @@ type FilterSheetProps = {
 const toggle = (list: string[], v: string) =>
   list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
 
-export function FilterSheet({ open, onClose, areas, value, onApply, countFor }: FilterSheetProps) {
+export function FilterSheet({ open, onClose, areas, types, value, onApply, countFor }: FilterSheetProps) {
   const [draft, setDraft] = useState(value);
 
   useEffect(() => {
@@ -118,10 +119,11 @@ export function FilterSheet({ open, onClose, areas, value, onApply, countFor }: 
             ))}
           </div>
         </fieldset>
+        {types.length > 0 ? (
         <fieldset className={styles.group}>
           <legend className={styles.legend}>Type</legend>
           <div className={styles.chips}>
-            {TYPE_OPTIONS.map((t) => (
+            {types.map((t) => (
               <Chip
                 key={t}
                 selected={draft.types.includes(t)}
@@ -132,6 +134,7 @@ export function FilterSheet({ open, onClose, areas, value, onApply, countFor }: 
             ))}
           </div>
         </fieldset>
+        ) : null}
       </div>
     </PanelSheet>
   );

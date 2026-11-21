@@ -14,6 +14,9 @@ export type FeedItem = {
   priceSuffix?: string;
   /** venue = bar or restaurant (cards show no price); trip = everything else. */
   format?: "trip" | "venue";
+  /** The category (page layout) the listing is in, set in the admin. Feeds the Type filter. */
+  categoryName?: string;
+  categorySlug?: string;
 };
 
 /** rail: tall cards you swipe sideways. stack: one big card each. */

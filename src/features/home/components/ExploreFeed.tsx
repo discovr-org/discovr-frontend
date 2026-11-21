@@ -9,6 +9,7 @@ import {
   applyFilters,
   areaOf,
   areasIn,
+  typesIn,
   hasFilters,
   withoutLabel,
   type FeedFilters,
@@ -93,6 +94,7 @@ export function ExploreFeed({ initialCards, initialSections, initialSettings }: 
 
   const allCards = useMemo(() => cardData ?? [], [cardData]);
   const areas = useMemo(() => areasIn(allCards), [allCards]);
+  const types = useMemo(() => typesIn(allCards), [allCards]);
   const filtering = hasFilters(filters);
   const filtered = useMemo(() => applyFilters(allCards, filters), [allCards, filters]);
 
@@ -330,6 +332,7 @@ export function ExploreFeed({ initialCards, initialSections, initialSettings }: 
           open={filtersOpen}
           onClose={() => setFiltersOpen(false)}
           areas={areas}
+          types={types}
           value={filters}
           onApply={setFilters}
           countFor={(draft) => applyFilters(allCards, draft).length}
