@@ -10,7 +10,7 @@ export function resolveLayout(x: Experience, layout: LayoutBlock[]): Array<{ blo
     if (b.show === false) return;
     if (b.when && isEmpty(valueOf(x, b.when))) return;
     const block = resolveBlock(x, b);
-    if (block) out.push({ block: { ...block, ...(b.size === "half" ? { size: "half" as const } : {}) }, index });
+    if (block) out.push({ block, index });
   });
   return out;
 }
