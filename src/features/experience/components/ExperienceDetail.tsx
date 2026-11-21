@@ -37,7 +37,7 @@ import { track } from "@/shared/analytics/utils/track";
 import { useScrollDepth } from "@/shared/analytics/utils/useScrollDepth";
 import { useTrackView } from "@/shared/analytics/utils/useTrackView";
 import type { Experience, ScreenState } from "@/types/experience";
-import { isFixedShown, orderedSections, type PartStyle, type SectionId } from "../utils/sections";
+import { isFixedShown, orderedSections, type SectionId } from "../utils/sections";
 import { storyBlocks, storyIndexes } from "../utils/story";
 import { ReportSheet } from "./ReportSheet";
 import { StoryBlocks } from "./StoryBlocks";
@@ -571,10 +571,9 @@ function Populated({
     reviews: Boolean(x.reviews && x.reviews.count > 0),
   };
   // In the admin preview each part sits in a marked wrapper, so a click can name it.
-  // A part with admin style settings (space, hide) sits in its own wrapper; the rest stay as they were.
-  const mark = (id: SectionId, style: PartStyle) =>
-    preview || style.space || style.hide ? (
-      <div key={id} data-pv={preview ? `part:${id}` : undefined} data-space={style.space} data-hide={style.hide}>
+  const mark = (id: SectionId) =>
+    preview ? (
+      <div key={id} data-pv={`part:${id}`}>
         {parts[id]}
       </div>
     ) : (
@@ -605,7 +604,7 @@ function Populated({
       runStart = i + 1;
       if (present[b.id]) {
         pieces.push(
-          <div key={`part-${i}`} data-pv={storyIdx ? `block:${storyIdx[i]}` : undefined} data-pv-part={storyIdx ? b.id : undefined} data-space={b.space} data-hide={b.hide}>
+          <div key={`part-${i}`} data-pv={storyIdx ? `block:${storyIdx[i]}` : undefined} data-pv-part={storyIdx ? b.id : undefined}>
             {parts[b.id]}
           </div>,
         );
@@ -623,10 +622,10 @@ function Populated({
   for (const section of orderedSections(layoutHolder)) {
     if (storyParts.has(section.id)) continue; // drawn inside the story
     if (!section.show || !present[section.id]) continue;
-    if (headParts.includes(section.id)) run.push(mark(section.id, section));
+    if (headParts.includes(section.id)) run.push(mark(section.id));
     else {
       flush();
-      body.push(mark(section.id, section));
+      body.push(mark(section.id));
     }
   }
   flush();

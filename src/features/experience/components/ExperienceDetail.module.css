@@ -44,27 +44,6 @@
   gap: var(--space-5);
 }
 
-/* Admin style settings on a page part. */
-.main [data-space="none"] {
-  margin-top: calc(var(--space-5) * -1);
-}
-
-.main [data-space="large"] {
-  margin-top: var(--space-5);
-}
-
-@media (max-width: 899px) {
-  .main [data-hide="mobile"] {
-    display: none;
-  }
-}
-
-@media (min-width: 900px) {
-  .main [data-hide="desktop"] {
-    display: none;
-  }
-}
-
 .policy {
   display: flex;
   flex-direction: column;

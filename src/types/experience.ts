@@ -44,7 +44,7 @@ export type CategoryLayout = {
 };
 
 /** `when`: show the block only if this listing field is filled (for headings and dividers that belong to a section). */
-export type LayoutBlock = { size?: "full" | "half"; show?: boolean; when?: string; space?: "none" | "large"; hide?: "mobile" | "desktop" } & (
+export type LayoutBlock = { size?: "full" | "half"; show?: boolean; when?: string } & (
   | { type: "heading"; level: "section" | "small"; text?: string; source?: string }
   | { type: "line" }
   | { type: "part"; id: "title" | "info" | "verdict" | "actions" | "menu" | "policy" | "host" | "reviews" }
@@ -148,10 +148,6 @@ export type ExperienceContent = {
 export type StoryBlockFlags = {
   show?: boolean;
   size?: "full" | "half";
-  /** Space above: `none` pulls it up to the block before, `large` adds room. */
-  space?: "none" | "large";
-  /** Hide on phones or on desktop. */
-  hide?: "mobile" | "desktop";
 };
 
 export type StoryBlock = StoryBlockFlags &
