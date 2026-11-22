@@ -21,6 +21,7 @@ type ApiListingCard = {
   imageSrc?: string;
   imageAlt?: string;
   blurb?: string;
+  searchWords?: string;
   durationMinutes?: number;
   priceInr?: number;
   priceAsk?: boolean;
@@ -174,6 +175,7 @@ function mapApiCard(card: ApiListingCard): FeedItem {
     imageSrc: card.imageSrc ?? FALLBACK_IMAGE,
     imageAlt: card.imageAlt ?? card.title,
     blurb: card.blurb,
+    searchWords: card.searchWords,
     durationLabel: formatDuration(card.durationMinutes) || undefined,
     durationMinutes: card.durationMinutes,
     priceInr: card.priceAsk ? undefined : card.priceInr,

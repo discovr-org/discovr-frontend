@@ -33,6 +33,8 @@ function tokenScore(token: string, fieldWords: string[], weight: number, fuzzy: 
   for (const w of fieldWords) {
     if (w === token) best = Math.max(best, 3 * weight);
     else if (w.startsWith(token)) best = Math.max(best, 2 * weight);
+    // Stemmed words: the vector holds "nightlif", the guest types "nightlife".
+    else if (w.length >= 4 && token.startsWith(w)) best = Math.max(best, 2 * weight);
     else if (token.length >= 4 && w.includes(token)) best = Math.max(best, weight);
     else if (fuzzy && token.length >= 5 && (closeEnough(token, w) || closeEnough(token, w.slice(0, token.length))))
       best = Math.max(best, weight);
@@ -50,7 +52,7 @@ function titlesBySlug(defs: HomeSectionDef[]): Map<string, string[]> {
 
 /**
  * Every word in the query must match the card's title, place, blurb, or the
- * home sections it sits in (so "nightlife" or "sundowners" work). Prefixes count;
+ * home sections it sits in, or its search vector (so "nightlife" or "sundowners" work). Prefixes count;
  * one-letter typos only when nothing matches exactly. Best matches first.
  */
 export function searchCards(items: FeedItem[], query: string, defs: HomeSectionDef[] = HOME_SECTIONS): FeedItem[] {
@@ -68,6 +70,7 @@ function rank(items: FeedItem[], tokens: string[], fuzzy: boolean, sectionTitles
       [words(item.title), 4],
       [words(item.placeLabel), 3],
       [words((sectionTitlesBySlug.get(item.slug) ?? []).join(" ")), 2],
+      [words(item.searchWords ?? ""), 3],
       [words(item.blurb ?? ""), 1],
     ];
     let total = 0;

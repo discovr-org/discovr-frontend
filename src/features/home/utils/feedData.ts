@@ -7,6 +7,8 @@ export type FeedItem = {
   imageSrc: string;
   imageAlt: string;
   blurb?: string;
+  /** Extra words from the listing's search vector. Search only; never shown. */
+  searchWords?: string;
   durationLabel?: string;
   durationMinutes?: number;
   priceInr?: number;
