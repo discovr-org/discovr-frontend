@@ -27,6 +27,7 @@ type ApiListingCard = {
   format?: "trip" | "venue";
   categoryName?: string;
   categorySlug?: string;
+  categoryWeight?: number;
 };
 
 type ApiExperience = {
@@ -179,6 +180,7 @@ function mapApiCard(card: ApiListingCard): FeedItem {
     format: card.format,
     categoryName: card.categoryName,
     categorySlug: card.categorySlug,
+    categoryWeight: card.categoryWeight,
   };
 }
 

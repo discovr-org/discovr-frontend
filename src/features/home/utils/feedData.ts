@@ -17,6 +17,8 @@ export type FeedItem = {
   /** The category (page layout) the listing is in, set in the admin. Feeds the Type filter. */
   categoryName?: string;
   categorySlug?: string;
+  /** The category's weight (1 to 1000). Higher puts its row higher on the home page. */
+  categoryWeight?: number;
 };
 
 /** rail: tall cards you swipe sideways. stack: one big card each. */

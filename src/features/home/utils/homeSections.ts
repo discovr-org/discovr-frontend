@@ -66,6 +66,10 @@ const norm = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, " ").tr
  * Categories come for free: any live listing not placed by a section joins the row of its category
  * (a section whose id or title is the category's slug or name), or gets a row of its own after the others.
  * So a new category shows on the home page once one of its listings is live, with nothing to add by hand.
+ *
+ * Order: by the category's weight, highest first (1 to 1000, set in the admin). A row from the Home feed takes the weight of
+ * its category (matched like above, else the category most of its listings are in), or 1 if it has none.
+ * Rows with the same weight keep the Home feed's order, then the rest by name, so nothing moves until weights are set.
  */
 export function buildHomeSections(cards: FeedItem[], defs: HomeSectionDef[] = HOME_SECTIONS): FeedSection[] {
   const bySlug = new Map(cards.map((card) => [card.slug, card]));
@@ -80,6 +84,28 @@ export function buildHomeSections(cards: FeedItem[], defs: HomeSectionDef[] = HO
     return { ...section, layout, items };
   });
 
+  // Every category on a live card, with its weight, whether or not a section already placed its listings.
+  const categories = new Map<string, { name: string; weight: number }>();
+  for (const card of cards) {
+    if (card.categorySlug && card.categoryName && !categories.has(card.categorySlug)) {
+      categories.set(card.categorySlug, { name: card.categoryName, weight: card.categoryWeight ?? 1 });
+    }
+  }
+  const sectionFor = (slug: string, name: string) => sections.find((x) => x.id === slug || norm(x.title) === norm(name));
+  const weightOf = new Map<FeedSection, number>();
+  for (const [slug, category] of categories) {
+    const home = sectionFor(slug, category.name);
+    if (home) weightOf.set(home, category.weight);
+  }
+  // A Home feed row named something else takes the weight of the category most of its listings are in.
+  for (const section of sections) {
+    if (weightOf.has(section)) continue;
+    const votes = new Map<string, number>();
+    for (const item of section.items) if (item.categorySlug) votes.set(item.categorySlug, (votes.get(item.categorySlug) ?? 0) + 1);
+    const top = [...votes].sort((a, b) => b[1] - a[1])[0]?.[0];
+    weightOf.set(section, top ? (categories.get(top)?.weight ?? 1) : 1);
+  }
+
   const groups = new Map<string, { name: string; items: FeedItem[] }>();
   for (const card of cards) {
     if (!card.categorySlug || !card.categoryName || shown.has(card.slug)) continue;
@@ -88,13 +114,19 @@ export function buildHomeSections(cards: FeedItem[], defs: HomeSectionDef[] = HO
     groups.set(card.categorySlug, group);
   }
   const extra: FeedSection[] = [];
-  for (const [slug, group] of [...groups].sort((a, b) => b[1].items.length - a[1].items.length || a[1].name.localeCompare(b[1].name))) {
-    const home = sections.find((x) => x.id === slug || norm(x.title) === norm(group.name));
+  for (const [slug, group] of [...groups].sort((a, b) => a[1].name.localeCompare(b[1].name))) {
+    const home = sectionFor(slug, group.name);
     if (home) home.items.push(...group.items);
-    else extra.push({ id: slug, title: group.name, layout: "rail", items: group.items });
+    else {
+      const row: FeedSection = { id: slug, title: group.name, layout: "rail", items: group.items };
+      weightOf.set(row, categories.get(slug)?.weight ?? 1);
+      extra.push(row);
+    }
   }
 
   return [...sections, ...extra]
-    .filter((section) => section.items.length > 0)
-    .map((section) => ({ ...section, layout: section.items.length === 1 ? ("stack" as const) : section.layout }));
+    .map((section, index) => ({ section, index }))
+    .filter(({ section }) => section.items.length > 0)
+    .sort((a, b) => (weightOf.get(b.section) ?? 1) - (weightOf.get(a.section) ?? 1) || a.index - b.index)
+    .map(({ section }) => ({ ...section, layout: section.items.length === 1 ? ("stack" as const) : section.layout }));
 }
