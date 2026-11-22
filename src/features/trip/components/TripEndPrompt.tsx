@@ -25,9 +25,8 @@ export type TripEndAnswer =
 
 export type TripEndPromptProps = {
   /**
-   * Show the prompt. The gift step cannot be dismissed. The question step can:
-   * a tap outside the card (or Escape) calls `onDismiss`. Set `open` to false from
-   * `onAnswer` and `onDismiss`.
+   * Show the prompt. Only the gift step is a hard wall. From the question step on, a tap outside the card
+   * (or Escape) calls `onDismiss`, whether or not a day was tapped. Set `open` to false from `onAnswer` and `onDismiss`.
    */
   open: boolean;
   /** Fires once, `selectDelay` ms after the tap, so the person sees "Valid till" fill in first. */
@@ -35,10 +34,11 @@ export type TripEndPromptProps = {
   /** Optional: fires when the gift ticket is tapped, for analytics. */
   onReveal?: () => void;
   /**
-   * Fires when the person taps outside the card on the question step, before answering.
+   * Fires when the person taps outside the card (or presses Escape) on the question step.
+   * `answer` is set when they had already tapped a day, so it can still be kept. `onAnswer` does not fire then.
    * Never fires on the gift step. Without it, the question step cannot be dismissed either.
    */
-  onDismiss?: () => void;
+  onDismiss?: (answer?: TripEndAnswer) => void;
   /** The day to count from. Defaults to the device's date when the prompt opens. */
   today?: Date;
   /** From the tap on the ticket to the boarding pass. Default 3200 (the reels take 1800). */
@@ -124,6 +124,8 @@ export default function TripEndPrompt({
   const revealTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const answerTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const answered = useRef(false);
+  const pickedAnswer = useRef<TripEndAnswer | null>(null);
+  const closed = useRef(false);
   const revealedRef = useRef(false);
   const onAnswerRef = useRef(onAnswer);
   const onDismissRef = useRef(onDismiss);
@@ -147,6 +149,8 @@ export default function TripEndPrompt({
     if (open) {
       returnFocus.current = document.activeElement as HTMLElement | null;
       answered.current = false;
+      pickedAnswer.current = null;
+      closed.current = false;
       revealedRef.current = false;
       setStage('gift');
       setRevealed(false);
@@ -197,19 +201,21 @@ export default function TripEndPrompt({
   const pick = (key: Exclude<Picked, null>, answer: TripEndAnswer) => {
     if (answered.current) return; // the first tap wins
     answered.current = true;
+    pickedAnswer.current = answer;
     setPicked(key);
     clearTimeout(answerTimer.current);
     answerTimer.current = setTimeout(() => onAnswerRef.current(answer), selectDelay);
   };
 
-  // Quitting is allowed only on the question step, and only before an answer is tapped.
-  // Once an answer is tapped it is committed: signup opens as planned.
-  const canDismiss = stage === 'pass' && picked === null && !!onDismiss;
+  // Quitting is allowed from the question step on, also after a day was tapped (the day is handed to onDismiss).
+  // The gift step is the only hard wall.
+  const canDismiss = stage === 'pass' && !!onDismiss;
   const dismiss = () => {
-    if (stage !== 'pass' || answered.current) return;
-    answered.current = true; // nothing else responds after quitting
-    clearTimeout(answerTimer.current);
-    onDismissRef.current?.();
+    if (stage !== 'pass' || closed.current) return;
+    closed.current = true; // nothing else responds after quitting
+    answered.current = true;
+    clearTimeout(answerTimer.current); // a pending answer is handed to onDismiss instead of onAnswer
+    onDismissRef.current?.(pickedAnswer.current ?? undefined);
   };
 
   // Escape quits where a tap outside would; otherwise it does nothing. Tab stays inside the sheet.

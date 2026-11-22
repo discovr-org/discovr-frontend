@@ -103,41 +103,53 @@ export function TripEndGate() {
     }
   }, [ready, authOpen, open, trip]);
 
-  const onAnswer = useCallback(
-    (answer: TripEndAnswer) => {
-      // Ask the device, not a captured value: sign-in only opens for someone who is signed out right now.
-      const sessionId = readSession()?.sessionId;
-      const next = tripFromAnswer(answer, isoDay(new Date()));
-      setOpen(false);
-      setReady(false);
-      setTrip(next);
-      writeLocalTrip(next);
-      track("trip_end_answered", {
-        status: next.status,
-        days_from_today: answer.kind === "date" ? answer.daysFromToday : undefined,
-        signed_in: Boolean(sessionId),
-      });
-      if (sessionId) {
-        saveTrip(sessionId, next).catch(() => {}); // kept on the device; moves up next visit
-      } else {
-        // Guest: keep it on the device, then ask them to sign up. It moves to their account when they do.
-        try {
-          localStorage.setItem(UNSYNCED_KEY, "1");
-        } catch {}
-      }
-      // Signed in: confirm at once. A guest gets the same line once signup is done.
-      if (sessionId) toast(CONFIRM_TEXT);
-      else requireAuth("trip", () => toast(CONFIRM_TEXT));
-    },
-    [requireAuth, toast],
-  );
-
-  // Left the question without answering: no answer kept, no signup. The visit flag stops a second ask today.
-  const onDismiss = useCallback(() => {
+  // Keep what they tapped: on the device, in PostHog, and on their account if they are signed in. Returns whether they are.
+  const record = useCallback((answer: TripEndAnswer): boolean => {
+    // Ask the device, not a captured value: sign-in only opens for someone who is signed out right now.
+    const sessionId = readSession()?.sessionId;
+    const next = tripFromAnswer(answer, isoDay(new Date()));
     setOpen(false);
     setReady(false);
-    track("trip_end_dismissed", {});
+    setTrip(next);
+    writeLocalTrip(next);
+    track("trip_end_answered", {
+      status: next.status,
+      days_from_today: answer.kind === "date" ? answer.daysFromToday : undefined,
+      signed_in: Boolean(sessionId),
+    });
+    if (sessionId) {
+      saveTrip(sessionId, next).catch(() => {}); // kept on the device; moves up next visit
+    } else {
+      // Guest: it stays on the device and moves to their account when they sign up.
+      try {
+        localStorage.setItem(UNSYNCED_KEY, "1");
+      } catch {}
+    }
+    return Boolean(sessionId);
   }, []);
+
+  const onAnswer = useCallback(
+    (answer: TripEndAnswer) => {
+      // Signed in: confirm at once. A guest gets the same line once signup is done.
+      if (record(answer)) toast(CONFIRM_TEXT);
+      else requireAuth("trip", () => toast(CONFIRM_TEXT));
+    },
+    [record, requireAuth, toast],
+  );
+
+  // Tapped outside (or Escape) from the question on. A day they had already tapped is kept; signup does not open.
+  // The visit flag stops a second ask today.
+  const onDismiss = useCallback(
+    (answer?: TripEndAnswer) => {
+      if (answer) record(answer);
+      else {
+        setOpen(false);
+        setReady(false);
+      }
+      track("trip_end_dismissed", { answered: Boolean(answer) });
+    },
+    [record],
+  );
 
   return <TripEndPrompt open={open} onAnswer={onAnswer} onDismiss={onDismiss} onReveal={() => track("trip_end_gift_revealed", {})} />;
 }
