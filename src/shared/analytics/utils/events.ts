@@ -131,6 +131,10 @@ export type EventMap = {
   };
   /** "Till when are you in Goa?" sheet came up. */
   trip_end_shown: { had_answer: boolean };
+  /** The gift ticket was tapped and the ₹300 revealed. */
+  trip_end_gift_revealed: Record<string, never>;
+  /** They left the question without answering (tap outside, or Escape). */
+  trip_end_dismissed: Record<string, never>;
   trip_end_answered: {
     status: "date" | "later" | "local" | "not_yet";
     /** Only for a picked day: 0 = today. */

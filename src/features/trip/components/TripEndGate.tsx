@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { readSession } from "@/features/auth/utils/session";
 import TripEndPrompt, { type TripEndAnswer } from "@/features/trip/components/TripEndPrompt";
@@ -8,6 +8,7 @@ import { fetchTrip, saveTrip } from "@/features/trip/utils/tripApi";
 import { isoDay, readLocalTrip, shouldAsk, tripFromAnswer, writeLocalTrip, type Trip } from "@/features/trip/utils/trip";
 import { setTripProperties } from "@/shared/analytics/utils/posthog";
 import { track } from "@/shared/analytics/utils/track";
+import { useToast } from "@/shared/components/Toast";
 
 /** Seconds of real use (tab visible, touched or scrolled recently) before we ask. */
 const ACTIVE_SECONDS = 10;
@@ -15,6 +16,7 @@ const IDLE_AFTER_MS = 15_000;
 const ASKED_KEY = "discovr.tripAsked";
 /** Set when a guest answers, cleared once that answer is in their account. */
 const UNSYNCED_KEY = "discovr.tripUnsynced";
+const CONFIRM_TEXT = "You’re in. Check WhatsApp for how to claim your ₹300";
 
 function clearUnsynced() {
   try {
@@ -25,11 +27,13 @@ function clearUnsynced() {
 
 /** Asks "Till when are you in Goa?" once per visit, after 10 seconds of use, if we have no answer or it's time to ask again. */
 export function TripEndGate() {
-  const { user, authOpen, openAuth } = useAuth();
+  const { user, authOpen, requireAuth } = useAuth();
+  const toast = useToast();
   const sessionId = user?.sessionId;
   const [trip, setTrip] = useState<Trip | null | undefined>(undefined); // undefined = still finding out
   const [ready, setReady] = useState(false);
   const [open, setOpen] = useState(false);
+  const askedThisVisit = useRef(false); // once the sheet has come up, it does not come up again until the next visit
 
   // What do we know? Signed in: the DB wins, and an answer given as a guest moves up to it.
   useEffect(() => {
@@ -76,7 +80,10 @@ export function TripEndGate() {
     events.forEach((e) => window.addEventListener(e, touch, { passive: true }));
     const timer = setInterval(() => {
       if (document.visibilityState === "visible" && Date.now() - lastTouch < IDLE_AFTER_MS) active += 1;
-      if (active >= ACTIVE_SECONDS) setReady(true);
+      if (active >= ACTIVE_SECONDS) {
+        setReady(true);
+        clearInterval(timer);
+      }
     }, 1000);
     return () => {
       clearInterval(timer);
@@ -86,7 +93,8 @@ export function TripEndGate() {
 
   // Wait out the sign-in sheet rather than stacking two sheets.
   useEffect(() => {
-    if (ready && !authOpen && !open) {
+    if (ready && !authOpen && !open && !askedThisVisit.current) {
+      askedThisVisit.current = true;
       try {
         sessionStorage.setItem(ASKED_KEY, "1");
       } catch {}
@@ -116,11 +124,20 @@ export function TripEndGate() {
         try {
           localStorage.setItem(UNSYNCED_KEY, "1");
         } catch {}
-        openAuth("trip");
       }
+      // Signed in: confirm at once. A guest gets the same line once signup is done.
+      if (sessionId) toast(CONFIRM_TEXT);
+      else requireAuth("trip", () => toast(CONFIRM_TEXT));
     },
-    [openAuth],
+    [requireAuth, toast],
   );
 
-  return <TripEndPrompt open={open} onAnswer={onAnswer} />;
+  // Left the question without answering: no answer kept, no signup. The visit flag stops a second ask today.
+  const onDismiss = useCallback(() => {
+    setOpen(false);
+    setReady(false);
+    track("trip_end_dismissed", {});
+  }, []);
+
+  return <TripEndPrompt open={open} onAnswer={onAnswer} onDismiss={onDismiss} onReveal={() => track("trip_end_gift_revealed", {})} />;
 }

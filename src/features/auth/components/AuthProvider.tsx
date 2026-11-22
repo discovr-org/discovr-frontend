@@ -34,10 +34,10 @@ const CTA_LABEL: Record<AuthIntent, string> = {
   call: "Call to book",
   book: "Go to booking",
   profile: "Done",
-  trip: "Send my surprise",
+  trip: "Claim my ₹300",
 };
 
-const TITLE: Partial<Record<AuthIntent, string>> = { trip: "You’ll get your surprise on WhatsApp" };
+const TITLE: Partial<Record<AuthIntent, string>> = { trip: "Get your ₹300 on WhatsApp" };
 
 type AuthContextValue = {
   user: SessionUser | null;
