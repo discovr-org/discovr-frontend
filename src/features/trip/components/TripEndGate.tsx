@@ -16,7 +16,7 @@ const IDLE_AFTER_MS = 15_000;
 const ASKED_KEY = "discovr.tripAsked";
 /** Set when a guest answers, cleared once that answer is in their account. */
 const UNSYNCED_KEY = "discovr.tripUnsynced";
-const CONFIRM_TEXT = "You’re in. Check WhatsApp for how to claim your ₹300";
+const CONFIRM_TEXT = "You’re in. You’ll receive your ₹300 on WhatsApp soon";
 
 function clearUnsynced() {
   try {
