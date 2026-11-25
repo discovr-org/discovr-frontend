@@ -18,6 +18,23 @@ const ASKED_KEY = "discovr.tripAsked";
 const UNSYNCED_KEY = "discovr.tripUnsynced";
 const CONFIRM_TEXT = "You’re in. You’ll receive your ₹300 on WhatsApp soon";
 
+const VISITS_KEY = "discovr.visits";
+
+/** Counts this visit once (per tab session) and returns how many visits this device has made. */
+function countVisit(): number {
+  try {
+    let n = Number(localStorage.getItem(VISITS_KEY)) || 0;
+    if (!sessionStorage.getItem(VISITS_KEY)) {
+      sessionStorage.setItem(VISITS_KEY, "1");
+      n += 1;
+      localStorage.setItem(VISITS_KEY, String(n));
+    }
+    return n;
+  } catch {
+    return 1;
+  }
+}
+
 function clearUnsynced() {
   try {
     sessionStorage.removeItem(UNSYNCED_KEY);
@@ -25,7 +42,7 @@ function clearUnsynced() {
   } catch {}
 }
 
-/** Asks "Till when are you in Goa?" once per visit, after 10 seconds of use, if we have no answer or it's time to ask again. */
+/** Asks "Till when are you in Goa?" once per visit, after 10 seconds of use, if we have no answer or it's time to ask again. Signed-out people from their 2nd visit get it every visit, at once. */
 export function TripEndGate() {
   const { user, authOpen, requireAuth } = useAuth();
   const toast = useToast();
@@ -67,12 +84,21 @@ export function TripEndGate() {
     if (trip) setTripProperties(trip);
   }, [trip]);
 
-  // 10 seconds of use, once per visit.
+  // Signed-out people on their 2nd visit or later get it every visit, at once.
+  const [returningGuest] = useState(() => !readSession()?.sessionId && countVisit() >= 2);
+
+  // 10 seconds of use, once per visit (at once for a returning guest).
   useEffect(() => {
-    if (trip === undefined || !shouldAsk(trip, isoDay(new Date()))) return;
+    if (trip === undefined) return;
+    const instant = returningGuest && !sessionId;
+    if (!instant && !shouldAsk(trip, isoDay(new Date()))) return;
     try {
       if (sessionStorage.getItem(ASKED_KEY)) return;
     } catch {}
+    if (instant) {
+      setReady(true);
+      return;
+    }
     let active = 0;
     let lastTouch = 0;
     const touch = () => (lastTouch = Date.now());
@@ -89,7 +115,7 @@ export function TripEndGate() {
       clearInterval(timer);
       events.forEach((e) => window.removeEventListener(e, touch));
     };
-  }, [trip]);
+  }, [trip, returningGuest, sessionId]);
 
   // Wait out the sign-in sheet rather than stacking two sheets.
   useEffect(() => {

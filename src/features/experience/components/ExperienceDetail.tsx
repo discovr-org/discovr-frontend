@@ -8,6 +8,7 @@ import { googleMapsDirections } from "@/features/experience/utils/schedule";
 import { useScrollChrome } from "@/features/experience/utils/useScrollChrome";
 import { priceLabel, type FeedItem } from "@/features/home/utils/feedData";
 import { ActionRow } from "@/shared/components/ActionRow";
+import { AskUs } from "@/shared/components/AskUs";
 import { AppBar } from "@/shared/components/AppBar";
 import { AppShell } from "@/shared/components/AppShell";
 import { Banner } from "@/shared/components/Banner";
@@ -672,6 +673,8 @@ function Populated({
           ) : null}
         </aside>
       </div>
+
+      <AskUs message={`Hi discovr, I have a question about ${x.title}.`} />
 
       {related.length > 0 && isFixedShown(layoutHolder, "more") && (
         <section className={styles.block} aria-labelledby="more-related" data-pv={preview ? "part:more" : undefined}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 // Filter chips (hidden for now) also need: FEED_FILTERS, FeedFilter, Chip, chipStyles, SlidersIcon.
 import { priceLabel, type FeedItem } from "@/features/home/utils/feedData";
 import {
@@ -30,7 +30,6 @@ import { useHomeFeed } from "@/shared/utils/useHomeFeed";
 import { useSiteSettings } from "@/shared/utils/useSiteSettings";
 import type { SiteSettings } from "@/shared/utils/siteSettings";
 import { FeedSkeleton } from "@/features/home/components/FeedSkeleton";
-import { AskUs } from "@/shared/components/AskUs";
 import { RequestBox } from "@/shared/components/RequestBox";
 import { analyticsActive } from "@/shared/analytics/utils/posthog";
 import { HomeSection } from "@/features/home/components/HomeSection";
@@ -327,26 +326,21 @@ export function ExploreFeed({ initialCards, initialSections, initialSettings }: 
 
         {loadState === "ready" && !searching && !filtering
           ? sections.map((section, i) => (
-              <Fragment key={section.id}>
-                <HomeSection
-                  section={section}
-                  position={i + 1}
-                  isSaved={saved.isSaved}
-                  onToggleSave={onToggleSave}
-                />
-                {i === 3 ? (
-                  <div className={styles.askUs}>
-                    <RequestBox onSubmit={sendRequest} />
-                  </div>
-                ) : null}
-                {i === 1 ? (
-                  <div className={styles.askUs}>
-                    <AskUs />
-                  </div>
-                ) : null}
-              </Fragment>
+              <HomeSection
+                key={section.id}
+                section={section}
+                position={i + 1}
+                isSaved={saved.isSaved}
+                onToggleSave={onToggleSave}
+              />
             ))
           : null}
+
+        {loadState === "ready" ? (
+          <div className={styles.askUs}>
+            <RequestBox onSubmit={sendRequest} />
+          </div>
+        ) : null}
 
         <FilterSheet
           open={filtersOpen}
