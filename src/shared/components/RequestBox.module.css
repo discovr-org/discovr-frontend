@@ -1,0 +1,183 @@
+/* RequestBox. Every value is a design token from app/globals.css, except the type sizes,
+   which match the design (heading 16/21, line under it 13/18, field 16/24, button 13/16),
+   the 40px icon circle with its 20px glyph, and the 98% press scale. */
+
+.card {
+  border-radius: var(--radius-md);
+  background: var(--accent-pink-tint);
+  padding: var(--space-4);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  background: var(--accent-pink);
+  color: var(--surface-canvas);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.heading {
+  margin: 0;
+  font-size: 16px;
+  line-height: 21px;
+  font-weight: 600;
+  color: var(--ink-primary);
+  text-wrap: balance;
+}
+.heading:focus {
+  outline: none;
+}
+.sub {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ink-muted);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The Input, on surface-canvas so it reads as a hole in the pink card */
+.field {
+  flex: 1;
+  min-width: 0;
+  height: var(--size-field);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-canvas);
+  border: var(--border-hairline) solid var(--line-strong);
+  transition: border-color var(--duration-instant) var(--ease-exit);
+}
+.field:hover {
+  border-color: var(--ink-muted);
+}
+.field:focus-within {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.field input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-primary);
+  font: inherit;
+  font-size: 16px;
+  line-height: 24px;
+  outline: none;
+}
+.field input::placeholder {
+  color: var(--ink-subtle);
+  opacity: 1;
+}
+
+/* Send: a secondary button with a pink edge; pink fill on hover and press */
+.send {
+  flex-shrink: 0;
+  height: var(--size-control-md);
+  padding: 0 var(--space-5);
+  border: var(--border-hairline) solid var(--accent-pink);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-primary);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+.send:hover:not(:disabled) {
+  background: var(--accent-pink);
+  color: var(--surface-canvas);
+}
+.send:active:not(:disabled) {
+  background: var(--accent-pink);
+  color: var(--surface-canvas);
+  transform: scale(0.98);
+}
+.send:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.send:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: default;
+}
+
+/* Only if saving fails: what happened, and what to do */
+.error {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--state-critical);
+}
+
+/* After sending */
+.done {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.again {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--ink-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-pink);
+  text-underline-offset: 3px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+/* 44px tall tap area without changing the line height */
+.again::after {
+  content: "";
+  position: absolute;
+  inset: -13px -4px;
+}
+.again:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}

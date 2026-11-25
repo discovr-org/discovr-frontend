@@ -8,8 +8,8 @@ const DENIED_KEY = "discovr.locationDenied";
 const ASKED_KEY = "discovr.locationAsked";
 const PLACE_KEY = "discovr.devicePlace";
 
-/** iOS moves the toolbar with a few pixels of scroll. A real scroll is past this. */
-export const FIRST_SCROLL_PX = 48;
+/** How long someone stays on the site before we ask where they are. */
+export const ASK_AFTER_MS = 30_000;
 
 const PRECISE: PositionOptions = {
   enableHighAccuracy: true,
@@ -50,7 +50,7 @@ export type GeoPermission = "granted" | "denied" | "prompt" | "unknown";
 export type LocationFailure = "denied" | "unavailable" | "timeout" | "unsupported";
 
 export type LocationPlan =
-  | { kind: "skip"; until: "scroll" | "never" }
+  | { kind: "skip"; until: "wait" | "never" }
   | { kind: "use"; fix: DeviceFix; refresh: boolean }
   | { kind: "refresh" }
   | { kind: "ask" };
@@ -214,7 +214,9 @@ export function requestDeviceFix(): Promise<DeviceFix> {
 }
 
 /**
- * Ask only after a real scroll, and only when this device has no fix.
+ * Ask only after ASK_AFTER_MS on the site, and only when this device has no fix.
+ * Asked is per visit, so a prompt they closed without answering comes back next visit.
+ * A hard deny (permission "denied") never asks again: the browser would block it anyway.
  * A granted permission refreshes quietly, with no prompt.
  */
 export function planLocationAsk(input: {
@@ -224,7 +226,7 @@ export function planLocationAsk(input: {
   asked: boolean;
   deniedFlag: boolean;
   analyticsOn: boolean;
-  scrolled: boolean;
+  waited: boolean;
 }): LocationPlan {
   if (!input.analyticsOn || !input.supported) return { kind: "skip", until: "never" };
   if (input.permission === "denied") return { kind: "skip", until: "never" };
@@ -234,7 +236,7 @@ export function planLocationAsk(input: {
   }
   if (input.permission === "granted") return { kind: "refresh" };
 
-  if (!input.scrolled) return { kind: "skip", until: "scroll" };
+  if (!input.waited) return { kind: "skip", until: "wait" };
   if (input.asked) return { kind: "skip", until: "never" };
   // Old Safari can't tell us the permission. A previous hard deny should stick.
   if (input.deniedFlag && input.permission === "unknown") return { kind: "skip", until: "never" };

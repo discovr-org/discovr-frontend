@@ -84,6 +84,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthOpen(true);
   }, []);
 
+  // Guests see signup once per visit (tab session), even if they closed it last time.
+  useEffect(() => {
+    try {
+      if (readSession()?.sessionId || sessionStorage.getItem("discovr.signupShown") === "1") return;
+      sessionStorage.setItem("discovr.signupShown", "1");
+    } catch {
+      // Storage blocked: still show it.
+    }
+    openAuth("profile");
+  }, [openAuth]);
+
   const closeAuth = useCallback(() => {
     setAuthOpen(false);
     setPending(null);

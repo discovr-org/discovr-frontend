@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 // Filter chips (hidden for now) also need: FEED_FILTERS, FeedFilter, Chip, chipStyles, SlidersIcon.
 import { priceLabel, type FeedItem } from "@/features/home/utils/feedData";
 import {
@@ -30,6 +30,9 @@ import { useHomeFeed } from "@/shared/utils/useHomeFeed";
 import { useSiteSettings } from "@/shared/utils/useSiteSettings";
 import type { SiteSettings } from "@/shared/utils/siteSettings";
 import { FeedSkeleton } from "@/features/home/components/FeedSkeleton";
+import { AskUs } from "@/shared/components/AskUs";
+import { RequestBox } from "@/shared/components/RequestBox";
+import { analyticsActive } from "@/shared/analytics/utils/posthog";
 import { HomeSection } from "@/features/home/components/HomeSection";
 import { useSaved } from "@/shared/utils/useSaved";
 import { TrackList } from "@/shared/analytics/components/TrackList";
@@ -40,6 +43,12 @@ import { useScrollDepth } from "@/shared/analytics/utils/useScrollDepth";
 const SEARCH_SETTLE_MS = 600;
 
 /** `initialCards` come from the server so the first HTML already has every listing link. */
+/** No requests table yet: the text goes to PostHog. Fails visibly when analytics is off, so nothing is lost silently. */
+function sendRequest(text: string) {
+  if (!analyticsActive()) throw new Error("Analytics off");
+  track("experience_requested", { text });
+}
+
 export function ExploreFeed({ initialCards, initialSections, initialSettings }: { initialCards?: FeedItem[]; initialSections?: HomeSectionDef[] | null; initialSettings?: Partial<SiteSettings> | null }) {
   const [filters, setFilters] = useState<FeedFilters>(NO_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -318,13 +327,24 @@ export function ExploreFeed({ initialCards, initialSections, initialSettings }: 
 
         {loadState === "ready" && !searching && !filtering
           ? sections.map((section, i) => (
-              <HomeSection
-                key={section.id}
-                section={section}
-                position={i + 1}
-                isSaved={saved.isSaved}
-                onToggleSave={onToggleSave}
-              />
+              <Fragment key={section.id}>
+                <HomeSection
+                  section={section}
+                  position={i + 1}
+                  isSaved={saved.isSaved}
+                  onToggleSave={onToggleSave}
+                />
+                {i === 3 ? (
+                  <div className={styles.askUs}>
+                    <RequestBox onSubmit={sendRequest} />
+                  </div>
+                ) : null}
+                {i === 1 ? (
+                  <div className={styles.askUs}>
+                    <AskUs />
+                  </div>
+                ) : null}
+              </Fragment>
             ))
           : null}
 

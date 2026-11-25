@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { isAnalyticsOn } from "@/shared/analytics/utils/analyticsConsent";
 import { analyticsConfigured, publishDeviceLocation } from "@/shared/analytics/utils/posthog";
 import {
+  ASK_AFTER_MS,
   deviceLocationSupported,
-  FIRST_SCROLL_PX,
   locationAskedThisVisit,
   locationDeniedFlag,
   LocationRequestError,
@@ -22,7 +22,7 @@ import {
 } from "@/shared/utils/deviceLocation";
 
 /**
- * Mount once (see Providers). No UI of our own: after the first real scroll,
+ * Mount once (see Providers). No UI of our own: after 30 seconds on the site,
  * the browser's own location prompt opens.
  */
 export function useDeviceLocation(): void {
@@ -30,7 +30,7 @@ export function useDeviceLocation(): void {
     if (!analyticsConfigured() || !isAnalyticsOn()) return;
     let alive = true;
     let booted = false;
-    let scrolled = window.scrollY >= FIRST_SCROLL_PX;
+    let waited = false;
     let permission: GeoPermission = "unknown";
 
     const plan = (): LocationPlan =>
@@ -41,7 +41,7 @@ export function useDeviceLocation(): void {
         asked: locationAskedThisVisit(),
         deniedFlag: locationDeniedFlag(),
         analyticsOn: isAnalyticsOn(),
-        scrolled,
+        waited,
       });
 
     const apply = (next: LocationPlan) => {
@@ -54,28 +54,23 @@ export function useDeviceLocation(): void {
       void locate(() => alive);
     };
 
-    const onScroll = () => {
-      if (window.scrollY < FIRST_SCROLL_PX) return;
-      scrolled = true;
-      window.removeEventListener("scroll", onScroll);
+    const timer = window.setTimeout(() => {
+      waited = true;
       if (booted) apply(plan());
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
+    }, ASK_AFTER_MS);
 
     void (async () => {
       permission = await readGeoPermission();
       if (!alive) return;
       booted = true;
       const first = plan();
-      if (first.kind !== "skip" || first.until === "never") {
-        window.removeEventListener("scroll", onScroll);
-      }
+      if (first.kind !== "skip" || first.until === "never") window.clearTimeout(timer);
       apply(first);
     })();
 
     return () => {
       alive = false;
-      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(timer);
     };
   }, []);
 }

@@ -100,6 +100,9 @@ export type EventMap = {
   experience_saved: SaveProps;
   experience_unsaved: SaveProps;
 
+  // Explore: "Looking for something we don't have?"
+  experience_requested: { text: string };
+
   // Sign-in (never the number)
   auth_sheet_opened: { intent: string };
   otp_requested: { intent: string };

@@ -1,0 +1,84 @@
+/* AskUs. Every value is a design token from app/globals.css, except the type sizes,
+   which match the design's row title (16/21) and subtitle (13/18), the 40px icon circle
+   with its 20px glyph, and the 98% press scale. */
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--size-field);
+  padding: 14px var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--state-positive-tint);
+  color: var(--ink-primary);
+  text-decoration: none;
+  box-shadow: inset 0 0 0 var(--border-hairline) transparent;
+  transition:
+    box-shadow var(--duration-instant) var(--ease-exit),
+    transform var(--duration-instant) var(--ease-exit);
+}
+.row:hover {
+  box-shadow: inset 0 0 0 var(--border-hairline) var(--state-positive);
+}
+.row:active {
+  box-shadow: inset 0 0 0 var(--border-hairline) var(--state-positive);
+  transform: scale(0.98);
+}
+.row:focus-visible {
+  outline: var(--border-focus) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  background: var(--state-positive);
+  color: var(--surface-canvas);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.title {
+  font-size: 16px;
+  line-height: 21px;
+  font-weight: 600;
+}
+.subtitle {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ink-muted);
+}
+
+.arrow {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+  flex-shrink: 0;
+  color: var(--state-positive);
+}
+
+/* Visually hidden, still read by screen readers */
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
